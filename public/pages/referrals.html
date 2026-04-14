@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/images/favicon.png">
+    <title>Referrals - Deng Parez</title>
+    <link href="/css/style.min.css" rel="stylesheet">
+    <link href="/assets/extra-libs/datatables.net-bs4/css/dataTables.bootstrap4.css" rel="stylesheet">
+    <style>
+        .tree-node { border-left: 3px solid #f158d0; padding-left: 15px; margin-bottom: 15px; }
+        .tree-artist { font-weight: 600; font-size: 1.05em; }
+        .tree-ref { background: #f8f9fa; padding: 6px 12px; border-radius: 4px; margin: 4px 0; display: flex; justify-content: space-between; align-items: center; }
+        .tree-ref .level-badge { width: 28px; height: 28px; border-radius: 50%; background: #f158d0; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; margin-right: 10px; }
+    </style>
+</head>
+<body>
+    <div class="preloader"><div class="lds-ripple"><div class="lds-pos"></div><div class="lds-pos"></div></div></div>
+    <div id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full" data-sidebar-position="absolute" data-header-position="relative" data-boxed-layout="full">
+        <header class="topbar">
+            <nav class="navbar top-navbar navbar-expand-md navbar-dark">
+                <div class="navbar-header">
+                    <a class="nav-toggler waves-effect waves-light d-block d-md-none" href="javascript:void(0)"><i class="ti-menu ti-close"></i></a>
+                    <div class="navbar-brand"><a href="/dashboard" class="logo"><b class="logo-icon"><img src="/assets/images/logo-icon.png" alt="logo" class="dark-logo" /><img src="/assets/images/logo-light-icon.png" alt="logo" class="light-logo" /></b><span class="logo-text"><img src="/assets/images/logo-text.png" alt="logo" class="dark-logo" /><img src="/assets/images/logo-light-text.png" class="light-logo" alt="logo" /></span></a><a class="sidebartoggler d-none d-md-block" href="javascript:void(0)" data-sidebartype="mini-sidebar"><i class="mdi mdi-toggle-switch mdi-toggle-switch-off font-20"></i></a></div>
+                    <a class="topbartoggler d-block d-md-none waves-effect waves-light" href="javascript:void(0)" data-toggle="collapse" data-target="#navbarSupportedContent"><i class="ti-more"></i></a>
+                </div>
+                <div class="navbar-collapse collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav float-left mr-auto"></ul>
+                    <ul class="navbar-nav float-right"><li class="nav-item dropdown"><a class="nav-link dropdown-toggle waves-effect waves-dark pro-pic" href="#" data-toggle="dropdown"><img src="/assets/images/users/1.jpg" alt="user" class="rounded-circle" width="40"><span class="m-l-5 font-medium d-none d-sm-inline-block" id="user-name">User</span></a><div class="dropdown-menu dropdown-menu-right user-dd animated flipInY"><a class="dropdown-item" href="/settings"><i class="ti-settings m-r-5 m-l-5"></i> Settings</a><div class="dropdown-divider"></div><a class="dropdown-item" href="#" id="logout-btn"><i class="fa fa-power-off m-r-5 m-l-5"></i> Logout</a></div></li></ul>
+                </div>
+            </nav>
+        </header>
+        <aside class="left-sidebar">
+            <div class="scroll-sidebar"><nav class="sidebar-nav"><ul id="sidebarnav">
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/dashboard"><i data-feather="home" class="feather-icon"></i><span class="hide-menu">Dashboard</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/artists"><i data-feather="users" class="feather-icon"></i><span class="hide-menu">Artists</span></a></li>
+                <li class="sidebar-item selected"><a class="sidebar-link waves-effect waves-dark" href="/referrals"><i data-feather="git-branch" class="feather-icon"></i><span class="hide-menu">Referrals</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)"><i data-feather="dollar-sign" class="feather-icon"></i><span class="hide-menu">Revenue</span></a><ul class="collapse first-level"><li class="sidebar-item"><a href="/revenue/new" class="sidebar-link"><span class="hide-menu">New Entry</span></a></li><li class="sidebar-item"><a href="/revenue" class="sidebar-link"><span class="hide-menu">History</span></a></li></ul></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/expenses"><i data-feather="trending-down" class="feather-icon"></i><span class="hide-menu">Expenses</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/additional-income"><i data-feather="plus-circle" class="feather-icon"></i><span class="hide-menu">Additional Income</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/reports"><i data-feather="bar-chart-2" class="feather-icon"></i><span class="hide-menu">Reports</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/user-breakdown"><i data-feather="pie-chart" class="feather-icon"></i><span class="hide-menu">User Breakdown</span></a></li>
+                <li class="sidebar-item admin-only"><a class="sidebar-link waves-effect waves-dark" href="/settings"><i data-feather="settings" class="feather-icon"></i><span class="hide-menu">Settings</span></a></li>
+            </ul></nav></div>
+        </aside>
+        <div class="page-wrapper">
+            <div class="page-breadcrumb">
+                <div class="row">
+                    <div class="col-7 align-self-center">
+                        <h3 class="page-title text-truncate text-dark font-weight-medium mb-1">Referral Network</h3>
+                        <nav aria-label="breadcrumb"><ol class="breadcrumb m-0 p-0"><li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li><li class="breadcrumb-item active">Referrals</li></ol></nav>
+                    </div>
+                    <div class="col-5 align-self-center text-right">
+                        <div class="btn-group">
+                            <button class="btn btn-primary active" id="btn-tree" onclick="showView('tree')">Tree View</button>
+                            <button class="btn btn-outline-primary" id="btn-table" onclick="showView('table')">Table View</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="container-fluid">
+                <!-- Tree View -->
+                <div id="tree-view">
+                    <div class="row" id="tree-container"></div>
+                </div>
+                <!-- Table View -->
+                <div id="table-view" class="d-none">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table id="referrals-table" class="table table-striped table-bordered">
+                                    <thead><tr><th>Artist</th><th>Level</th><th>Referrer</th><th>Commission %</th><th>Total Earned</th></tr></thead>
+                                    <tbody id="referrals-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <footer class="footer text-center">Deng Parez Monetary System &copy; 2024</footer>
+        </div>
+    </div>
+    <script src="/assets/libs/jquery/dist/jquery.min.js"></script>
+    <script src="/assets/libs/popper.js/dist/umd/popper.min.js"></script>
+    <script src="/assets/libs/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/custom.js"></script>
+    <script src="/js/feather.min.js"></script>
+    <script src="/assets/extra-libs/datatables.net/js/jquery.dataTables.min.js"></script>
+    <script src="/assets/extra-libs/datatables.net-bs4/js/dataTables.responsive.min.js"></script>
+    <script src="/app/common.js"></script>
+    <script>
+    App.init(function() {
+        loadReferrals();
+    });
+
+    function showView(view) {
+        if (view === 'tree') {
+            $('#tree-view').removeClass('d-none'); $('#table-view').addClass('d-none');
+            $('#btn-tree').addClass('active btn-primary').removeClass('btn-outline-primary');
+            $('#btn-table').removeClass('active btn-primary').addClass('btn-outline-primary');
+        } else {
+            $('#table-view').removeClass('d-none'); $('#tree-view').addClass('d-none');
+            $('#btn-table').addClass('active btn-primary').removeClass('btn-outline-primary');
+            $('#btn-tree').removeClass('active btn-primary').addClass('btn-outline-primary');
+        }
+    }
+
+    function loadReferrals() {
+        // Load tree view
+        App.api('GET', '/api/referrals/tree').done(function(tree) {
+            var container = $('#tree-container');
+            container.empty();
+            var hasRefs = false;
+            tree.forEach(function(artist) {
+                if (!artist.referrals || artist.referrals.length === 0) return;
+                hasRefs = true;
+                var refs = artist.referrals.map(function(r) {
+                    return '<div class="tree-ref">' +
+                        '<div class="d-flex align-items-center"><span class="level-badge">L' + r.level + '</span>' +
+                        '<div><strong>' + r.referrer_name + '</strong><br><small class="text-muted">' + r.commission_pct + '% of company share</small></div></div>' +
+                        '<span class="badge badge-warning">' + r.commission_pct + '%</span></div>';
+                }).join('');
+                container.append(
+                    '<div class="col-lg-4 col-md-6">' +
+                    '<div class="card"><div class="card-body">' +
+                    '<div class="tree-node">' +
+                    '<div class="tree-artist mb-2"><i data-feather="user" class="feather-icon mr-1" style="width:16px;height:16px;"></i>' +
+                    '<a href="/artists/' + artist.id + '">' + artist.name + '</a>' +
+                    (artist.nickname ? ' <small class="text-muted">(' + artist.nickname + ')</small>' : '') +
+                    '</div>' + refs + '</div></div></div></div>'
+                );
+            });
+            if (!hasRefs) {
+                container.html('<div class="col-12"><div class="card"><div class="card-body text-center py-5"><i data-feather="git-branch" class="feather-icon mb-3" style="width:48px;height:48px;color:#ccc;"></i><p class="text-muted">No referral chains configured yet. Add referrals when creating or editing artists.</p><a href="/artists" class="btn btn-primary mt-2">Go to Artists</a></div></div></div>');
+            }
+            feather.replace();
+        });
+
+        // Load table view
+        App.api('GET', '/api/referrals').done(function(referrals) {
+            var tbody = $('#referrals-body');
+            tbody.empty();
+            referrals.forEach(function(r) {
+                tbody.append(
+                    '<tr><td><a href="/artists/' + r.artist_id + '">' + r.artist_name + '</a></td>' +
+                    '<td><span class="badge badge-primary">Level ' + r.level + '</span></td>' +
+                    '<td>' + r.referrer_name + '</td>' +
+                    '<td>' + r.commission_pct + '%</td>' +
+                    '<td class="text-warning font-weight-medium">' + App.formatCurrency(r.total_earned) + '</td></tr>'
+                );
+            });
+            if ($.fn.DataTable.isDataTable('#referrals-table')) $('#referrals-table').DataTable().destroy();
+            $('#referrals-table').DataTable({ responsive: true, order: [[0, 'asc'], [1, 'asc']] });
+        });
+    }
+    </script>
+</body>
+</html>

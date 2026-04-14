@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/images/favicon.png">
+    <title>New Revenue Entry - Deng Parez</title>
+    <link href="/css/style.min.css" rel="stylesheet">
+    <link href="/assets/libs/bootstrap-datepicker/dist/css/bootstrap-datepicker.min.css" rel="stylesheet">
+    <style>
+        .calc-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+        .calc-row:last-child { border-bottom: none; }
+        .calc-label { color: #6c757d; }
+        .calc-value { font-weight: 500; }
+        .calc-total { font-size: 1.1em; font-weight: 700; }
+        .referral-item { background: #f8f9fa; padding: 8px 12px; border-radius: 4px; margin-bottom: 4px; }
+    </style>
+</head>
+<body>
+    <div class="preloader"><div class="lds-ripple"><div class="lds-pos"></div><div class="lds-pos"></div></div></div>
+    <div id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full" data-sidebar-position="absolute" data-header-position="relative" data-boxed-layout="full">
+        <header class="topbar">
+            <nav class="navbar top-navbar navbar-expand-md navbar-dark">
+                <div class="navbar-header">
+                    <a class="nav-toggler waves-effect waves-light d-block d-md-none" href="javascript:void(0)"><i class="ti-menu ti-close"></i></a>
+                    <div class="navbar-brand"><a href="/dashboard" class="logo"><b class="logo-icon"><img src="/assets/images/logo-icon.png" alt="logo" class="dark-logo" /><img src="/assets/images/logo-light-icon.png" alt="logo" class="light-logo" /></b><span class="logo-text"><img src="/assets/images/logo-text.png" alt="logo" class="dark-logo" /><img src="/assets/images/logo-light-text.png" class="light-logo" alt="logo" /></span></a><a class="sidebartoggler d-none d-md-block" href="javascript:void(0)" data-sidebartype="mini-sidebar"><i class="mdi mdi-toggle-switch mdi-toggle-switch-off font-20"></i></a></div>
+                    <a class="topbartoggler d-block d-md-none waves-effect waves-light" href="javascript:void(0)" data-toggle="collapse" data-target="#navbarSupportedContent"><i class="ti-more"></i></a>
+                </div>
+                <div class="navbar-collapse collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav float-left mr-auto"></ul>
+                    <ul class="navbar-nav float-right">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle waves-effect waves-dark pro-pic" href="#" data-toggle="dropdown"><img src="/assets/images/users/1.jpg" alt="user" class="rounded-circle" width="40"><span class="m-l-5 font-medium d-none d-sm-inline-block" id="user-name">User</span></a>
+                            <div class="dropdown-menu dropdown-menu-right user-dd animated flipInY">
+                                <a class="dropdown-item" href="/settings"><i class="ti-settings m-r-5 m-l-5"></i> Settings</a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="#" id="logout-btn"><i class="fa fa-power-off m-r-5 m-l-5"></i> Logout</a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </header>
+        <aside class="left-sidebar">
+            <div class="scroll-sidebar">
+                <nav class="sidebar-nav">
+                    <ul id="sidebarnav">
+                        <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/dashboard"><i data-feather="home" class="feather-icon"></i><span class="hide-menu">Dashboard</span></a></li>
+                        <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/artists"><i data-feather="users" class="feather-icon"></i><span class="hide-menu">Artists</span></a></li>
+                        <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/referrals"><i data-feather="git-branch" class="feather-icon"></i><span class="hide-menu">Referrals</span></a></li>
+                        <li class="sidebar-item selected"><a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)"><i data-feather="dollar-sign" class="feather-icon"></i><span class="hide-menu">Revenue</span></a>
+                            <ul class="collapse first-level in">
+                                <li class="sidebar-item active"><a href="/revenue/new" class="sidebar-link"><span class="hide-menu">New Entry</span></a></li>
+                                <li class="sidebar-item"><a href="/revenue" class="sidebar-link"><span class="hide-menu">History</span></a></li>
+                            </ul>
+                        </li>
+                        <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/expenses"><i data-feather="trending-down" class="feather-icon"></i><span class="hide-menu">Expenses</span></a></li>
+                        <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/additional-income"><i data-feather="plus-circle" class="feather-icon"></i><span class="hide-menu">Additional Income</span></a></li>
+                        <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/reports"><i data-feather="bar-chart-2" class="feather-icon"></i><span class="hide-menu">Reports</span></a></li>
+                        <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/user-breakdown"><i data-feather="pie-chart" class="feather-icon"></i><span class="hide-menu">User Breakdown</span></a></li>
+                        <li class="sidebar-item admin-only"><a class="sidebar-link waves-effect waves-dark" href="/settings"><i data-feather="settings" class="feather-icon"></i><span class="hide-menu">Settings</span></a></li>
+                    </ul>
+                </nav>
+            </div>
+        </aside>
+        <div class="page-wrapper">
+            <div class="page-breadcrumb">
+                <div class="row">
+                    <div class="col-12 align-self-center">
+                        <h3 class="page-title text-truncate text-dark font-weight-medium mb-1">New Revenue Entry</h3>
+                        <nav aria-label="breadcrumb"><ol class="breadcrumb m-0 p-0"><li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li><li class="breadcrumb-item"><a href="/revenue">Revenue</a></li><li class="breadcrumb-item active">New Entry</li></ol></nav>
+                    </div>
+                </div>
+            </div>
+            <div class="container-fluid">
+                <div class="row">
+                    <!-- Entry Form -->
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title">Revenue Details</h4>
+                                <form id="revenue-form">
+                                    <div class="form-group">
+                                        <label>Artist <span class="text-danger">*</span></label>
+                                        <select class="form-control custom-select" id="rev-artist" required>
+                                            <option value="">Select artist...</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Gross Revenue Amount <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend"><span class="input-group-text">$</span></div>
+                                            <input type="number" class="form-control form-control-lg" id="rev-amount" placeholder="0.00" min="0" step="0.01" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Revenue Source</label>
+                                        <select class="form-control custom-select" id="rev-source">
+                                            <option value="both">Both</option>
+                                            <option value="youtube">YouTube</option>
+                                            <option value="platform">Platform</option>
+                                        </select>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Period Start</label>
+                                                <input type="date" class="form-control" id="rev-start">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Period End</label>
+                                                <input type="date" class="form-control" id="rev-end">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Notes</label>
+                                        <textarea class="form-control" id="rev-notes" rows="2"></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-lg btn-block" id="save-btn">
+                                        <i data-feather="save" class="feather-icon mr-1"></i> Save Revenue Entry
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Live Preview -->
+                    <div class="col-lg-6">
+                        <div class="card border-primary">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0"><i data-feather="eye" class="feather-icon mr-2"></i>Live Calculation Preview</h5>
+                            </div>
+                            <div class="card-body" id="preview-body">
+                                <div class="text-center text-muted py-5" id="preview-empty">
+                                    <i data-feather="calculator" class="feather-icon" style="width:48px;height:48px;"></i>
+                                    <p class="mt-3">Select an artist and enter an amount to see the breakdown</p>
+                                </div>
+                                <div id="preview-content" class="d-none">
+                                    <div class="calc-row">
+                                        <span class="calc-label">Gross Revenue</span>
+                                        <span class="calc-value" id="calc-gross">$0.00</span>
+                                    </div>
+                                    <div class="calc-row">
+                                        <span class="calc-label">Bank Fee (<span id="calc-fee-pct">0</span>%)</span>
+                                        <span class="calc-value text-danger" id="calc-fee">-$0.00</span>
+                                    </div>
+                                    <div class="calc-row calc-total" style="border-top:2px solid #333;padding-top:10px;">
+                                        <span>Net Revenue</span>
+                                        <span id="calc-net">$0.00</span>
+                                    </div>
+                                    <hr>
+                                    <div class="calc-row">
+                                        <span class="calc-label">Artist Share (<span id="calc-artist-pct">0</span>%)</span>
+                                        <span class="calc-value text-info" id="calc-artist">$0.00</span>
+                                    </div>
+                                    <div class="calc-row">
+                                        <span class="calc-label">Company Gross (<span id="calc-company-pct">0</span>%)</span>
+                                        <span class="calc-value" id="calc-company-gross">$0.00</span>
+                                    </div>
+                                    <hr>
+                                    <h6 class="text-muted">Referral Commissions (from company share)</h6>
+                                    <div id="calc-referrals"></div>
+                                    <hr>
+                                    <div class="calc-row calc-total" style="border-top:2px solid #5cd050;padding-top:10px;">
+                                        <span class="text-success">Final Company Profit</span>
+                                        <span class="text-success" id="calc-company-net">$0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Artist Info Card -->
+                        <div class="card d-none" id="artist-info-card">
+                            <div class="card-body">
+                                <h5 class="card-title">Artist Configuration</h5>
+                                <div id="artist-info-content"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <footer class="footer text-center">Deng Parez Monetary System &copy; 2024</footer>
+        </div>
+    </div>
+    <script src="/assets/libs/jquery/dist/jquery.min.js"></script>
+    <script src="/assets/libs/popper.js/dist/umd/popper.min.js"></script>
+    <script src="/assets/libs/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/custom.js"></script>
+    <script src="/js/feather.min.js"></script>
+    <script src="/app/common.js"></script>
+    <script src="/app/revenue.js"></script>
+</body>
+</html>

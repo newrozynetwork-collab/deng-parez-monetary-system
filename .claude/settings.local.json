@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(cp -r \"UI/mendy-admin/package/dist/css/\"* public/css/)",
+      "Bash(cp -r \"UI/mendy-admin/package/dist/js/\"* public/js/)",
+      "Bash(cp -r \"UI/mendy-admin/package/assets/\"* public/assets/)",
+      "Bash(node server.js)",
+      "Bash(curl -s -c cookies.txt -X POST http://localhost:3000/api/auth/login -H \"Content-Type: application/json\" -d '{\"username\":\"admin\",\"password\":\"admin123\"}')",
+      "Bash(curl -s -b cookies.txt http://localhost:3000/api/auth/me)",
+      "Bash(curl -s -b cookies.txt -X POST http://localhost:3000/api/artists -H 'Content-Type: application/json' -d '{:*)",
+      "Bash(python -m json.tool)",
+      "Bash(curl -s -b cookies.txt -X POST http://localhost:3000/api/revenue -H 'Content-Type: application/json' -d '{\"artist_id\":1,\"amount\":100,\"source\":\"both\",\"period_start\":\"2026-04-01\",\"period_end\":\"2026-04-14\"}')",
+      "Bash(curl -s -b cookies.txt -X POST http://localhost:3000/api/expenses -H 'Content-Type: application/json' -d '{\"category\":\"Operations\",\"description\":\"Server hosting\",\"amount\":25,\"date\":\"2026-04-10\"}')",
+      "Bash(curl -s -b cookies.txt -X POST http://localhost:3000/api/income -H 'Content-Type: application/json' -d '{\"source\":\"Consulting\",\"description\":\"Advisory fee\",\"amount\":50,\"date\":\"2026-04-12\"}')",
+      "Bash(curl -s -b cookies.txt http://localhost:3000/api/reports/financial-summary)",
+      "Bash(curl -s -b cookies.txt -o /tmp/test-export.xlsx http://localhost:3000/api/reports/export)",
+      "Read(//tmp/**)",
+      "Bash(pkill -f \"node server.js\")",
+      "Bash(gh auth:*)",
+      "Bash(railway version:*)"
+    ]
+  }
+}

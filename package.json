@@ -1,0 +1,29 @@
+{
+  "name": "deng-parez-monetary-system",
+  "version": "1.0.0",
+  "description": "Content monetization management platform with multi-level referrals and revenue sharing",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "migrate": "npx knex migrate:latest",
+    "seed": "npx knex seed:run",
+    "setup": "npx knex migrate:latest && npx knex seed:run"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "knex": "^3.1.0",
+    "pg": "^8.11.3",
+    "sqlite3": "^5.1.7",
+    "express-session": "^1.17.3",
+    "connect-session-knex": "^4.0.0",
+    "bcryptjs": "^2.4.3",
+    "exceljs": "^4.4.0",
+    "multer": "^1.4.5-lts.1",
+    "csv-parse": "^5.5.3",
+    "dotenv": "^16.3.1"
+  }
+}

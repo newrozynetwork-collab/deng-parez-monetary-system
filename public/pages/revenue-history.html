@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/images/favicon.png">
+    <title>Revenue History - Deng Parez</title>
+    <link href="/css/style.min.css" rel="stylesheet">
+    <link href="/assets/extra-libs/datatables.net-bs4/css/dataTables.bootstrap4.css" rel="stylesheet">
+    <link href="/assets/libs/daterangepicker/daterangepicker.css" rel="stylesheet">
+</head>
+<body>
+    <div class="preloader"><div class="lds-ripple"><div class="lds-pos"></div><div class="lds-pos"></div></div></div>
+    <div id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full" data-sidebar-position="absolute" data-header-position="relative" data-boxed-layout="full">
+        <header class="topbar">
+            <nav class="navbar top-navbar navbar-expand-md navbar-dark">
+                <div class="navbar-header">
+                    <a class="nav-toggler waves-effect waves-light d-block d-md-none" href="javascript:void(0)"><i class="ti-menu ti-close"></i></a>
+                    <div class="navbar-brand"><a href="/dashboard" class="logo"><b class="logo-icon"><img src="/assets/images/logo-icon.png" alt="logo" class="dark-logo" /><img src="/assets/images/logo-light-icon.png" alt="logo" class="light-logo" /></b><span class="logo-text"><img src="/assets/images/logo-text.png" alt="logo" class="dark-logo" /><img src="/assets/images/logo-light-text.png" class="light-logo" alt="logo" /></span></a><a class="sidebartoggler d-none d-md-block" href="javascript:void(0)" data-sidebartype="mini-sidebar"><i class="mdi mdi-toggle-switch mdi-toggle-switch-off font-20"></i></a></div>
+                    <a class="topbartoggler d-block d-md-none waves-effect waves-light" href="javascript:void(0)" data-toggle="collapse" data-target="#navbarSupportedContent"><i class="ti-more"></i></a>
+                </div>
+                <div class="navbar-collapse collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav float-left mr-auto"></ul>
+                    <ul class="navbar-nav float-right"><li class="nav-item dropdown"><a class="nav-link dropdown-toggle waves-effect waves-dark pro-pic" href="#" data-toggle="dropdown"><img src="/assets/images/users/1.jpg" alt="user" class="rounded-circle" width="40"><span class="m-l-5 font-medium d-none d-sm-inline-block" id="user-name">User</span></a><div class="dropdown-menu dropdown-menu-right user-dd animated flipInY"><a class="dropdown-item" href="/settings"><i class="ti-settings m-r-5 m-l-5"></i> Settings</a><div class="dropdown-divider"></div><a class="dropdown-item" href="#" id="logout-btn"><i class="fa fa-power-off m-r-5 m-l-5"></i> Logout</a></div></li></ul>
+                </div>
+            </nav>
+        </header>
+        <aside class="left-sidebar">
+            <div class="scroll-sidebar"><nav class="sidebar-nav"><ul id="sidebarnav">
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/dashboard"><i data-feather="home" class="feather-icon"></i><span class="hide-menu">Dashboard</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/artists"><i data-feather="users" class="feather-icon"></i><span class="hide-menu">Artists</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/referrals"><i data-feather="git-branch" class="feather-icon"></i><span class="hide-menu">Referrals</span></a></li>
+                <li class="sidebar-item selected"><a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)"><i data-feather="dollar-sign" class="feather-icon"></i><span class="hide-menu">Revenue</span></a>
+                    <ul class="collapse first-level in"><li class="sidebar-item"><a href="/revenue/new" class="sidebar-link"><span class="hide-menu">New Entry</span></a></li><li class="sidebar-item active"><a href="/revenue" class="sidebar-link"><span class="hide-menu">History</span></a></li></ul>
+                </li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/expenses"><i data-feather="trending-down" class="feather-icon"></i><span class="hide-menu">Expenses</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/additional-income"><i data-feather="plus-circle" class="feather-icon"></i><span class="hide-menu">Additional Income</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/reports"><i data-feather="bar-chart-2" class="feather-icon"></i><span class="hide-menu">Reports</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/user-breakdown"><i data-feather="pie-chart" class="feather-icon"></i><span class="hide-menu">User Breakdown</span></a></li>
+                <li class="sidebar-item admin-only"><a class="sidebar-link waves-effect waves-dark" href="/settings"><i data-feather="settings" class="feather-icon"></i><span class="hide-menu">Settings</span></a></li>
+            </ul></nav></div>
+        </aside>
+        <div class="page-wrapper">
+            <div class="page-breadcrumb">
+                <div class="row">
+                    <div class="col-md-6 align-self-center">
+                        <h3 class="page-title text-truncate text-dark font-weight-medium mb-1">Revenue History</h3>
+                        <nav aria-label="breadcrumb"><ol class="breadcrumb m-0 p-0"><li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li><li class="breadcrumb-item active">Revenue</li></ol></nav>
+                    </div>
+                    <div class="col-md-6 align-self-center">
+                        <div class="d-flex justify-content-end flex-wrap">
+                            <input type="text" class="form-control mr-2 mb-1" id="date-range" style="max-width:220px;" placeholder="Filter by date">
+                            <a href="/revenue/new" class="btn btn-primary mb-1 mr-1 admin-only"><i data-feather="plus" class="feather-icon mr-1"></i> New Entry</a>
+                            <button class="btn btn-outline-success mb-1" onclick="exportRevenue()"><i data-feather="download" class="feather-icon mr-1"></i> Export</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="container-fluid">
+                <!-- Summary Cards -->
+                <div class="row" id="summary-row">
+                    <div class="col-lg-3 col-md-6"><div class="card"><div class="card-body"><h6 class="text-muted">Total Gross</h6><h4 class="text-dark" id="sum-gross">$0.00</h4></div></div></div>
+                    <div class="col-lg-3 col-md-6"><div class="card"><div class="card-body"><h6 class="text-muted">Artist Payouts</h6><h4 class="text-info" id="sum-artist">$0.00</h4></div></div></div>
+                    <div class="col-lg-3 col-md-6"><div class="card"><div class="card-body"><h6 class="text-muted">Referral Payouts</h6><h4 class="text-warning" id="sum-referral">$0.00</h4></div></div></div>
+                    <div class="col-lg-3 col-md-6"><div class="card"><div class="card-body"><h6 class="text-muted">Company Net</h6><h4 class="text-success" id="sum-company">$0.00</h4></div></div></div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table id="revenue-table" class="table table-striped table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th></th>
+                                                <th>Date</th>
+                                                <th>Artist</th>
+                                                <th>Source</th>
+                                                <th>Gross</th>
+                                                <th>Artist Share</th>
+                                                <th>Referrals</th>
+                                                <th>Company Net</th>
+                                                <th class="admin-only">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="revenue-body"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <footer class="footer text-center">Deng Parez Monetary System &copy; 2024</footer>
+        </div>
+    </div>
+    <script src="/assets/libs/jquery/dist/jquery.min.js"></script>
+    <script src="/assets/libs/popper.js/dist/umd/popper.min.js"></script>
+    <script src="/assets/libs/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/custom.js"></script>
+    <script src="/js/feather.min.js"></script>
+    <script src="/assets/libs/moment/moment.js"></script>
+    <script src="/assets/libs/daterangepicker/daterangepicker.js"></script>
+    <script src="/assets/extra-libs/datatables.net/js/jquery.dataTables.min.js"></script>
+    <script src="/assets/extra-libs/datatables.net-bs4/js/dataTables.responsive.min.js"></script>
+    <script src="/app/common.js"></script>
+    <script>
+    var currentStart, currentEnd;
+
+    App.init(function() {
+        initDateRange();
+        loadRevenue();
+    });
+
+    function initDateRange() {
+        $('#date-range').daterangepicker({
+            autoUpdateInput: false,
+            locale: { cancelLabel: 'Clear', format: 'YYYY-MM-DD' },
+            ranges: {
+                'Today': [moment(), moment()],
+                'This Week': [moment().startOf('week'), moment().endOf('week')],
+                'This Month': [moment().startOf('month'), moment().endOf('month')],
+                'Last Month': [moment().subtract(1,'month').startOf('month'), moment().subtract(1,'month').endOf('month')],
+                'This Year': [moment().startOf('year'), moment().endOf('year')],
+                'All Time': [moment('2020-01-01'), moment()]
+            }
+        });
+        $('#date-range').on('apply.daterangepicker', function(ev, picker) {
+            currentStart = picker.startDate.format('YYYY-MM-DD');
+            currentEnd = picker.endDate.format('YYYY-MM-DD');
+            $(this).val(currentStart + ' - ' + currentEnd);
+            loadRevenue();
+        });
+        $('#date-range').on('cancel.daterangepicker', function() {
+            $(this).val(''); currentStart = null; currentEnd = null;
+            loadRevenue();
+        });
+    }
+
+    function loadRevenue() {
+        var params = {};
+        if (currentStart) params.start = currentStart;
+        if (currentEnd) params.end = currentEnd;
+
+        App.api('GET', '/api/revenue', params).done(function(entries) {
+            var tbody = $('#revenue-body');
+            tbody.empty();
+            var totalGross = 0, totalArtist = 0, totalRef = 0, totalCompany = 0;
+
+            entries.forEach(function(e) {
+                totalGross += parseFloat(e.amount);
+                totalArtist += e.artist_share;
+                totalRef += e.total_referrals;
+                totalCompany += e.company_net;
+
+                // Build expandable referral detail
+                var refDetail = '';
+                var refDists = (e.distributions || []).filter(function(d){ return d.recipient_type === 'referral'; });
+                if (refDists.length > 0) {
+                    refDetail = '<table class="table table-sm mb-0 mt-2"><thead><tr><th>Recipient</th><th>Type</th><th>Amount</th></tr></thead><tbody>';
+                    (e.distributions || []).forEach(function(d) {
+                        if (d.recipient_type === 'bank_fee') return;
+                        refDetail += '<tr><td>' + d.recipient_name + '</td><td><span class="badge badge-' +
+                            (d.recipient_type === 'artist' ? 'info' : d.recipient_type === 'referral' ? 'warning' : 'success') + '">' +
+                            d.recipient_type + '</span></td><td>' + App.formatCurrency(d.amount) + '</td></tr>';
+                    });
+                    refDetail += '</tbody></table>';
+                }
+
+                tbody.append(
+                    '<tr data-detail="' + encodeURIComponent(refDetail) + '">' +
+                    '<td class="text-center" style="cursor:pointer;width:30px;"><i class="ti-angle-down"></i></td>' +
+                    '<td>' + App.formatDate(e.period_start) + '</td>' +
+                    '<td><a href="/artists/' + e.artist_id + '">' + e.artist_name + '</a></td>' +
+                    '<td>' + App.sourceBadge(e.source) + '</td>' +
+                    '<td>' + App.formatCurrency(e.amount) + '</td>' +
+                    '<td class="text-info">' + App.formatCurrency(e.artist_share) + '</td>' +
+                    '<td class="text-warning">' + App.formatCurrency(e.total_referrals) + '</td>' +
+                    '<td class="text-success font-weight-medium">' + App.formatCurrency(e.company_net) + '</td>' +
+                    '<td class="admin-only"><button class="btn btn-sm btn-danger" onclick="deleteEntry(' + e.id + ')"><i class="ti-trash"></i></button></td>' +
+                    '</tr>'
+                );
+            });
+
+            $('#sum-gross').text(App.formatCurrency(totalGross));
+            $('#sum-artist').text(App.formatCurrency(totalArtist));
+            $('#sum-referral').text(App.formatCurrency(totalRef));
+            $('#sum-company').text(App.formatCurrency(totalCompany));
+
+            if ($.fn.DataTable.isDataTable('#revenue-table')) $('#revenue-table').DataTable().destroy();
+            $('#revenue-table').DataTable({ responsive: true, order: [[1, 'desc']] });
+            feather.replace();
+        });
+    }
+
+    // Expandable rows
+    $(document).on('click', '#revenue-body tr td:first-child', function() {
+        var tr = $(this).closest('tr');
+        var nextRow = tr.next('.detail-row');
+        if (nextRow.length) {
+            nextRow.remove();
+            $(this).find('i').removeClass('ti-angle-up').addClass('ti-angle-down');
+        } else {
+            var detail = decodeURIComponent(tr.data('detail'));
+            if (detail) {
+                tr.after('<tr class="detail-row"><td colspan="9" class="bg-light">' + detail + '</td></tr>');
+                $(this).find('i').removeClass('ti-angle-down').addClass('ti-angle-up');
+            }
+        }
+    });
+
+    function deleteEntry(id) {
+        if (!confirm('Delete this revenue entry?')) return;
+        App.api('DELETE', '/api/revenue/' + id).done(function() {
+            App.showSuccess('Entry deleted');
+            loadRevenue();
+        });
+    }
+
+    function exportRevenue() {
+        var url = '/api/reports/export';
+        var params = [];
+        if (currentStart) params.push('start=' + currentStart);
+        if (currentEnd) params.push('end=' + currentEnd);
+        if (params.length) url += '?' + params.join('&');
+        window.location.href = url;
+    }
+    </script>
+</body>
+</html>

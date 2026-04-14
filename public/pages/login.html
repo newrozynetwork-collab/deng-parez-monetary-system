@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html dir="ltr">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/images/favicon.png">
+    <title>Deng Parez - Login</title>
+    <link href="/css/style.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="main-wrapper">
+        <div class="preloader">
+            <div class="lds-ripple"><div class="lds-pos"></div><div class="lds-pos"></div></div>
+        </div>
+        <div class="auth-wrapper d-flex no-block justify-content-center align-items-center" style="background:url(/assets/images/big/auth-bg.jpg) no-repeat center center; background-size: cover;">
+            <div class="auth-box">
+                <div id="loginform">
+                    <div class="logo">
+                        <span class="db"><img src="/assets/images/logo-icon.png" alt="logo" /></span>
+                        <h5 class="font-medium m-b-20">Deng Parez Monetary System</h5>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <form class="form-horizontal mt-3" id="login-form">
+                                <div id="login-error" class="alert alert-danger d-none"></div>
+                                <div class="input-group mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="ti-user"></i></span>
+                                    </div>
+                                    <input type="text" class="form-control form-control-lg" placeholder="Username" id="username" required>
+                                </div>
+                                <div class="input-group mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="ti-lock"></i></span>
+                                    </div>
+                                    <input type="password" class="form-control form-control-lg" placeholder="Password" id="password" required>
+                                </div>
+                                <div class="form-group text-center">
+                                    <div class="col-xs-12 p-b-20">
+                                        <button class="btn btn-block btn-lg bg-gradient-primary text-white" type="submit" id="login-btn">
+                                            Log In
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/assets/libs/jquery/dist/jquery.min.js"></script>
+    <script src="/assets/libs/popper.js/dist/umd/popper.min.js"></script>
+    <script src="/assets/libs/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script>
+        $(".preloader").fadeOut();
+        $('#login-form').on('submit', function(e) {
+            e.preventDefault();
+            var btn = $('#login-btn');
+            btn.prop('disabled', true).text('Logging in...');
+            $.ajax({
+                url: '/api/auth/login',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    username: $('#username').val(),
+                    password: $('#password').val()
+                }),
+                success: function() {
+                    window.location.href = '/dashboard';
+                },
+                error: function(xhr) {
+                    var msg = xhr.responseJSON ? xhr.responseJSON.error : 'Login failed';
+                    $('#login-error').text(msg).removeClass('d-none');
+                    btn.prop('disabled', false).text('Log In');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

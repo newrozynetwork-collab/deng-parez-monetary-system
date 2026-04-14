@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/images/favicon.png">
+    <title>Reports - Deng Parez</title>
+    <link href="/css/style.min.css" rel="stylesheet">
+    <link href="/assets/libs/daterangepicker/daterangepicker.css" rel="stylesheet">
+    <style>.chart-container { position: relative; height: 300px; }</style>
+</head>
+<body>
+    <div class="preloader"><div class="lds-ripple"><div class="lds-pos"></div><div class="lds-pos"></div></div></div>
+    <div id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full" data-sidebar-position="absolute" data-header-position="relative" data-boxed-layout="full">
+        <header class="topbar">
+            <nav class="navbar top-navbar navbar-expand-md navbar-dark">
+                <div class="navbar-header">
+                    <a class="nav-toggler waves-effect waves-light d-block d-md-none" href="javascript:void(0)"><i class="ti-menu ti-close"></i></a>
+                    <div class="navbar-brand"><a href="/dashboard" class="logo"><b class="logo-icon"><img src="/assets/images/logo-icon.png" alt="logo" class="dark-logo" /><img src="/assets/images/logo-light-icon.png" alt="logo" class="light-logo" /></b><span class="logo-text"><img src="/assets/images/logo-text.png" alt="logo" class="dark-logo" /><img src="/assets/images/logo-light-text.png" class="light-logo" alt="logo" /></span></a><a class="sidebartoggler d-none d-md-block" href="javascript:void(0)" data-sidebartype="mini-sidebar"><i class="mdi mdi-toggle-switch mdi-toggle-switch-off font-20"></i></a></div>
+                    <a class="topbartoggler d-block d-md-none waves-effect waves-light" href="javascript:void(0)" data-toggle="collapse" data-target="#navbarSupportedContent"><i class="ti-more"></i></a>
+                </div>
+                <div class="navbar-collapse collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav float-left mr-auto"></ul>
+                    <ul class="navbar-nav float-right"><li class="nav-item dropdown"><a class="nav-link dropdown-toggle waves-effect waves-dark pro-pic" href="#" data-toggle="dropdown"><img src="/assets/images/users/1.jpg" alt="user" class="rounded-circle" width="40"><span class="m-l-5 font-medium d-none d-sm-inline-block" id="user-name">User</span></a><div class="dropdown-menu dropdown-menu-right user-dd animated flipInY"><a class="dropdown-item" href="/settings"><i class="ti-settings m-r-5 m-l-5"></i> Settings</a><div class="dropdown-divider"></div><a class="dropdown-item" href="#" id="logout-btn"><i class="fa fa-power-off m-r-5 m-l-5"></i> Logout</a></div></li></ul>
+                </div>
+            </nav>
+        </header>
+        <aside class="left-sidebar">
+            <div class="scroll-sidebar"><nav class="sidebar-nav"><ul id="sidebarnav">
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/dashboard"><i data-feather="home" class="feather-icon"></i><span class="hide-menu">Dashboard</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/artists"><i data-feather="users" class="feather-icon"></i><span class="hide-menu">Artists</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/referrals"><i data-feather="git-branch" class="feather-icon"></i><span class="hide-menu">Referrals</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)"><i data-feather="dollar-sign" class="feather-icon"></i><span class="hide-menu">Revenue</span></a><ul class="collapse first-level"><li class="sidebar-item"><a href="/revenue/new" class="sidebar-link"><span class="hide-menu">New Entry</span></a></li><li class="sidebar-item"><a href="/revenue" class="sidebar-link"><span class="hide-menu">History</span></a></li></ul></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/expenses"><i data-feather="trending-down" class="feather-icon"></i><span class="hide-menu">Expenses</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/additional-income"><i data-feather="plus-circle" class="feather-icon"></i><span class="hide-menu">Additional Income</span></a></li>
+                <li class="sidebar-item selected"><a class="sidebar-link waves-effect waves-dark" href="/reports"><i data-feather="bar-chart-2" class="feather-icon"></i><span class="hide-menu">Reports</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/user-breakdown"><i data-feather="pie-chart" class="feather-icon"></i><span class="hide-menu">User Breakdown</span></a></li>
+                <li class="sidebar-item admin-only"><a class="sidebar-link waves-effect waves-dark" href="/settings"><i data-feather="settings" class="feather-icon"></i><span class="hide-menu">Settings</span></a></li>
+            </ul></nav></div>
+        </aside>
+        <div class="page-wrapper">
+            <div class="page-breadcrumb">
+                <div class="row">
+                    <div class="col-md-6 align-self-center">
+                        <h3 class="page-title text-truncate text-dark font-weight-medium mb-1">Financial Reports</h3>
+                        <nav aria-label="breadcrumb"><ol class="breadcrumb m-0 p-0"><li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li><li class="breadcrumb-item active">Reports</li></ol></nav>
+                    </div>
+                    <div class="col-md-6 align-self-center">
+                        <div class="d-flex justify-content-end flex-wrap">
+                            <input type="text" class="form-control mr-2 mb-1" id="date-range" style="max-width:220px;" placeholder="Filter by date">
+                            <button class="btn btn-success mb-1" onclick="exportReport()"><i data-feather="download" class="feather-icon mr-1"></i> Export Excel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="container-fluid">
+                <!-- Financial Summary Cards -->
+                <div class="row">
+                    <div class="col-lg-3 col-md-6"><div class="card border-left border-primary" style="border-left-width:4px !important;"><div class="card-body"><h6 class="text-muted font-weight-normal">Total Revenue</h6><h3 id="rpt-revenue">$0.00</h3></div></div></div>
+                    <div class="col-lg-3 col-md-6"><div class="card border-left border-danger" style="border-left-width:4px !important;"><div class="card-body"><h6 class="text-muted font-weight-normal">Bank Fees</h6><h3 class="text-danger" id="rpt-fees">$0.00</h3></div></div></div>
+                    <div class="col-lg-3 col-md-6"><div class="card border-left border-info" style="border-left-width:4px !important;"><div class="card-body"><h6 class="text-muted font-weight-normal">Artist Payouts</h6><h3 class="text-info" id="rpt-artists">$0.00</h3></div></div></div>
+                    <div class="col-lg-3 col-md-6"><div class="card border-left border-warning" style="border-left-width:4px !important;"><div class="card-body"><h6 class="text-muted font-weight-normal">Referral Payouts</h6><h3 class="text-warning" id="rpt-referrals">$0.00</h3></div></div></div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-4 col-md-6"><div class="card"><div class="card-body"><h6 class="text-muted">Company Revenue (from splits)</h6><h3 id="rpt-company">$0.00</h3></div></div></div>
+                    <div class="col-lg-4 col-md-6"><div class="card"><div class="card-body"><h6 class="text-muted">Additional Income</h6><h3 class="text-success" id="rpt-additional">$0.00</h3></div></div></div>
+                    <div class="col-lg-4 col-md-6"><div class="card"><div class="card-body"><h6 class="text-muted">Total Expenses</h6><h3 class="text-danger" id="rpt-expenses">$0.00</h3></div></div></div>
+                </div>
+                <!-- Net Profit -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card" style="background: linear-gradient(135deg, #5cd050, #7ee674);">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center text-white">
+                                    <div>
+                                        <h5 class="text-white mb-1">Net Company Profit</h5>
+                                        <p class="text-white op-7 mb-0">Company revenue + Additional income - Expenses</p>
+                                    </div>
+                                    <div class="ml-auto">
+                                        <h2 class="text-white mb-0" id="rpt-profit">$0.00</h2>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Charts -->
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title">Revenue Trend</h4>
+                                <div class="chart-container"><canvas id="trend-chart"></canvas></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title">Distribution Breakdown</h4>
+                                <div class="chart-container"><canvas id="dist-chart"></canvas></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <footer class="footer text-center">Deng Parez Monetary System &copy; 2024</footer>
+        </div>
+    </div>
+    <script src="/assets/libs/jquery/dist/jquery.min.js"></script>
+    <script src="/assets/libs/popper.js/dist/umd/popper.min.js"></script>
+    <script src="/assets/libs/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/custom.js"></script>
+    <script src="/js/feather.min.js"></script>
+    <script src="/assets/libs/moment/moment.js"></script>
+    <script src="/assets/libs/daterangepicker/daterangepicker.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="/app/common.js"></script>
+    <script>
+    var currentStart, currentEnd, trendChart, distChart;
+
+    App.init(function() { initDateRange(); loadReport(); });
+
+    function initDateRange() {
+        $('#date-range').daterangepicker({
+            autoUpdateInput: false, locale: { cancelLabel: 'Clear', format: 'YYYY-MM-DD' },
+            ranges: { 'This Month': [moment().startOf('month'), moment().endOf('month')], 'Last Month': [moment().subtract(1,'month').startOf('month'), moment().subtract(1,'month').endOf('month')], 'This Year': [moment().startOf('year'), moment().endOf('year')], 'All Time': [moment('2020-01-01'), moment()] }
+        });
+        $('#date-range').on('apply.daterangepicker', function(ev, p) { currentStart=p.startDate.format('YYYY-MM-DD'); currentEnd=p.endDate.format('YYYY-MM-DD'); $(this).val(currentStart+' - '+currentEnd); loadReport(); });
+        $('#date-range').on('cancel.daterangepicker', function() { $(this).val(''); currentStart=null; currentEnd=null; loadReport(); });
+    }
+
+    function loadReport() {
+        var params = {};
+        if (currentStart) params.start = currentStart;
+        if (currentEnd) params.end = currentEnd;
+
+        App.api('GET', '/api/reports/financial-summary', params).done(function(d) {
+            $('#rpt-revenue').text(App.formatCurrency(d.totalRevenue));
+            $('#rpt-fees').text(App.formatCurrency(d.totalBankFees));
+            $('#rpt-artists').text(App.formatCurrency(d.totalArtistPayouts));
+            $('#rpt-referrals').text(App.formatCurrency(d.totalReferralPayouts));
+            $('#rpt-company').text(App.formatCurrency(d.companyRevenue));
+            $('#rpt-additional').text(App.formatCurrency(d.totalAdditionalIncome));
+            $('#rpt-expenses').text(App.formatCurrency(d.totalExpenses));
+            $('#rpt-profit').text(App.formatCurrency(d.netCompanyProfit));
+
+            // Distribution chart
+            var ctx2 = document.getElementById('dist-chart').getContext('2d');
+            if (distChart) distChart.destroy();
+            distChart = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Artist Payouts', 'Referral Payouts', 'Bank Fees', 'Company Profit'],
+                    datasets: [{ data: [d.totalArtistPayouts, d.totalReferralPayouts, d.totalBankFees, d.netCompanyProfit > 0 ? d.netCompanyProfit : 0], backgroundColor: ['#30ccff', '#ffaf30', '#ff7430', '#5cd050'] }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+        });
+
+        App.api('GET', '/api/reports/dashboard', params).done(function(d) {
+            var ctx1 = document.getElementById('trend-chart').getContext('2d');
+            if (trendChart) trendChart.destroy();
+            trendChart = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: d.monthlyRevenue.map(function(m) { return m.month; }),
+                    datasets: [{ label: 'Revenue', data: d.monthlyRevenue.map(function(m) { return m.total; }), backgroundColor: 'rgba(241,88,208,0.7)', borderColor: '#f158d0', borderWidth: 1 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: function(v) { return '$'+v; } } } } }
+            });
+        });
+    }
+
+    function exportReport() {
+        var url = '/api/reports/export';
+        var params = [];
+        if (currentStart) params.push('start=' + currentStart);
+        if (currentEnd) params.push('end=' + currentEnd);
+        if (params.length) url += '?' + params.join('&');
+        window.location.href = url;
+    }
+    </script>
+</body>
+</html>

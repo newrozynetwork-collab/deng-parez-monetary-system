@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/images/favicon.png">
+    <title>Additional Income - Deng Parez</title>
+    <link href="/css/style.min.css" rel="stylesheet">
+    <link href="/assets/extra-libs/datatables.net-bs4/css/dataTables.bootstrap4.css" rel="stylesheet">
+    <link href="/assets/libs/daterangepicker/daterangepicker.css" rel="stylesheet">
+</head>
+<body>
+    <div class="preloader"><div class="lds-ripple"><div class="lds-pos"></div><div class="lds-pos"></div></div></div>
+    <div id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full" data-sidebar-position="absolute" data-header-position="relative" data-boxed-layout="full">
+        <header class="topbar">
+            <nav class="navbar top-navbar navbar-expand-md navbar-dark">
+                <div class="navbar-header">
+                    <a class="nav-toggler waves-effect waves-light d-block d-md-none" href="javascript:void(0)"><i class="ti-menu ti-close"></i></a>
+                    <div class="navbar-brand"><a href="/dashboard" class="logo"><b class="logo-icon"><img src="/assets/images/logo-icon.png" alt="logo" class="dark-logo" /><img src="/assets/images/logo-light-icon.png" alt="logo" class="light-logo" /></b><span class="logo-text"><img src="/assets/images/logo-text.png" alt="logo" class="dark-logo" /><img src="/assets/images/logo-light-text.png" class="light-logo" alt="logo" /></span></a><a class="sidebartoggler d-none d-md-block" href="javascript:void(0)" data-sidebartype="mini-sidebar"><i class="mdi mdi-toggle-switch mdi-toggle-switch-off font-20"></i></a></div>
+                    <a class="topbartoggler d-block d-md-none waves-effect waves-light" href="javascript:void(0)" data-toggle="collapse" data-target="#navbarSupportedContent"><i class="ti-more"></i></a>
+                </div>
+                <div class="navbar-collapse collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav float-left mr-auto"></ul>
+                    <ul class="navbar-nav float-right"><li class="nav-item dropdown"><a class="nav-link dropdown-toggle waves-effect waves-dark pro-pic" href="#" data-toggle="dropdown"><img src="/assets/images/users/1.jpg" alt="user" class="rounded-circle" width="40"><span class="m-l-5 font-medium d-none d-sm-inline-block" id="user-name">User</span></a><div class="dropdown-menu dropdown-menu-right user-dd animated flipInY"><a class="dropdown-item" href="/settings"><i class="ti-settings m-r-5 m-l-5"></i> Settings</a><div class="dropdown-divider"></div><a class="dropdown-item" href="#" id="logout-btn"><i class="fa fa-power-off m-r-5 m-l-5"></i> Logout</a></div></li></ul>
+                </div>
+            </nav>
+        </header>
+        <aside class="left-sidebar">
+            <div class="scroll-sidebar"><nav class="sidebar-nav"><ul id="sidebarnav">
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/dashboard"><i data-feather="home" class="feather-icon"></i><span class="hide-menu">Dashboard</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/artists"><i data-feather="users" class="feather-icon"></i><span class="hide-menu">Artists</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/referrals"><i data-feather="git-branch" class="feather-icon"></i><span class="hide-menu">Referrals</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)"><i data-feather="dollar-sign" class="feather-icon"></i><span class="hide-menu">Revenue</span></a><ul class="collapse first-level"><li class="sidebar-item"><a href="/revenue/new" class="sidebar-link"><span class="hide-menu">New Entry</span></a></li><li class="sidebar-item"><a href="/revenue" class="sidebar-link"><span class="hide-menu">History</span></a></li></ul></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/expenses"><i data-feather="trending-down" class="feather-icon"></i><span class="hide-menu">Expenses</span></a></li>
+                <li class="sidebar-item selected"><a class="sidebar-link waves-effect waves-dark" href="/additional-income"><i data-feather="plus-circle" class="feather-icon"></i><span class="hide-menu">Additional Income</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/reports"><i data-feather="bar-chart-2" class="feather-icon"></i><span class="hide-menu">Reports</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/user-breakdown"><i data-feather="pie-chart" class="feather-icon"></i><span class="hide-menu">User Breakdown</span></a></li>
+                <li class="sidebar-item admin-only"><a class="sidebar-link waves-effect waves-dark" href="/settings"><i data-feather="settings" class="feather-icon"></i><span class="hide-menu">Settings</span></a></li>
+            </ul></nav></div>
+        </aside>
+        <div class="page-wrapper">
+            <div class="page-breadcrumb">
+                <div class="row">
+                    <div class="col-md-6 align-self-center">
+                        <h3 class="page-title text-truncate text-dark font-weight-medium mb-1">Additional Income</h3>
+                        <nav aria-label="breadcrumb"><ol class="breadcrumb m-0 p-0"><li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li><li class="breadcrumb-item active">Additional Income</li></ol></nav>
+                    </div>
+                    <div class="col-md-6 align-self-center">
+                        <div class="d-flex justify-content-end flex-wrap">
+                            <input type="text" class="form-control mr-2 mb-1" id="date-range" style="max-width:220px;" placeholder="Filter by date">
+                            <button class="btn btn-primary mb-1 admin-only" data-toggle="modal" data-target="#incomeModal" onclick="resetIncomeForm()"><i data-feather="plus-circle" class="feather-icon mr-1"></i> Add Income</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card" style="background: linear-gradient(135deg, #5cd050, #7ee674);">
+                            <div class="card-body d-flex align-items-center text-white">
+                                <div><h5 class="text-white mb-0">Total Additional Income</h5></div>
+                                <div class="ml-auto"><h3 class="text-white mb-0" id="total-income">$0.00</h3></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table id="income-table" class="table table-striped table-bordered">
+                                        <thead><tr><th>Date</th><th>Source</th><th>Description</th><th>Amount</th><th>Commission</th><th>Commission To</th><th class="admin-only">Actions</th></tr></thead>
+                                        <tbody id="income-body"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <footer class="footer text-center">Deng Parez Monetary System &copy; 2024</footer>
+        </div>
+    </div>
+
+    <!-- Income Modal -->
+    <div class="modal fade" id="incomeModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="income-modal-title">Add Income</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="income-form">
+                        <input type="hidden" id="income-id">
+                        <div class="form-group">
+                            <label>Source <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="income-source" placeholder="e.g., Consulting, Licensing" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <input type="text" class="form-control" id="income-desc">
+                        </div>
+                        <div class="form-group">
+                            <label>Amount <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <div class="input-group-prepend"><span class="input-group-text">$</span></div>
+                                <input type="number" class="form-control" id="income-amount" min="0" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Commission % (optional)</label>
+                                    <input type="number" class="form-control" id="income-commission" min="0" max="100" step="0.01" value="0">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Commission To</label>
+                                    <input type="text" class="form-control" id="income-commission-to" placeholder="Recipient name">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="income-date" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="saveIncome()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/assets/libs/jquery/dist/jquery.min.js"></script>
+    <script src="/assets/libs/popper.js/dist/umd/popper.min.js"></script>
+    <script src="/assets/libs/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/custom.js"></script>
+    <script src="/js/feather.min.js"></script>
+    <script src="/assets/libs/moment/moment.js"></script>
+    <script src="/assets/libs/daterangepicker/daterangepicker.js"></script>
+    <script src="/assets/extra-libs/datatables.net/js/jquery.dataTables.min.js"></script>
+    <script src="/assets/extra-libs/datatables.net-bs4/js/dataTables.responsive.min.js"></script>
+    <script src="/app/common.js"></script>
+    <script>
+    var currentStart, currentEnd, incomeData = [];
+
+    App.init(function() {
+        $('#income-date').val(new Date().toISOString().slice(0,10));
+        initDateRange();
+        loadIncome();
+    });
+
+    function initDateRange() {
+        $('#date-range').daterangepicker({
+            autoUpdateInput: false, locale: { cancelLabel: 'Clear', format: 'YYYY-MM-DD' },
+            ranges: { 'This Month': [moment().startOf('month'), moment().endOf('month')], 'Last Month': [moment().subtract(1,'month').startOf('month'), moment().subtract(1,'month').endOf('month')], 'This Year': [moment().startOf('year'), moment().endOf('year')], 'All Time': [moment('2020-01-01'), moment()] }
+        });
+        $('#date-range').on('apply.daterangepicker', function(ev, p) { currentStart=p.startDate.format('YYYY-MM-DD'); currentEnd=p.endDate.format('YYYY-MM-DD'); $(this).val(currentStart+' - '+currentEnd); loadIncome(); });
+        $('#date-range').on('cancel.daterangepicker', function() { $(this).val(''); currentStart=null; currentEnd=null; loadIncome(); });
+    }
+
+    function loadIncome() {
+        var params = {};
+        if (currentStart) params.start = currentStart;
+        if (currentEnd) params.end = currentEnd;
+        App.api('GET', '/api/income', params).done(function(items) {
+            incomeData = items;
+            var tbody = $('#income-body'); tbody.empty();
+            var total = 0;
+            items.forEach(function(i) {
+                total += parseFloat(i.amount);
+                var commText = i.commission_pct > 0 ? i.commission_pct + '%' : '-';
+                tbody.append('<tr><td>' + App.formatDate(i.date) + '</td><td>' + i.source + '</td><td>' + (i.description||'-') + '</td><td class="text-success font-weight-medium">' + App.formatCurrency(i.amount) + '</td><td>' + commText + '</td><td>' + (i.commission_to||'-') + '</td><td class="admin-only"><button class="btn btn-sm btn-info mr-1" onclick="editIncome(' + i.id + ')"><i class="ti-pencil"></i></button><button class="btn btn-sm btn-danger" onclick="deleteIncome(' + i.id + ')"><i class="ti-trash"></i></button></td></tr>');
+            });
+            $('#total-income').text(App.formatCurrency(total));
+            if ($.fn.DataTable.isDataTable('#income-table')) $('#income-table').DataTable().destroy();
+            $('#income-table').DataTable({ responsive: true, order: [[0, 'desc']] });
+            feather.replace();
+        });
+    }
+
+    function resetIncomeForm() { $('#income-modal-title').text('Add Income'); $('#income-id').val(''); $('#income-form')[0].reset(); $('#income-date').val(new Date().toISOString().slice(0,10)); $('#income-commission').val(0); }
+
+    function editIncome(id) {
+        var i = incomeData.find(function(x){return x.id===id;});
+        if (!i) return;
+        $('#income-modal-title').text('Edit Income');
+        $('#income-id').val(i.id); $('#income-source').val(i.source); $('#income-desc').val(i.description); $('#income-amount').val(i.amount); $('#income-commission').val(i.commission_pct); $('#income-commission-to').val(i.commission_to); $('#income-date').val(i.date ? i.date.toString().slice(0,10) : '');
+        $('#incomeModal').modal('show');
+    }
+
+    function saveIncome() {
+        var id = $('#income-id').val();
+        var data = { source: $('#income-source').val(), description: $('#income-desc').val(), amount: parseFloat($('#income-amount').val()), commission_pct: parseFloat($('#income-commission').val())||0, commission_to: $('#income-commission-to').val()||null, date: $('#income-date').val() };
+        if (!data.source || !data.amount || !data.date) { App.showError('Source, amount, and date are required'); return; }
+        App.api(id ? 'PUT' : 'POST', id ? '/api/income/'+id : '/api/income', data).done(function() {
+            $('#incomeModal').modal('hide'); App.showSuccess('Income ' + (id?'updated':'added')); loadIncome();
+        });
+    }
+
+    function deleteIncome(id) {
+        if (!confirm('Delete this income entry?')) return;
+        App.api('DELETE', '/api/income/' + id).done(function() { App.showSuccess('Income deleted'); loadIncome(); });
+    }
+    </script>
+</body>
+</html>

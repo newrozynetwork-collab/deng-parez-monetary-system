@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/images/favicon.png">
+    <title>Settings - Deng Parez</title>
+    <link href="/css/style.min.css" rel="stylesheet">
+    <link href="/assets/extra-libs/datatables.net-bs4/css/dataTables.bootstrap4.css" rel="stylesheet">
+</head>
+<body>
+    <div class="preloader"><div class="lds-ripple"><div class="lds-pos"></div><div class="lds-pos"></div></div></div>
+    <div id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full" data-sidebar-position="absolute" data-header-position="relative" data-boxed-layout="full">
+        <header class="topbar">
+            <nav class="navbar top-navbar navbar-expand-md navbar-dark">
+                <div class="navbar-header">
+                    <a class="nav-toggler waves-effect waves-light d-block d-md-none" href="javascript:void(0)"><i class="ti-menu ti-close"></i></a>
+                    <div class="navbar-brand"><a href="/dashboard" class="logo"><b class="logo-icon"><img src="/assets/images/logo-icon.png" alt="logo" class="dark-logo" /><img src="/assets/images/logo-light-icon.png" alt="logo" class="light-logo" /></b><span class="logo-text"><img src="/assets/images/logo-text.png" alt="logo" class="dark-logo" /><img src="/assets/images/logo-light-text.png" class="light-logo" alt="logo" /></span></a><a class="sidebartoggler d-none d-md-block" href="javascript:void(0)" data-sidebartype="mini-sidebar"><i class="mdi mdi-toggle-switch mdi-toggle-switch-off font-20"></i></a></div>
+                    <a class="topbartoggler d-block d-md-none waves-effect waves-light" href="javascript:void(0)" data-toggle="collapse" data-target="#navbarSupportedContent"><i class="ti-more"></i></a>
+                </div>
+                <div class="navbar-collapse collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav float-left mr-auto"></ul>
+                    <ul class="navbar-nav float-right"><li class="nav-item dropdown"><a class="nav-link dropdown-toggle waves-effect waves-dark pro-pic" href="#" data-toggle="dropdown"><img src="/assets/images/users/1.jpg" alt="user" class="rounded-circle" width="40"><span class="m-l-5 font-medium d-none d-sm-inline-block" id="user-name">User</span></a><div class="dropdown-menu dropdown-menu-right user-dd animated flipInY"><a class="dropdown-item" href="/settings"><i class="ti-settings m-r-5 m-l-5"></i> Settings</a><div class="dropdown-divider"></div><a class="dropdown-item" href="#" id="logout-btn"><i class="fa fa-power-off m-r-5 m-l-5"></i> Logout</a></div></li></ul>
+                </div>
+            </nav>
+        </header>
+        <aside class="left-sidebar">
+            <div class="scroll-sidebar"><nav class="sidebar-nav"><ul id="sidebarnav">
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/dashboard"><i data-feather="home" class="feather-icon"></i><span class="hide-menu">Dashboard</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/artists"><i data-feather="users" class="feather-icon"></i><span class="hide-menu">Artists</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/referrals"><i data-feather="git-branch" class="feather-icon"></i><span class="hide-menu">Referrals</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)"><i data-feather="dollar-sign" class="feather-icon"></i><span class="hide-menu">Revenue</span></a><ul class="collapse first-level"><li class="sidebar-item"><a href="/revenue/new" class="sidebar-link"><span class="hide-menu">New Entry</span></a></li><li class="sidebar-item"><a href="/revenue" class="sidebar-link"><span class="hide-menu">History</span></a></li></ul></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/expenses"><i data-feather="trending-down" class="feather-icon"></i><span class="hide-menu">Expenses</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/additional-income"><i data-feather="plus-circle" class="feather-icon"></i><span class="hide-menu">Additional Income</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/reports"><i data-feather="bar-chart-2" class="feather-icon"></i><span class="hide-menu">Reports</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/user-breakdown"><i data-feather="pie-chart" class="feather-icon"></i><span class="hide-menu">User Breakdown</span></a></li>
+                <li class="sidebar-item selected admin-only"><a class="sidebar-link waves-effect waves-dark" href="/settings"><i data-feather="settings" class="feather-icon"></i><span class="hide-menu">Settings</span></a></li>
+            </ul></nav></div>
+        </aside>
+        <div class="page-wrapper">
+            <div class="page-breadcrumb">
+                <div class="row">
+                    <div class="col-12 align-self-center">
+                        <h3 class="page-title text-truncate text-dark font-weight-medium mb-1">Settings</h3>
+                        <nav aria-label="breadcrumb"><ol class="breadcrumb m-0 p-0"><li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li><li class="breadcrumb-item active">Settings</li></ol></nav>
+                    </div>
+                </div>
+            </div>
+            <div class="container-fluid">
+                <!-- User Management -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-4">
+                                    <h4 class="card-title mb-0">User Management</h4>
+                                    <button class="btn btn-primary ml-auto" data-toggle="modal" data-target="#userModal" onclick="resetUserForm()">
+                                        <i data-feather="user-plus" class="feather-icon mr-1"></i> Add User
+                                    </button>
+                                </div>
+                                <div class="table-responsive">
+                                    <table id="users-table" class="table table-striped table-bordered">
+                                        <thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Created</th><th>Actions</th></tr></thead>
+                                        <tbody id="users-body"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Import Revenue -->
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title">Import Revenue Data</h4>
+                                <p class="text-muted">Upload CSV or Excel with columns: <strong>artist</strong> (must match existing artist name), <strong>amount</strong>, <strong>source</strong>, <strong>date</strong></p>
+                                <form id="import-revenue-form" enctype="multipart/form-data">
+                                    <div class="form-group">
+                                        <input type="file" class="form-control" id="revenue-import-file" accept=".csv,.xlsx,.xls">
+                                    </div>
+                                    <button type="button" class="btn btn-info" onclick="importRevenue()">Import Revenue</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title">Import Artists</h4>
+                                <p class="text-muted">Upload CSV or Excel with columns: <strong>name</strong>, nickname, revenue_type, artist_split_pct, company_split_pct, bank_fee_pct, referrals (format: <code>Name1:35,Name2:5</code>)</p>
+                                <form id="import-artists-form" enctype="multipart/form-data">
+                                    <div class="form-group">
+                                        <input type="file" class="form-control" id="artists-import-file" accept=".csv,.xlsx,.xls">
+                                    </div>
+                                    <button type="button" class="btn btn-info" onclick="importArtistsData()">Import Artists</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <footer class="footer text-center">Deng Parez Monetary System &copy; 2024</footer>
+        </div>
+    </div>
+
+    <!-- User Modal -->
+    <div class="modal fade" id="userModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="user-modal-title">Add User</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="user-form">
+                        <input type="hidden" id="user-id">
+                        <div class="form-group">
+                            <label>Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="user-fullname" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Username <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="user-username" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Password <span class="text-danger" id="pwd-required">*</span></label>
+                            <input type="password" class="form-control" id="user-password">
+                            <small class="text-muted" id="pwd-hint" style="display:none;">Leave blank to keep current password</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Role</label>
+                            <select class="form-control custom-select" id="user-role-select">
+                                <option value="admin">Admin</option>
+                                <option value="viewer">Viewer</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveUser()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/assets/libs/jquery/dist/jquery.min.js"></script>
+    <script src="/assets/libs/popper.js/dist/umd/popper.min.js"></script>
+    <script src="/assets/libs/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/custom.js"></script>
+    <script src="/js/feather.min.js"></script>
+    <script src="/assets/extra-libs/datatables.net/js/jquery.dataTables.min.js"></script>
+    <script src="/assets/extra-libs/datatables.net-bs4/js/dataTables.responsive.min.js"></script>
+    <script src="/app/common.js"></script>
+    <script>
+    var usersData = [];
+
+    App.init(function() {
+        if (App.user.role !== 'admin') {
+            window.location.href = '/dashboard';
+            return;
+        }
+        loadUsers();
+    });
+
+    function loadUsers() {
+        App.api('GET', '/api/users').done(function(users) {
+            usersData = users;
+            var tbody = $('#users-body'); tbody.empty();
+            users.forEach(function(u) {
+                var roleBadge = u.role === 'admin' ? '<span class="badge badge-primary">Admin</span>' : '<span class="badge badge-secondary">Viewer</span>';
+                tbody.append('<tr><td>' + u.name + '</td><td>' + u.username + '</td><td>' + roleBadge + '</td><td>' + App.formatDate(u.created_at) + '</td><td><button class="btn btn-sm btn-info mr-1" onclick="editUser(' + u.id + ')"><i class="ti-pencil"></i></button><button class="btn btn-sm btn-danger" onclick="deleteUser(' + u.id + ',\'' + u.name.replace(/'/g,"\\'") + '\')"><i class="ti-trash"></i></button></td></tr>');
+            });
+            if ($.fn.DataTable.isDataTable('#users-table')) $('#users-table').DataTable().destroy();
+            $('#users-table').DataTable({ responsive: true });
+            feather.replace();
+        });
+    }
+
+    function resetUserForm() {
+        $('#user-modal-title').text('Add User'); $('#user-id').val(''); $('#user-form')[0].reset();
+        $('#pwd-required').show(); $('#pwd-hint').hide(); $('#user-password').attr('required', true);
+    }
+
+    function editUser(id) {
+        var u = usersData.find(function(x){return x.id===id;});
+        if (!u) return;
+        $('#user-modal-title').text('Edit User'); $('#user-id').val(u.id);
+        $('#user-fullname').val(u.name); $('#user-username').val(u.username); $('#user-role-select').val(u.role);
+        $('#user-password').val('').removeAttr('required'); $('#pwd-required').hide(); $('#pwd-hint').show();
+        $('#userModal').modal('show');
+    }
+
+    function saveUser() {
+        var id = $('#user-id').val();
+        var data = { name: $('#user-fullname').val(), username: $('#user-username').val(), role: $('#user-role-select').val() };
+        var pwd = $('#user-password').val();
+        if (pwd) data.password = pwd;
+        if (!id && !pwd) { App.showError('Password is required for new users'); return; }
+        if (!data.name || !data.username) { App.showError('Name and username are required'); return; }
+        App.api(id ? 'PUT' : 'POST', id ? '/api/users/'+id : '/api/users', data).done(function() {
+            $('#userModal').modal('hide'); App.showSuccess('User ' + (id?'updated':'created')); loadUsers();
+        });
+    }
+
+    function deleteUser(id, name) {
+        if (!confirm('Delete user "' + name + '"?')) return;
+        App.api('DELETE', '/api/users/' + id).done(function() { App.showSuccess('User deleted'); loadUsers(); });
+    }
+
+    function importRevenue() {
+        var file = $('#revenue-import-file')[0].files[0];
+        if (!file) { App.showError('Select a file'); return; }
+        var fd = new FormData(); fd.append('file', file);
+        $.ajax({ url: '/api/import/revenue', method: 'POST', data: fd, processData: false, contentType: false,
+            success: function(r) { App.showSuccess('Imported ' + r.imported + ' of ' + r.total + ' entries'); },
+            error: function(xhr) { App.showError(xhr.responseJSON ? xhr.responseJSON.error : 'Import failed'); }
+        });
+    }
+
+    function importArtistsData() {
+        var file = $('#artists-import-file')[0].files[0];
+        if (!file) { App.showError('Select a file'); return; }
+        var fd = new FormData(); fd.append('file', file);
+        $.ajax({ url: '/api/import/artists', method: 'POST', data: fd, processData: false, contentType: false,
+            success: function(r) { App.showSuccess('Imported ' + r.imported + ' of ' + r.total + ' artists'); },
+            error: function(xhr) { App.showError(xhr.responseJSON ? xhr.responseJSON.error : 'Import failed'); }
+        });
+    }
+    </script>
+</body>
+</html>
