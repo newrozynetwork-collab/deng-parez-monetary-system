@@ -9,10 +9,7 @@ const commonConfig = {
 module.exports = process.env.DATABASE_URL
   ? {
       client: 'pg',
-      connection: {
-        connectionString: process.env.DATABASE_URL,
-        ssl: process.env.DATABASE_URL.includes('railway') ? false : { rejectUnauthorized: false }
-      },
+      connection: process.env.DATABASE_URL,
       ...commonConfig
     }
   : {
