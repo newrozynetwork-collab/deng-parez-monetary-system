@@ -77,7 +77,11 @@
       "mcp__Claude_in_Chrome__javascript_tool",
       "Bash(node -e ':*)",
       "Bash(node scripts/import-artists.js)",
-      "mcp__Claude_in_Chrome__find"
+      "mcp__Claude_in_Chrome__find",
+      "mcp__Claude_in_Chrome__read_console_messages",
+      "Bash(curl -s https://app-production-0a17.up.railway.app/assets/extra-libs/datatables.net/js/jquery.dataTables.min.js)",
+      "Bash(curl -s -I https://app-production-0a17.up.railway.app/assets/extra-libs/datatables.net/js/jquery.dataTables.min.js)",
+      "Bash(grep -l \"datatables.net/js\" \"/c/Users/PC/Desktop/Deng Parez Monetiary System/public/pages/\"*.html)"
     ]
   }
 }
