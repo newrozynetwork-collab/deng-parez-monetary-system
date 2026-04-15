@@ -193,11 +193,16 @@ body {
 /* ============ CARDS ============ */
 
 .card {
-    background: var(--dp-surface) !important;
+    background: var(--dp-surface);
     border: 1px solid var(--dp-border) !important;
     border-radius: 12px !important;
     box-shadow: var(--dp-card-shadow);
     transition: box-shadow 0.2s, transform 0.2s;
+}
+
+/* Stat cards keep their inline gradient backgrounds */
+.card.stat-card {
+    border: none !important;
 }
 
 .card:hover {
@@ -601,7 +606,7 @@ label {
 
 [data-theme="dark"] .topbar,
 [data-theme="dark"] .left-sidebar,
-[data-theme="dark"] .card,
+[data-theme="dark"] .card:not(.stat-card),
 [data-theme="dark"] .modal-content {
     background: var(--dp-surface) !important;
     color: var(--dp-text);
