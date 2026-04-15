@@ -104,16 +104,15 @@
                         <input type="hidden" id="expense-id">
                         <div class="form-group">
                             <label>Category <span class="text-danger">*</span></label>
-                            <select class="form-control custom-select" id="expense-category">
-                                <option value="Operations">Operations</option>
-                                <option value="Marketing">Marketing</option>
-                                <option value="Software">Software</option>
-                                <option value="Equipment">Equipment</option>
-                                <option value="Legal">Legal</option>
-                                <option value="Travel">Travel</option>
-                                <option value="Office">Office</option>
-                                <option value="Other">Other</option>
-                            </select>
+                            <div class="input-group">
+                                <select class="form-control custom-select" id="expense-category-select"></select>
+                                <div class="input-group-append admin-only">
+                                    <a href="/settings#categories" class="btn btn-outline-secondary" title="Manage categories" target="_blank">
+                                        <i data-feather="settings" style="width:16px;height:16px;"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            <small class="text-muted">Manage categories in <a href="/settings#categories" target="_blank">Settings</a></small>
                         </div>
                         <div class="form-group">
                             <label>Description</label>
@@ -153,14 +152,32 @@
     <script src="/assets/extra-libs/DataTables/DataTables-1.10.16/js/dataTables.bootstrap4.min.js"></script>
     <script src="/app/common.js"></script>
     <script>
-    var currentStart, currentEnd, expensesData = [];
-    var catColors = {Operations:'primary',Marketing:'info',Software:'purple',Equipment:'warning',Legal:'dark',Travel:'success',Office:'secondary',Other:'danger'};
+    var currentStart, currentEnd, expensesData = [], categories = [];
 
     App.init(function() {
         $('#expense-date').val(new Date().toISOString().slice(0,10));
         initDateRange();
-        loadExpenses();
+        loadCategories(function() { loadExpenses(); });
     });
+
+    function loadCategories(cb) {
+        App.api('GET', '/api/categories', { type: 'expense' }).done(function(cats) {
+            categories = cats;
+            var sel = $('#expense-category-select');
+            sel.empty();
+            cats.forEach(function(c) {
+                sel.append('<option value="' + c.id + '" data-color="' + c.color + '">' + c.name + '</option>');
+            });
+            if (cb) cb();
+        });
+    }
+
+    function categoryBadge(cat) {
+        if (!cat) return '<span class="badge badge-secondary">—</span>';
+        var color = cat.category_color || '#6b7280';
+        var name = cat.category_name || cat.category || 'Other';
+        return '<span class="badge" style="background:' + color + ';color:#fff;">' + name + '</span>';
+    }
 
     function initDateRange() {
         $('#date-range').daterangepicker({
@@ -181,14 +198,19 @@
             var total = 0, catTotals = {};
             expenses.forEach(function(e) {
                 total += parseFloat(e.amount);
-                catTotals[e.category] = (catTotals[e.category] || 0) + parseFloat(e.amount);
-                tbody.append('<tr><td>' + App.formatDate(e.date) + '</td><td><span class="badge badge-' + (catColors[e.category]||'secondary') + '">' + e.category + '</span></td><td>' + (e.description||'-') + '</td><td class="text-danger font-weight-medium">' + App.formatCurrency(e.amount) + '</td><td class="admin-only"><button class="btn btn-sm btn-info mr-1" onclick="editExpense(' + e.id + ')"><i class="ti-pencil"></i></button><button class="btn btn-sm btn-danger" onclick="deleteExpense(' + e.id + ')"><i class="ti-trash"></i></button></td></tr>');
+                var catKey = e.category_name || e.category || 'Other';
+                var catColor = e.category_color || '#6b7280';
+                if (!catTotals[catKey]) catTotals[catKey] = { total: 0, color: catColor };
+                catTotals[catKey].total += parseFloat(e.amount);
+
+                tbody.append('<tr><td>' + App.formatDate(e.date) + '</td><td>' + categoryBadge(e) + '</td><td>' + (e.description||'-') + '</td><td class="text-danger font-weight-medium">' + App.formatCurrency(e.amount) + '</td><td class="admin-only"><button class="btn btn-sm btn-info mr-1" onclick="editExpense(' + e.id + ')"><i class="ti-pencil"></i></button><button class="btn btn-sm btn-danger" onclick="deleteExpense(' + e.id + ')"><i class="ti-trash"></i></button></td></tr>');
             });
             $('#total-expenses').text(App.formatCurrency(total));
             // Category cards
             var cards = $('#category-cards'); cards.empty();
             Object.keys(catTotals).forEach(function(cat) {
-                cards.append('<div class="col-lg-3 col-md-4 col-6"><div class="card"><div class="card-body"><h6 class="text-muted">' + cat + '</h6><h4 class="text-' + (catColors[cat]||'secondary') + '">' + App.formatCurrency(catTotals[cat]) + '</h4></div></div></div>');
+                var c = catTotals[cat];
+                cards.append('<div class="col-lg-3 col-md-4 col-6"><div class="card"><div class="card-body" style="border-left:4px solid ' + c.color + ';"><h6 class="text-muted mb-1">' + cat + '</h6><h4 style="color:' + c.color + ';">' + App.formatCurrency(c.total) + '</h4></div></div></div>');
             });
             if ($.fn.DataTable.isDataTable('#expenses-table')) $('#expenses-table').DataTable().destroy();
             $('#expenses-table').DataTable({ responsive: true, order: [[0, 'desc']] });
@@ -202,14 +224,22 @@
         var e = expensesData.find(function(x){return x.id===id;});
         if (!e) return;
         $('#expense-modal-title').text('Edit Expense');
-        $('#expense-id').val(e.id); $('#expense-category').val(e.category); $('#expense-desc').val(e.description); $('#expense-amount').val(e.amount); $('#expense-date').val(e.date ? e.date.toString().slice(0,10) : '');
+        $('#expense-id').val(e.id);
+        if (e.category_id) $('#expense-category-select').val(e.category_id);
+        $('#expense-desc').val(e.description); $('#expense-amount').val(e.amount); $('#expense-date').val(e.date ? e.date.toString().slice(0,10) : '');
         $('#expenseModal').modal('show');
     }
 
     function saveExpense() {
         var id = $('#expense-id').val();
-        var data = { category: $('#expense-category').val(), description: $('#expense-desc').val(), amount: parseFloat($('#expense-amount').val()), date: $('#expense-date').val() };
-        if (!data.amount || !data.date) { App.showError('Amount and date are required'); return; }
+        var categoryId = $('#expense-category-select').val();
+        var data = {
+            category_id: categoryId ? parseInt(categoryId) : null,
+            description: $('#expense-desc').val(),
+            amount: parseFloat($('#expense-amount').val()),
+            date: $('#expense-date').val()
+        };
+        if (!data.category_id || !data.amount || !data.date) { App.showError('Category, amount, and date are required'); return; }
         App.api(id ? 'PUT' : 'POST', id ? '/api/expenses/'+id : '/api/expenses', data).done(function() {
             $('#expenseModal').modal('hide'); App.showSuccess('Expense ' + (id?'updated':'added')); loadExpenses();
         });

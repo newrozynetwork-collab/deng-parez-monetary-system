@@ -73,6 +73,41 @@
                         </div>
                     </div>
                 </div>
+                <!-- Categories -->
+                <div class="row" id="categories">
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-3">
+                                    <h4 class="card-title mb-0">
+                                        <i data-feather="minus-circle" class="feather-icon mr-1" style="color:#ef4444;"></i>
+                                        Expense Categories
+                                    </h4>
+                                    <button class="btn btn-sm btn-danger ml-auto" onclick="openCategoryModal('expense')">
+                                        <i data-feather="plus" class="feather-icon mr-1"></i> Add
+                                    </button>
+                                </div>
+                                <div id="expense-categories-list"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-3">
+                                    <h4 class="card-title mb-0">
+                                        <i data-feather="plus-circle" class="feather-icon mr-1" style="color:#10b981;"></i>
+                                        Income Categories
+                                    </h4>
+                                    <button class="btn btn-sm btn-success ml-auto" onclick="openCategoryModal('income')">
+                                        <i data-feather="plus" class="feather-icon mr-1"></i> Add
+                                    </button>
+                                </div>
+                                <div id="income-categories-list"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <!-- Import Revenue -->
                 <div class="row">
                     <div class="col-lg-6">
@@ -150,6 +185,47 @@
         </div>
     </div>
 
+    <!-- Category Modal -->
+    <div class="modal fade" id="categoryModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="category-modal-title">Add Category</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="category-form">
+                        <input type="hidden" id="category-id">
+                        <input type="hidden" id="category-type">
+                        <div class="form-group">
+                            <label>Category Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="category-name" placeholder="e.g., Marketing, Equipment" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Color <span class="text-danger">*</span></label>
+                            <div class="d-flex align-items-center">
+                                <input type="color" class="form-control" id="category-color" value="#3b82f6" style="width:80px;padding:4px;">
+                                <div class="ml-3 d-flex flex-wrap" id="color-swatches"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Description (optional)</label>
+                            <textarea class="form-control" id="category-description" rows="2"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Preview</label>
+                            <div><span class="badge" id="category-preview" style="background:#3b82f6;color:#fff;font-size:14px;padding:6px 14px;">Category Name</span></div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveCategory()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="/assets/libs/jquery/dist/jquery.min.js"></script>
     <script src="/assets/libs/popper.js/dist/umd/popper.min.js"></script>
     <script src="/assets/libs/bootstrap/dist/js/bootstrap.min.js"></script>
@@ -161,7 +237,8 @@
     <script src="/assets/extra-libs/DataTables/DataTables-1.10.16/js/dataTables.bootstrap4.min.js"></script>
     <script src="/app/common.js"></script>
     <script>
-    var usersData = [];
+    var usersData = [], categoriesData = { expense: [], income: [] };
+    var presetColors = ['#3b82f6','#10b981','#f59e0b','#ef4444','#ec4899','#8b5cf6','#14b8a6','#06b6d4','#f97316','#6366f1','#64748b','#6b7280'];
 
     App.init(function() {
         if (App.user.role !== 'admin') {
@@ -169,7 +246,118 @@
             return;
         }
         loadUsers();
+        loadCategories();
+        initColorSwatches();
+        // Scroll to categories if hash present
+        if (window.location.hash === '#categories') {
+            setTimeout(function() { document.getElementById('categories').scrollIntoView({behavior:'smooth'}); }, 300);
+        }
     });
+
+    function initColorSwatches() {
+        var sw = $('#color-swatches');
+        presetColors.forEach(function(c) {
+            sw.append('<div style="width:28px;height:28px;border-radius:6px;background:' + c + ';margin:2px;cursor:pointer;border:2px solid transparent;" onclick="pickColor(\'' + c + '\')" data-color="' + c + '" title="' + c + '"></div>');
+        });
+        $('#category-color').on('input', updateCategoryPreview);
+        $('#category-name').on('input', updateCategoryPreview);
+    }
+
+    function pickColor(c) {
+        $('#category-color').val(c);
+        updateCategoryPreview();
+    }
+
+    function updateCategoryPreview() {
+        var name = $('#category-name').val() || 'Category Name';
+        var color = $('#category-color').val() || '#3b82f6';
+        $('#category-preview').text(name).css('background', color);
+    }
+
+    function loadCategories() {
+        App.api('GET', '/api/categories').done(function(cats) {
+            categoriesData.expense = cats.filter(function(c) { return c.type === 'expense'; });
+            categoriesData.income = cats.filter(function(c) { return c.type === 'income'; });
+            renderCategories('expense');
+            renderCategories('income');
+            feather.replace();
+        });
+    }
+
+    function renderCategories(type) {
+        var container = $('#' + type + '-categories-list');
+        container.empty();
+        var list = categoriesData[type];
+        if (list.length === 0) {
+            container.html('<p class="text-muted text-center py-3">No categories yet. Click "Add" to create one.</p>');
+            return;
+        }
+        list.forEach(function(c) {
+            var usage = c.usage_count > 0 ? '<small class="text-muted ml-2">· ' + c.usage_count + ' record' + (c.usage_count === 1 ? '' : 's') + ' · ' + App.formatCurrency(c.total_amount) + '</small>' : '<small class="text-muted ml-2">· unused</small>';
+            container.append(
+                '<div class="d-flex align-items-center py-2 border-bottom">' +
+                    '<span class="badge mr-3" style="background:' + c.color + ';color:#fff;padding:6px 12px;font-size:13px;min-width:90px;text-align:center;">' + c.name + '</span>' +
+                    usage +
+                    '<div class="ml-auto">' +
+                        '<button class="btn btn-sm btn-outline-info mr-1" onclick="editCategory(' + c.id + ')"><i class="ti-pencil"></i></button>' +
+                        '<button class="btn btn-sm btn-outline-danger" onclick="deleteCategory(' + c.id + ',\'' + c.name.replace(/'/g,"\\'") + '\',' + c.usage_count + ')"><i class="ti-trash"></i></button>' +
+                    '</div>' +
+                '</div>'
+            );
+        });
+    }
+
+    function openCategoryModal(type) {
+        $('#category-modal-title').text('Add ' + (type === 'expense' ? 'Expense' : 'Income') + ' Category');
+        $('#category-id').val('');
+        $('#category-type').val(type);
+        $('#category-name').val('');
+        $('#category-color').val(type === 'expense' ? '#ef4444' : '#10b981');
+        $('#category-description').val('');
+        updateCategoryPreview();
+        $('#categoryModal').modal('show');
+    }
+
+    function editCategory(id) {
+        var all = categoriesData.expense.concat(categoriesData.income);
+        var c = all.find(function(x) { return x.id === id; });
+        if (!c) return;
+        $('#category-modal-title').text('Edit ' + (c.type === 'expense' ? 'Expense' : 'Income') + ' Category');
+        $('#category-id').val(c.id);
+        $('#category-type').val(c.type);
+        $('#category-name').val(c.name);
+        $('#category-color').val(c.color);
+        $('#category-description').val(c.description || '');
+        updateCategoryPreview();
+        $('#categoryModal').modal('show');
+    }
+
+    function saveCategory() {
+        var id = $('#category-id').val();
+        var data = {
+            name: $('#category-name').val().trim(),
+            type: $('#category-type').val(),
+            color: $('#category-color').val(),
+            description: $('#category-description').val()
+        };
+        if (!data.name) { App.showError('Name is required'); return; }
+        App.api(id ? 'PUT' : 'POST', id ? '/api/categories/'+id : '/api/categories', data).done(function() {
+            $('#categoryModal').modal('hide');
+            App.showSuccess('Category ' + (id ? 'updated' : 'created'));
+            loadCategories();
+        });
+    }
+
+    function deleteCategory(id, name, usageCount) {
+        var msg = 'Delete category "' + name + '"?';
+        if (usageCount > 0) msg += '\n\nThis category is used by ' + usageCount + ' record(s). They will be unlinked but not deleted.';
+        if (!confirm(msg)) return;
+        var url = '/api/categories/' + id + (usageCount > 0 ? '?force=1' : '');
+        App.api('DELETE', url).done(function() {
+            App.showSuccess('Category deleted');
+            loadCategories();
+        });
+    }
 
     function loadUsers() {
         App.api('GET', '/api/users').done(function(users) {

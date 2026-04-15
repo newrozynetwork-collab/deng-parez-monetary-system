@@ -75,7 +75,7 @@
                             <div class="card-body">
                                 <div class="table-responsive">
                                     <table id="income-table" class="table table-striped table-bordered">
-                                        <thead><tr><th>Date</th><th>Source</th><th>Description</th><th>Amount</th><th>Commission</th><th>Commission To</th><th class="admin-only">Actions</th></tr></thead>
+                                        <thead><tr><th>Date</th><th>Category</th><th>Source</th><th>Description</th><th>Amount</th><th>Commission</th><th>Commission To</th><th class="admin-only">Actions</th></tr></thead>
                                         <tbody id="income-body"></tbody>
                                     </table>
                                 </div>
@@ -100,8 +100,20 @@
                     <form id="income-form">
                         <input type="hidden" id="income-id">
                         <div class="form-group">
+                            <label>Category <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <select class="form-control custom-select" id="income-category-select"></select>
+                                <div class="input-group-append admin-only">
+                                    <a href="/settings#categories" class="btn btn-outline-secondary" title="Manage categories" target="_blank">
+                                        <i data-feather="settings" style="width:16px;height:16px;"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            <small class="text-muted">Manage categories in <a href="/settings#categories" target="_blank">Settings</a></small>
+                        </div>
+                        <div class="form-group">
                             <label>Source <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="income-source" placeholder="e.g., Consulting, Licensing" required>
+                            <input type="text" class="form-control" id="income-source" placeholder="e.g., Client name, project name" required>
                         </div>
                         <div class="form-group">
                             <label>Description</label>
@@ -155,13 +167,31 @@
     <script src="/assets/extra-libs/DataTables/DataTables-1.10.16/js/dataTables.bootstrap4.min.js"></script>
     <script src="/app/common.js"></script>
     <script>
-    var currentStart, currentEnd, incomeData = [];
+    var currentStart, currentEnd, incomeData = [], categories = [];
 
     App.init(function() {
         $('#income-date').val(new Date().toISOString().slice(0,10));
         initDateRange();
-        loadIncome();
+        loadCategories(function() { loadIncome(); });
     });
+
+    function loadCategories(cb) {
+        App.api('GET', '/api/categories', { type: 'income' }).done(function(cats) {
+            categories = cats;
+            var sel = $('#income-category-select');
+            sel.empty();
+            cats.forEach(function(c) {
+                sel.append('<option value="' + c.id + '" data-color="' + c.color + '">' + c.name + '</option>');
+            });
+            if (cb) cb();
+        });
+    }
+
+    function categoryBadge(item) {
+        var color = item.category_color || '#6b7280';
+        var name = item.category_name || 'Uncategorized';
+        return '<span class="badge" style="background:' + color + ';color:#fff;">' + name + '</span>';
+    }
 
     function initDateRange() {
         $('#date-range').daterangepicker({
@@ -183,7 +213,7 @@
             items.forEach(function(i) {
                 total += parseFloat(i.amount);
                 var commText = i.commission_pct > 0 ? i.commission_pct + '%' : '-';
-                tbody.append('<tr><td>' + App.formatDate(i.date) + '</td><td>' + i.source + '</td><td>' + (i.description||'-') + '</td><td class="text-success font-weight-medium">' + App.formatCurrency(i.amount) + '</td><td>' + commText + '</td><td>' + (i.commission_to||'-') + '</td><td class="admin-only"><button class="btn btn-sm btn-info mr-1" onclick="editIncome(' + i.id + ')"><i class="ti-pencil"></i></button><button class="btn btn-sm btn-danger" onclick="deleteIncome(' + i.id + ')"><i class="ti-trash"></i></button></td></tr>');
+                tbody.append('<tr><td>' + App.formatDate(i.date) + '</td><td>' + categoryBadge(i) + '</td><td>' + i.source + '</td><td>' + (i.description||'-') + '</td><td class="text-success font-weight-medium">' + App.formatCurrency(i.amount) + '</td><td>' + commText + '</td><td>' + (i.commission_to||'-') + '</td><td class="admin-only"><button class="btn btn-sm btn-info mr-1" onclick="editIncome(' + i.id + ')"><i class="ti-pencil"></i></button><button class="btn btn-sm btn-danger" onclick="deleteIncome(' + i.id + ')"><i class="ti-trash"></i></button></td></tr>');
             });
             $('#total-income').text(App.formatCurrency(total));
             if ($.fn.DataTable.isDataTable('#income-table')) $('#income-table').DataTable().destroy();
@@ -198,13 +228,16 @@
         var i = incomeData.find(function(x){return x.id===id;});
         if (!i) return;
         $('#income-modal-title').text('Edit Income');
-        $('#income-id').val(i.id); $('#income-source').val(i.source); $('#income-desc').val(i.description); $('#income-amount').val(i.amount); $('#income-commission').val(i.commission_pct); $('#income-commission-to').val(i.commission_to); $('#income-date').val(i.date ? i.date.toString().slice(0,10) : '');
+        $('#income-id').val(i.id);
+        if (i.category_id) $('#income-category-select').val(i.category_id);
+        $('#income-source').val(i.source); $('#income-desc').val(i.description); $('#income-amount').val(i.amount); $('#income-commission').val(i.commission_pct); $('#income-commission-to').val(i.commission_to); $('#income-date').val(i.date ? i.date.toString().slice(0,10) : '');
         $('#incomeModal').modal('show');
     }
 
     function saveIncome() {
         var id = $('#income-id').val();
-        var data = { source: $('#income-source').val(), description: $('#income-desc').val(), amount: parseFloat($('#income-amount').val()), commission_pct: parseFloat($('#income-commission').val())||0, commission_to: $('#income-commission-to').val()||null, date: $('#income-date').val() };
+        var categoryId = $('#income-category-select').val();
+        var data = { source: $('#income-source').val(), category_id: categoryId ? parseInt(categoryId) : null, description: $('#income-desc').val(), amount: parseFloat($('#income-amount').val()), commission_pct: parseFloat($('#income-commission').val())||0, commission_to: $('#income-commission-to').val()||null, date: $('#income-date').val() };
         if (!data.source || !data.amount || !data.date) { App.showError('Source, amount, and date are required'); return; }
         App.api(id ? 'PUT' : 'POST', id ? '/api/income/'+id : '/api/income', data).done(function() {
             $('#incomeModal').modal('hide'); App.showSuccess('Income ' + (id?'updated':'added')); loadIncome();
