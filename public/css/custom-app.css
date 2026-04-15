@@ -1,0 +1,64 @@
+/* Deng Parez Monetary System - Custom overrides */
+
+/* Fix page-wrapper being hidden by default */
+.page-wrapper {
+    display: block !important;
+}
+
+/* Ensure body has proper background */
+body {
+    background-color: #f3f3f5;
+}
+
+/* Make sure sidebar content is visible */
+.left-sidebar .scroll-sidebar {
+    height: calc(100vh - 64px);
+    overflow-y: auto;
+}
+
+/* Mobile fixes */
+@media (max-width: 767px) {
+    .page-wrapper {
+        margin-left: 0 !important;
+    }
+    .left-sidebar {
+        left: -300px;
+        transition: left 0.3s ease;
+    }
+    #main-wrapper.show-sidebar .left-sidebar {
+        left: 0;
+    }
+}
+
+/* Improve stat card readability */
+.stat-card h3 {
+    font-size: 1.75rem;
+    font-weight: 600;
+}
+.stat-card h6 {
+    font-size: 0.875rem;
+    opacity: 0.85;
+}
+
+/* Better chart container sizing */
+.chart-container canvas {
+    max-height: 300px;
+}
+
+/* Ensure tables don't overflow on mobile */
+.table-responsive {
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Sidebar icon spacing */
+.sidebar-nav .sidebar-item .sidebar-link .feather-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    vertical-align: middle;
+}
+
+/* Prevent preloader from blocking interactions */
+.preloader {
+    pointer-events: none;
+}
