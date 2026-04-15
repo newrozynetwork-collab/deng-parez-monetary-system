@@ -58,6 +58,52 @@ body {
     vertical-align: middle;
 }
 
+/* Fix sidebar text color - was white on white background */
+.left-sidebar,
+#main-wrapper[data-sidebarbg="skin6"] .left-sidebar,
+#main-wrapper .left-sidebar {
+    background: #fff;
+}
+
+.sidebar-nav ul .sidebar-item .sidebar-link,
+.sidebar-nav ul .sidebar-item .sidebar-link i,
+.sidebar-nav ul .sidebar-item .sidebar-link .feather-icon {
+    color: #54667a !important;
+}
+
+.sidebar-nav ul .sidebar-item .sidebar-link:hover,
+.sidebar-nav ul .sidebar-item .sidebar-link:hover i,
+.sidebar-nav ul .sidebar-item .sidebar-link:hover .feather-icon {
+    color: #f158d0 !important;
+}
+
+.sidebar-nav ul .sidebar-item.selected > .sidebar-link,
+.sidebar-nav ul .sidebar-item.selected > .sidebar-link i,
+.sidebar-nav ul .sidebar-item.selected > .sidebar-link .feather-icon,
+.sidebar-nav ul .sidebar-item > .sidebar-link.active,
+.sidebar-nav ul .sidebar-item > .sidebar-link.active i {
+    color: #fff !important;
+    background: linear-gradient(135deg, #f158d0, #ae5af3) !important;
+}
+
+.sidebar-nav ul .sidebar-item .sidebar-link {
+    padding: 10px 15px;
+    border-radius: 4px;
+    margin: 2px 8px;
+    transition: all 0.2s;
+}
+
+/* Fix sidebar menu text visibility */
+.sidebar-nav .hide-menu {
+    color: inherit;
+}
+
+/* Collapsed submenu styling */
+.sidebar-nav .collapse .sidebar-item .sidebar-link {
+    padding-left: 40px;
+    font-size: 0.9em;
+}
+
 /* Prevent preloader from blocking interactions */
 .preloader {
     pointer-events: none;
