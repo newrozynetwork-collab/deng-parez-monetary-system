@@ -83,6 +83,84 @@
                         </div>
                     </div>
                     <div class="col-lg-8">
+                        <!-- YouTube Channel Card -->
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-3">
+                                    <h4 class="card-title mb-0">
+                                        <i data-feather="youtube" class="feather-icon mr-1" style="color:#ef4444;"></i>
+                                        YouTube Channel
+                                    </h4>
+                                    <div class="ml-auto" id="yt-actions"></div>
+                                </div>
+                                <!-- Not linked state -->
+                                <div id="yt-not-linked">
+                                    <p class="text-muted mb-2">Link this artist's YouTube channel to see public stats and optionally sync revenue.</p>
+                                    <div class="input-group">
+                                        <input type="text" id="yt-input" class="form-control" placeholder="Channel URL, @handle, or channel ID (UC...)">
+                                        <div class="input-group-append">
+                                            <button class="btn btn-primary admin-only" onclick="linkYouTube()">
+                                                <i data-feather="link" class="feather-icon mr-1"></i> Link
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">Examples: <code>@artistname</code>, <code>youtube.com/@artistname</code>, <code>youtube.com/channel/UC...</code></small>
+                                </div>
+                                <!-- Linked state -->
+                                <div id="yt-linked" style="display:none;">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <img id="yt-thumbnail" src="" style="width:60px;height:60px;border-radius:50%;margin-right:15px;">
+                                        <div>
+                                            <h5 class="mb-0"><a id="yt-channel-link" target="_blank"></a></h5>
+                                            <small class="text-muted" id="yt-sync-info"></small>
+                                        </div>
+                                    </div>
+                                    <div class="row text-center mb-3">
+                                        <div class="col-4">
+                                            <div style="background:var(--dp-surface-2);padding:12px;border-radius:8px;">
+                                                <small class="text-muted d-block">Subscribers</small>
+                                                <h4 class="mb-0" id="yt-subs">-</h4>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div style="background:var(--dp-surface-2);padding:12px;border-radius:8px;">
+                                                <small class="text-muted d-block">Total Views</small>
+                                                <h4 class="mb-0" id="yt-views">-</h4>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div style="background:var(--dp-surface-2);padding:12px;border-radius:8px;">
+                                                <small class="text-muted d-block">Videos</small>
+                                                <h4 class="mb-0" id="yt-videos-count">-</h4>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="yt-oauth-section" class="admin-only">
+                                        <div id="yt-oauth-not-connected">
+                                            <div class="alert alert-info mb-2" style="padding:10px;">
+                                                <i data-feather="info" class="feather-icon mr-1"></i>
+                                                <strong>Connect for revenue access:</strong> Authorize YouTube Analytics to sync revenue data automatically.
+                                            </div>
+                                            <button class="btn btn-sm btn-danger" onclick="connectYouTubeOAuth()">
+                                                <i data-feather="link-2" class="feather-icon mr-1"></i> Connect YouTube Analytics
+                                            </button>
+                                        </div>
+                                        <div id="yt-oauth-connected" style="display:none;">
+                                            <div class="alert alert-success mb-2" style="padding:10px;">
+                                                <i data-feather="check-circle" class="feather-icon mr-1"></i>
+                                                <strong>Analytics connected</strong> — <span id="yt-last-sync"></span>
+                                            </div>
+                                            <button class="btn btn-sm btn-primary mr-2" onclick="syncYouTubeRevenue()">
+                                                <i data-feather="refresh-cw" class="feather-icon mr-1"></i> Sync Revenue
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" onclick="disconnectYouTubeOAuth()">
+                                                Disconnect
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <!-- Earnings Chart -->
                         <div class="card">
                             <div class="card-body">
@@ -124,12 +202,21 @@
     <script src="/app/common.js"></script>
     <script>
     var earningsChart;
+    var artistId;
 
     App.init(function() {
-        var id = window.location.pathname.split('/').pop();
-        loadArtist(id);
-        loadArtistRevenue(id);
+        artistId = window.location.pathname.split('/').pop();
+        loadArtist(artistId);
+        loadArtistRevenue(artistId);
     });
+
+    function formatNum(n) {
+        n = parseInt(n || 0);
+        if (n >= 1e9) return (n/1e9).toFixed(1) + 'B';
+        if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
+        if (n >= 1e3) return (n/1e3).toFixed(1) + 'K';
+        return n.toString();
+    }
 
     function loadArtist(id) {
         App.api('GET', '/api/artists/' + id).done(function(a) {
@@ -152,6 +239,14 @@
             }
             $('#artist-referrals').html(refsHtml);
             if (a.notes) { $('#artist-notes').text(a.notes); $('#artist-notes-section').show(); }
+
+            // YouTube
+            if (a.youtube_channel_id) {
+                loadYouTubeStats(a);
+            } else {
+                $('#yt-not-linked').show();
+                $('#yt-linked').hide();
+            }
             feather.replace();
         });
     }
@@ -178,10 +273,100 @@
                 type: 'pie',
                 data: {
                     labels: ['Artist Share', 'Company Net', 'Referral Payouts'],
-                    datasets: [{ data: [totalArtist, totalCompany, totalRef], backgroundColor: ['#30ccff', '#5cd050', '#ffaf30'] }]
+                    datasets: [{ data: [totalArtist, totalCompany, totalRef], backgroundColor: ['#3b82f6', '#10b981', '#f59e0b'] }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
             });
+        });
+    }
+
+    // ============ YouTube Integration ============
+
+    function loadYouTubeStats(artist) {
+        App.api('GET', '/api/youtube/stats/' + artistId).done(function(stats) {
+            $('#yt-not-linked').hide();
+            $('#yt-linked').show();
+            if (stats.channel_thumbnail) $('#yt-thumbnail').attr('src', stats.channel_thumbnail);
+            $('#yt-channel-link').text(artist.youtube_channel_title || 'YouTube Channel').attr('href', artist.youtube_channel_url);
+            $('#yt-subs').text(formatNum(stats.subscriber_count));
+            $('#yt-views').text(formatNum(stats.view_count));
+            $('#yt-videos-count').text(formatNum(stats.video_count));
+            var fetched = new Date(stats.fetched_at);
+            $('#yt-sync-info').text('Stats updated ' + fetched.toLocaleString());
+
+            if (stats.oauth_connected) {
+                $('#yt-oauth-not-connected').hide();
+                $('#yt-oauth-connected').show();
+                $('#yt-last-sync').text(stats.last_synced_at ? 'Last synced ' + new Date(stats.last_synced_at).toLocaleString() : 'Never synced');
+            } else {
+                $('#yt-oauth-not-connected').show();
+                $('#yt-oauth-connected').hide();
+            }
+
+            $('#yt-actions').html('<button class="btn btn-sm btn-outline-secondary mr-1 admin-only" onclick="refreshYouTubeStats()" title="Refresh stats"><i data-feather="refresh-cw" style="width:14px;height:14px;"></i></button><button class="btn btn-sm btn-outline-danger admin-only" onclick="unlinkYouTube()" title="Unlink channel"><i data-feather="x" style="width:14px;height:14px;"></i></button>');
+            feather.replace();
+        });
+    }
+
+    function linkYouTube() {
+        var input = $('#yt-input').val().trim();
+        if (!input) { App.showError('Enter a channel URL, @handle, or ID'); return; }
+        var btn = event.target.closest('button');
+        var original = btn.innerHTML;
+        btn.innerHTML = 'Linking...';
+        btn.disabled = true;
+        App.api('POST', '/api/youtube/link/' + artistId, { input: input }).done(function(res) {
+            App.showSuccess('Channel linked: ' + res.channel.title);
+            loadArtist(artistId);
+        }).always(function() {
+            btn.innerHTML = original;
+            btn.disabled = false;
+        });
+    }
+
+    function refreshYouTubeStats() {
+        App.api('GET', '/api/youtube/stats/' + artistId, { refresh: 1 }).done(function() {
+            App.showSuccess('Stats refreshed');
+            loadArtist(artistId);
+        });
+    }
+
+    function unlinkYouTube() {
+        if (!confirm('Unlink this YouTube channel? The OAuth connection and cached stats will be removed.')) return;
+        App.api('POST', '/api/youtube/unlink/' + artistId).done(function() {
+            App.showSuccess('YouTube unlinked');
+            loadArtist(artistId);
+        });
+    }
+
+    function connectYouTubeOAuth() {
+        window.location.href = '/api/youtube/connect/' + artistId;
+    }
+
+    function disconnectYouTubeOAuth() {
+        if (!confirm('Disconnect YouTube Analytics access?')) return;
+        App.api('POST', '/api/youtube/disconnect/' + artistId).done(function() {
+            App.showSuccess('Disconnected');
+            loadArtist(artistId);
+        });
+    }
+
+    function syncYouTubeRevenue() {
+        var btn = event.target.closest('button');
+        var original = btn.innerHTML;
+        btn.innerHTML = 'Syncing...';
+        btn.disabled = true;
+        App.api('POST', '/api/youtube/sync/' + artistId).done(function(res) {
+            var rowCount = res.rows ? res.rows.length : 0;
+            App.showSuccess('Synced ' + rowCount + ' months of data');
+            if (res.rows && res.rows.length > 0) {
+                var totalRev = res.rows.reduce(function(sum, r) { return sum + (parseFloat(r[2]) || 0); }, 0);
+                alert('YouTube Revenue (estimated, last 12 months): $' + totalRev.toFixed(2) + '\n\nBy month:\n' + res.rows.map(function(r) { return r[0] + ': $' + (r[2] || 0); }).join('\n'));
+            }
+            loadArtist(artistId);
+        }).always(function() {
+            btn.innerHTML = original;
+            btn.disabled = false;
         });
     }
     </script>

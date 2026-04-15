@@ -51,6 +51,7 @@ app.use('/api/revenue', require('./routes/revenue'));
 app.use('/api/expenses', require('./routes/expenses'));
 app.use('/api/income', require('./routes/income'));
 app.use('/api/categories', require('./routes/categories'));
+app.use('/api/youtube', require('./routes/youtube'));
 app.use('/api/reports', require('./routes/reports'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/import', require('./routes/import'));

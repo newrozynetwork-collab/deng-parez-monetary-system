@@ -83,7 +83,9 @@
       "Bash(curl -s -I https://app-production-0a17.up.railway.app/assets/extra-libs/datatables.net/js/jquery.dataTables.min.js)",
       "Bash(grep -l \"datatables.net/js\" \"/c/Users/PC/Desktop/Deng Parez Monetiary System/public/pages/\"*.html)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://app-production-0a17.up.railway.app/assets/extra-libs/DataTables/DataTables-1.10.16/js/jquery.dataTables.min.js)",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://app-production-0a17.up.railway.app/assets/extra-libs/DataTables/DataTables-1.10.16/js/dataTables.bootstrap4.min.js)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://app-production-0a17.up.railway.app/assets/extra-libs/DataTables/DataTables-1.10.16/js/dataTables.bootstrap4.min.js)",
+      "Bash(curl -s -c /tmp/c.txt -X POST https://app-production-0a17.up.railway.app/api/auth/login -H \"Content-Type: application/json\" -d '{\"username\":\"admin\",\"password\":\"admin123\"}' curl -s -b /tmp/c.txt https://app-production-0a17.up.railway.app/api/categories)",
+      "Bash(rm /tmp/c.txt)"
     ]
   }
 }
