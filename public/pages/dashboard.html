@@ -9,6 +9,9 @@
     <link href="/css/style.min.css" rel="stylesheet">
     <link href="/css/custom-app.css" rel="stylesheet">
     <link href="/assets/libs/daterangepicker/daterangepicker.css" rel="stylesheet">
+    <script>
+        (function(){ try { var t = localStorage.getItem('dp-theme') || 'light'; document.documentElement.setAttribute('data-theme', t); } catch(e){} })();
+    </script>
     <style>
         .stat-card { transition: transform 0.2s; cursor: pointer; }
         .stat-card:hover { transform: translateY(-3px); }
@@ -168,7 +171,7 @@
                 <!-- Stats Row -->
                 <div class="row">
                     <div class="col-lg-3 col-md-6">
-                        <div class="card stat-card bg-gradient-primary">
+                        <div class="card stat-card" style="background: linear-gradient(135deg, #3b82f6, #60a5fa);">
                             <div class="card-body">
                                 <div class="d-flex">
                                     <div>
@@ -181,7 +184,7 @@
                         </div>
                     </div>
                     <div class="col-lg-3 col-md-6">
-                        <div class="card stat-card" style="background: linear-gradient(135deg, #ff7430, #ff9a56);">
+                        <div class="card stat-card" style="background: linear-gradient(135deg, #f59e0b, #fbbf24);">
                             <div class="card-body">
                                 <div class="d-flex">
                                     <div>
@@ -194,7 +197,7 @@
                         </div>
                     </div>
                     <div class="col-lg-3 col-md-6">
-                        <div class="card stat-card" style="background: linear-gradient(135deg, #5cd050, #7ee674);">
+                        <div class="card stat-card" style="background: linear-gradient(135deg, #10b981, #34d399);">
                             <div class="card-body">
                                 <div class="d-flex">
                                     <div>
@@ -207,7 +210,7 @@
                         </div>
                     </div>
                     <div class="col-lg-3 col-md-6">
-                        <div class="card stat-card" style="background: linear-gradient(135deg, #30ccff, #56dcff);">
+                        <div class="card stat-card" style="background: linear-gradient(135deg, #14b8a6, #2dd4bf);">
                             <div class="card-body">
                                 <div class="d-flex">
                                     <div>

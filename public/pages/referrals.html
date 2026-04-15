@@ -10,11 +10,14 @@
     <link href="/css/custom-app.css" rel="stylesheet">
     <link href="/assets/extra-libs/datatables.net-bs4/css/dataTables.bootstrap4.css" rel="stylesheet">
     <style>
-        .tree-node { border-left: 3px solid #f158d0; padding-left: 15px; margin-bottom: 15px; }
+        .tree-node { border-left: 3px solid var(--dp-primary); padding-left: 15px; margin-bottom: 15px; }
         .tree-artist { font-weight: 600; font-size: 1.05em; }
-        .tree-ref { background: #f8f9fa; padding: 6px 12px; border-radius: 4px; margin: 4px 0; display: flex; justify-content: space-between; align-items: center; }
-        .tree-ref .level-badge { width: 28px; height: 28px; border-radius: 50%; background: #f158d0; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; margin-right: 10px; }
+        .tree-ref { background: var(--dp-surface-2); padding: 6px 12px; border-radius: 6px; margin: 4px 0; display: flex; justify-content: space-between; align-items: center; }
+        .tree-ref .level-badge { width: 28px; height: 28px; border-radius: 50%; background: var(--dp-primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; margin-right: 10px; flex-shrink: 0; }
     </style>
+    <script>
+        (function(){ try { var t = localStorage.getItem("dp-theme") || "light"; document.documentElement.setAttribute("data-theme", t); } catch(e){} })();
+    </script>
 </head>
 <body>
     <div class="preloader"><div class="lds-ripple"><div class="lds-pos"></div><div class="lds-pos"></div></div></div>

@@ -10,13 +10,16 @@
     <link href="/css/custom-app.css" rel="stylesheet">
     <link href="/assets/libs/bootstrap-datepicker/dist/css/bootstrap-datepicker.min.css" rel="stylesheet">
     <style>
-        .calc-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+        .calc-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--dp-border); }
         .calc-row:last-child { border-bottom: none; }
-        .calc-label { color: #6c757d; }
-        .calc-value { font-weight: 500; }
+        .calc-label { color: var(--dp-text-muted); }
+        .calc-value { font-weight: 500; color: var(--dp-text); }
         .calc-total { font-size: 1.1em; font-weight: 700; }
-        .referral-item { background: #f8f9fa; padding: 8px 12px; border-radius: 4px; margin-bottom: 4px; }
+        .referral-item { background: var(--dp-surface-2); padding: 8px 12px; border-radius: 6px; margin-bottom: 4px; }
     </style>
+    <script>
+        (function(){ try { var t = localStorage.getItem("dp-theme") || "light"; document.documentElement.setAttribute("data-theme", t); } catch(e){} })();
+    </script>
 </head>
 <body>
     <div class="preloader"><div class="lds-ripple"><div class="lds-pos"></div><div class="lds-pos"></div></div></div>
