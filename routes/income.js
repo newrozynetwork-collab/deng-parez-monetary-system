@@ -17,12 +17,13 @@ router.post('/', requireAdmin, async (req, res) => {
   try {
     const { source, description, amount, commission_pct, commission_to, date } = req.body;
     if (!source || !amount || !date) return res.status(400).json({ error: 'Source, amount, and date required' });
-    const [id] = await req.db('additional_income').insert({
+    const inserted = await req.db('additional_income').insert({
       source, description, amount: parseFloat(amount),
       commission_pct: commission_pct || 0, commission_to, date,
       created_by: req.session.userId
-    });
-    const incomeId = typeof id === 'object' ? id.id : id;
+    }).returning('id');
+    const first = Array.isArray(inserted) ? inserted[0] : inserted;
+    const incomeId = (first && typeof first === 'object') ? first.id : first;
     res.status(201).json(await req.db('additional_income').where({ id: incomeId }).first());
   } catch (err) {
     res.status(500).json({ error: err.message });

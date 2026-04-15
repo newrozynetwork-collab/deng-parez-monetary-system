@@ -108,15 +108,16 @@ router.post('/', requireAdmin, async (req, res) => {
       }))
     });
 
-    const [entryId] = await req.db('revenue_entries').insert({
+    const insertedRev = await req.db('revenue_entries').insert({
       artist_id,
       amount: parseFloat(amount),
       source: source || artist.revenue_type || 'both',
       period_start, period_end, notes,
       created_by: req.session.userId
-    });
+    }).returning('id');
 
-    const id = typeof entryId === 'object' ? entryId.id : entryId;
+    const firstRev = Array.isArray(insertedRev) ? insertedRev[0] : insertedRev;
+    const id = (firstRev && typeof firstRev === 'object') ? firstRev.id : firstRev;
 
     // Insert distributions
     const distributions = [

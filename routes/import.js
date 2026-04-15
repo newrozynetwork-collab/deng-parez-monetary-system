@@ -40,7 +40,7 @@ router.post('/artists', requireAdmin, upload.single('file'), async (req, res) =>
       const existing = await req.db('artists').where('name', name).first();
       if (existing) continue;
 
-      const [id] = await req.db('artists').insert({
+      const insertedArt = await req.db('artists').insert({
         name,
         nickname: row.nickname || null,
         revenue_type: row.revenue_type || row.type || 'both',
@@ -48,8 +48,9 @@ router.post('/artists', requireAdmin, upload.single('file'), async (req, res) =>
         company_split_pct: parseFloat(row.company_split_pct || row.company_split || 40),
         bank_fee_pct: parseFloat(row.bank_fee_pct || row.bank_fee || 2.5),
         notes: row.notes || null
-      });
-      const artistId = typeof id === 'object' ? id.id : id;
+      }).returning('id');
+      const fa = Array.isArray(insertedArt) ? insertedArt[0] : insertedArt;
+      const artistId = (fa && typeof fa === 'object') ? fa.id : fa;
 
       // Import referrals if present (format: "Name1:35,Name2:5")
       const refStr = row.referrals || row.referral_chain;
@@ -117,15 +118,16 @@ router.post('/revenue', requireAdmin, upload.single('file'), async (req, res) =>
         }))
       });
 
-      const [entryId] = await req.db('revenue_entries').insert({
+      const insertedE = await req.db('revenue_entries').insert({
         artist_id: artist.id, amount,
         source: row.source || artist.revenue_type || 'both',
         period_start: row.period_start || row.start_date || row.date || null,
         period_end: row.period_end || row.end_date || null,
         notes: row.notes || null,
         created_by: req.session.userId
-      });
-      const id = typeof entryId === 'object' ? entryId.id : entryId;
+      }).returning('id');
+      const fe = Array.isArray(insertedE) ? insertedE[0] : insertedE;
+      const id = (fe && typeof fe === 'object') ? fe.id : fe;
 
       const distributions = [
         { revenue_entry_id: id, recipient_type: 'artist', recipient_name: artist.name, amount: calc.artistShare },

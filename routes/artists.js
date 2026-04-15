@@ -35,15 +35,16 @@ router.post('/', requireAdmin, async (req, res) => {
     const { name, nickname, revenue_type, artist_split_pct, company_split_pct, bank_fee_pct, notes, referrals } = req.body;
     if (!name) return res.status(400).json({ error: 'Name is required' });
 
-    const [id] = await req.db('artists').insert({
+    const inserted = await req.db('artists').insert({
       name, nickname, revenue_type,
       artist_split_pct: artist_split_pct || 60,
       company_split_pct: company_split_pct || 40,
       bank_fee_pct: bank_fee_pct || 2.5,
       notes
-    });
+    }).returning('id');
 
-    const artistId = typeof id === 'object' ? id.id : id;
+    const first = Array.isArray(inserted) ? inserted[0] : inserted;
+    const artistId = (first && typeof first === 'object') ? first.id : first;
 
     if (referrals && referrals.length > 0) {
       const refs = referrals.map((r, i) => ({

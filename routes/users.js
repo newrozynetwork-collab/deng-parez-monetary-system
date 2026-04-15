@@ -20,10 +20,11 @@ router.post('/', requireAdmin, async (req, res) => {
     if (exists) return res.status(409).json({ error: 'Username already exists' });
 
     const hash = await bcrypt.hash(password, 10);
-    const [id] = await req.db('users').insert({
+    const inserted = await req.db('users').insert({
       username, password_hash: hash, role: role || 'viewer', name
-    });
-    const userId = typeof id === 'object' ? id.id : id;
+    }).returning('id');
+    const first = Array.isArray(inserted) ? inserted[0] : inserted;
+    const userId = (first && typeof first === 'object') ? first.id : first;
     const user = await req.db('users').select('id', 'username', 'role', 'name', 'created_at').where({ id: userId }).first();
     res.status(201).json(user);
   } catch (err) {
