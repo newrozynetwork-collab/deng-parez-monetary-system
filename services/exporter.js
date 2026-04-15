@@ -90,4 +90,107 @@ async function exportRevenueToExcel(data, res) {
   await workbook.xlsx.write(res);
 }
 
-module.exports = { exportRevenueToExcel };
+async function exportArtistsToExcel(artists, res) {
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'Deng Parez Monetary System';
+
+  const sheet = workbook.addWorksheet('Artists');
+  sheet.columns = [
+    { header: 'Name', key: 'name', width: 30 },
+    { header: 'Nickname', key: 'nickname', width: 20 },
+    { header: 'Revenue Type', key: 'revenue_type', width: 15 },
+    { header: 'Artist Split %', key: 'artist_split', width: 15 },
+    { header: 'Company Split %', key: 'company_split', width: 15 },
+    { header: 'Bank Fee %', key: 'bank_fee', width: 12 },
+    { header: 'Referrals', key: 'referrals', width: 50 },
+    { header: 'Total Revenue', key: 'total_revenue', width: 15 },
+    { header: 'Total Earned', key: 'total_earned', width: 15 },
+    { header: 'Notes', key: 'notes', width: 40 },
+    { header: 'Created', key: 'created_at', width: 20 }
+  ];
+
+  // Style header row
+  sheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+  sheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF3B82F6' } };
+  sheet.getRow(1).height = 22;
+  sheet.getRow(1).alignment = { vertical: 'middle' };
+
+  artists.forEach(a => {
+    const refs = (a.referrals || [])
+      .map(r => `L${r.level}: ${r.referrer_name} (${r.commission_pct}%)`)
+      .join(', ');
+    sheet.addRow({
+      name: a.name,
+      nickname: a.nickname || '',
+      revenue_type: a.revenue_type,
+      artist_split: parseFloat(a.artist_split_pct),
+      company_split: parseFloat(a.company_split_pct),
+      bank_fee: parseFloat(a.bank_fee_pct),
+      referrals: refs || '—',
+      total_revenue: a.total_revenue || 0,
+      total_earned: a.total_earned || 0,
+      notes: a.notes || '',
+      created_at: a.created_at ? new Date(a.created_at).toISOString().slice(0, 10) : ''
+    });
+  });
+
+  // Format percentage columns
+  ['artist_split', 'company_split', 'bank_fee'].forEach(k => {
+    sheet.getColumn(k).numFmt = '0.00"%"';
+  });
+  ['total_revenue', 'total_earned'].forEach(k => {
+    sheet.getColumn(k).numFmt = '$#,##0.00';
+  });
+
+  // Freeze header row
+  sheet.views = [{ state: 'frozen', ySplit: 1 }];
+
+  // Alternate row colors
+  for (let i = 2; i <= artists.length + 1; i++) {
+    if (i % 2 === 0) {
+      sheet.getRow(i).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } };
+    }
+  }
+
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', `attachment; filename=artists-${new Date().toISOString().slice(0, 10)}.xlsx`);
+  await workbook.xlsx.write(res);
+}
+
+function exportArtistsToCSV(artists, res) {
+  const escape = v => {
+    if (v === null || v === undefined) return '';
+    const s = String(v);
+    if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+      return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+  };
+
+  const headers = ['Name', 'Nickname', 'Revenue Type', 'Artist Split %', 'Company Split %', 'Bank Fee %', 'Referrals', 'Total Revenue', 'Total Earned', 'Notes'];
+  const rows = [headers.join(',')];
+
+  artists.forEach(a => {
+    const refs = (a.referrals || [])
+      .map(r => `L${r.level}: ${r.referrer_name} (${r.commission_pct}%)`)
+      .join('; ');
+    rows.push([
+      escape(a.name),
+      escape(a.nickname),
+      escape(a.revenue_type),
+      escape(a.artist_split_pct),
+      escape(a.company_split_pct),
+      escape(a.bank_fee_pct),
+      escape(refs),
+      escape(a.total_revenue || 0),
+      escape(a.total_earned || 0),
+      escape(a.notes)
+    ].join(','));
+  });
+
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename=artists-${new Date().toISOString().slice(0, 10)}.csv`);
+  res.send('\ufeff' + rows.join('\n'));
+}
+
+module.exports = { exportRevenueToExcel, exportArtistsToExcel, exportArtistsToCSV };

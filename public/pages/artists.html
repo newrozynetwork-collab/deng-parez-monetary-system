@@ -88,6 +88,47 @@
                 </div>
             </div>
             <div class="container-fluid">
+                <!-- Search & Export Bar -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body py-3">
+                                <div class="row align-items-center">
+                                    <div class="col-md-6 col-lg-7">
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text bg-white">
+                                                    <i data-feather="search" style="width:18px;height:18px;"></i>
+                                                </span>
+                                            </div>
+                                            <input type="text" id="artist-search" class="form-control form-control-lg"
+                                                   placeholder="Search by name, nickname, notes, referrer..." autocomplete="off">
+                                            <div class="input-group-append">
+                                                <button class="btn btn-light" type="button" id="clear-search" title="Clear search" style="display:none;">
+                                                    <i data-feather="x" style="width:16px;height:16px;"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-lg-5 text-right mt-2 mt-md-0">
+                                        <span class="text-muted mr-3" id="result-count">—</span>
+                                        <div class="btn-group">
+                                            <button class="btn btn-success" onclick="exportArtists('xlsx')" title="Export to Excel">
+                                                <i data-feather="download" class="feather-icon mr-1"></i> Excel
+                                            </button>
+                                            <button class="btn btn-outline-success" onclick="exportArtists('csv')" title="Export to CSV">
+                                                CSV
+                                            </button>
+                                            <button class="btn btn-outline-secondary" onclick="printArtists()" title="Print">
+                                                <i data-feather="printer" class="feather-icon"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="row">
                     <div class="col-12">
                         <div class="card">

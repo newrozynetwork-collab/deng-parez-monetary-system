@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const { requireAuth, requireAdmin } = require('../middleware/auth');
+const { exportArtistsToExcel, exportArtistsToCSV } = require('../services/exporter');
 
 router.get('/', requireAuth, async (req, res) => {
   try {
@@ -97,6 +98,56 @@ router.delete('/:id', requireAdmin, async (req, res) => {
   try {
     await req.db('artists').where({ id: req.params.id }).del();
     res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Export artists (format=xlsx|csv)
+router.get('/export/download', requireAuth, async (req, res) => {
+  try {
+    const format = (req.query.format || 'xlsx').toLowerCase();
+    const artists = await req.db('artists').orderBy('name');
+    const artistIds = artists.map(a => a.id);
+
+    // Attach referrals
+    const referrals = await req.db('referral_levels').whereIn('artist_id', artistIds).orderBy('level');
+    const refMap = {};
+    referrals.forEach(r => {
+      if (!refMap[r.artist_id]) refMap[r.artist_id] = [];
+      refMap[r.artist_id].push(r);
+    });
+
+    // Compute total revenue per artist
+    const revTotals = await req.db('revenue_entries')
+      .whereIn('artist_id', artistIds)
+      .groupBy('artist_id')
+      .select('artist_id')
+      .sum('amount as total');
+    const revMap = {};
+    revTotals.forEach(r => { revMap[r.artist_id] = parseFloat(r.total) || 0; });
+
+    // Compute total earned per artist (from distributions)
+    const earnTotals = await req.db('revenue_distributions')
+      .join('revenue_entries', 'revenue_distributions.revenue_entry_id', 'revenue_entries.id')
+      .where('revenue_distributions.recipient_type', 'artist')
+      .whereIn('revenue_entries.artist_id', artistIds)
+      .groupBy('revenue_entries.artist_id')
+      .select('revenue_entries.artist_id')
+      .sum('revenue_distributions.amount as total');
+    const earnMap = {};
+    earnTotals.forEach(r => { earnMap[r.artist_id] = parseFloat(r.total) || 0; });
+
+    artists.forEach(a => {
+      a.referrals = refMap[a.id] || [];
+      a.total_revenue = revMap[a.id] || 0;
+      a.total_earned = earnMap[a.id] || 0;
+    });
+
+    if (format === 'csv') {
+      return exportArtistsToCSV(artists, res);
+    }
+    return await exportArtistsToExcel(artists, res);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

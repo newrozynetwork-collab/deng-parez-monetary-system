@@ -1,8 +1,17 @@
 var artistsData = [];
+var artistsTable = null;
 
 App.init(function() {
     loadArtists();
+    initInstantSearch();
 });
+
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/[&<>"']/g, function(m) {
+        return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m];
+    });
+}
 
 function loadArtists() {
     App.api('GET', '/api/artists').done(function(artists) {
@@ -11,11 +20,16 @@ function loadArtists() {
         tbody.empty();
         artists.forEach(function(a) {
             var refCount = a.referrals ? a.referrals.length : 0;
+            var refNames = (a.referrals || []).map(function(r) { return r.referrer_name; }).join(' ');
             var refText = refCount > 0 ? refCount + ' level(s)' : '<span class="text-muted">None</span>';
+            // Hidden searchable data
+            var searchable = [
+                a.name, a.nickname || '', a.revenue_type, a.notes || '', refNames
+            ].join(' ');
             tbody.append(
-                '<tr>' +
-                '<td><a href="/artists/' + a.id + '" class="text-primary font-weight-medium">' + a.name + '</a></td>' +
-                '<td>' + (a.nickname || '-') + '</td>' +
+                '<tr data-search="' + escapeHtml(searchable.toLowerCase()) + '">' +
+                '<td><a href="/artists/' + a.id + '" class="text-primary font-weight-medium">' + escapeHtml(a.name) + '</a></td>' +
+                '<td>' + escapeHtml(a.nickname || '-') + '</td>' +
                 '<td>' + App.sourceBadge(a.revenue_type) + '</td>' +
                 '<td>' + a.artist_split_pct + '%</td>' +
                 '<td>' + a.company_split_pct + '%</td>' +
@@ -31,9 +45,172 @@ function loadArtists() {
         if ($.fn.DataTable.isDataTable('#artists-table')) {
             $('#artists-table').DataTable().destroy();
         }
-        $('#artists-table').DataTable({ responsive: true, order: [[0, 'asc']] });
+        artistsTable = $('#artists-table').DataTable({
+            responsive: true,
+            order: [[0, 'asc']],
+            pageLength: 25,
+            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'All']],
+            dom: 'lrtip', // hide default search since we have our own
+            language: { search: '', searchPlaceholder: 'Filter...' }
+        });
+        updateResultCount();
         feather.replace();
+
+        // Re-apply current filter if search box has value
+        var q = $('#artist-search').val();
+        if (q) filterArtists(q);
     });
+}
+
+function initInstantSearch() {
+    var $input = $('#artist-search');
+    var $clear = $('#clear-search');
+
+    // Focus search with Ctrl+K / Cmd+K
+    $(document).on('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            $input.focus().select();
+        }
+        if (e.key === 'Escape' && document.activeElement === $input[0]) {
+            $input.val('').trigger('input');
+        }
+    });
+
+    // Instant search as you type
+    $input.on('input', function() {
+        var q = $(this).val();
+        $clear.toggle(q.length > 0);
+        filterArtists(q);
+    });
+
+    $clear.on('click', function() {
+        $input.val('').trigger('input').focus();
+    });
+}
+
+function filterArtists(query) {
+    if (!artistsTable) return;
+    // Use DataTables' search API (which is instant)
+    artistsTable.search(query).draw();
+    updateResultCount();
+}
+
+function updateResultCount() {
+    if (!artistsTable) return;
+    var info = artistsTable.page.info();
+    var total = info.recordsTotal;
+    var filtered = info.recordsDisplay;
+    var q = $('#artist-search').val();
+    if (q && filtered !== total) {
+        $('#result-count').html('<strong>' + filtered + '</strong> of ' + total + ' artists');
+    } else {
+        $('#result-count').html('<strong>' + total + '</strong> artists');
+    }
+}
+
+function exportArtists(format) {
+    // Build query with current search so export matches what user sees
+    var q = $('#artist-search').val();
+    if (q && artistsTable) {
+        // For filtered export, use client-side CSV generation
+        if (format === 'csv' || format === 'xlsx') {
+            clientSideExport(format, q);
+            return;
+        }
+    }
+    // Otherwise download from server (full list with computed totals)
+    window.location.href = '/api/artists/export/download?format=' + format;
+}
+
+function clientSideExport(format, query) {
+    // Get only visible (filtered) rows
+    var rows = artistsTable.rows({ search: 'applied' }).data();
+    var filtered = [];
+    for (var i = 0; i < rows.length; i++) {
+        // Find the artist by name from the rendered row
+        var nameCell = $(rows[i][0]).text() || rows[i][0];
+        var nameMatch = nameCell.match(/[^<]+$/);
+        filtered.push(nameCell.replace(/<[^>]+>/g, '').trim());
+    }
+    var matchingArtists = artistsData.filter(function(a) {
+        return filtered.indexOf(a.name) !== -1;
+    });
+
+    if (format === 'csv') {
+        downloadCSV(matchingArtists, 'artists-filtered-' + new Date().toISOString().slice(0,10) + '.csv');
+    } else {
+        // For xlsx with filter, fall back to server (full list) and note
+        App.showSuccess('Excel export uses the full list. CSV supports filtered export.');
+        window.location.href = '/api/artists/export/download?format=xlsx';
+    }
+}
+
+function downloadCSV(artists, filename) {
+    var headers = ['Name', 'Nickname', 'Revenue Type', 'Artist Split %', 'Company Split %', 'Bank Fee %', 'Referrals', 'Notes'];
+    var esc = function(v) {
+        if (v === null || v === undefined) return '';
+        var s = String(v);
+        return (s.indexOf(',') > -1 || s.indexOf('"') > -1 || s.indexOf('\n') > -1) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    };
+    var rows = [headers.join(',')];
+    artists.forEach(function(a) {
+        var refs = (a.referrals || []).map(function(r) { return 'L' + r.level + ': ' + r.referrer_name + ' (' + r.commission_pct + '%)'; }).join('; ');
+        rows.push([
+            esc(a.name), esc(a.nickname), esc(a.revenue_type),
+            esc(a.artist_split_pct), esc(a.company_split_pct), esc(a.bank_fee_pct),
+            esc(refs), esc(a.notes)
+        ].join(','));
+    });
+    var blob = new Blob(['\ufeff' + rows.join('\n')], { type: 'text/csv;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement('a');
+    link.href = url; link.download = filename;
+    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    setTimeout(function() { URL.revokeObjectURL(url); }, 100);
+    App.showSuccess('Exported ' + artists.length + ' artist' + (artists.length === 1 ? '' : 's'));
+}
+
+function printArtists() {
+    var rows = artistsTable.rows({ search: 'applied' }).data();
+    var filtered = [];
+    for (var i = 0; i < rows.length; i++) {
+        var nameCell = typeof rows[i][0] === 'string' ? rows[i][0] : rows[i][0];
+        filtered.push(String(nameCell).replace(/<[^>]+>/g, '').trim());
+    }
+    var artists = artistsData.filter(function(a) { return filtered.indexOf(a.name) !== -1; });
+
+    var html = '<html><head><title>Artists — Deng Parez</title>' +
+        '<style>' +
+        'body{font-family:Arial,sans-serif;padding:20px;color:#1f2937;}' +
+        'h1{color:#3b82f6;border-bottom:2px solid #3b82f6;padding-bottom:8px;}' +
+        'table{width:100%;border-collapse:collapse;margin-top:15px;font-size:12px;}' +
+        'th{background:#3b82f6;color:#fff;padding:8px;text-align:left;}' +
+        'td{border:1px solid #e5e7eb;padding:6px 8px;}' +
+        'tr:nth-child(even){background:#f9fafb;}' +
+        '.meta{color:#6b7280;font-size:12px;margin-bottom:10px;}' +
+        '@media print { body { padding: 0; } }' +
+        '</style></head><body>' +
+        '<h1>Artists — Deng Parez Monetary System</h1>' +
+        '<div class="meta">Generated: ' + new Date().toLocaleString() + ' · Total: ' + artists.length + ' artist' + (artists.length === 1 ? '' : 's') + '</div>' +
+        '<table><thead><tr>' +
+        '<th>Name</th><th>Nickname</th><th>Type</th><th>Artist %</th><th>Company %</th><th>Bank Fee %</th><th>Referrals</th>' +
+        '</tr></thead><tbody>';
+    artists.forEach(function(a) {
+        var refs = (a.referrals || []).map(function(r) { return 'L' + r.level + ': ' + r.referrer_name + ' (' + r.commission_pct + '%)'; }).join('<br>');
+        html += '<tr><td>' + escapeHtml(a.name) + '</td>' +
+            '<td>' + escapeHtml(a.nickname || '-') + '</td>' +
+            '<td>' + a.revenue_type + '</td>' +
+            '<td>' + a.artist_split_pct + '%</td>' +
+            '<td>' + a.company_split_pct + '%</td>' +
+            '<td>' + a.bank_fee_pct + '%</td>' +
+            '<td>' + (refs || '-') + '</td></tr>';
+    });
+    html += '</tbody></table></body></html>';
+
+    var w = window.open('', '_blank');
+    w.document.write(html); w.document.close();
+    setTimeout(function() { w.focus(); w.print(); }, 250);
 }
 
 function resetForm() {
