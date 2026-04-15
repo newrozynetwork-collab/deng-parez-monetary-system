@@ -85,7 +85,10 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://app-production-0a17.up.railway.app/assets/extra-libs/DataTables/DataTables-1.10.16/js/jquery.dataTables.min.js)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://app-production-0a17.up.railway.app/assets/extra-libs/DataTables/DataTables-1.10.16/js/dataTables.bootstrap4.min.js)",
       "Bash(curl -s -c /tmp/c.txt -X POST https://app-production-0a17.up.railway.app/api/auth/login -H \"Content-Type: application/json\" -d '{\"username\":\"admin\",\"password\":\"admin123\"}' curl -s -b /tmp/c.txt https://app-production-0a17.up.railway.app/api/categories)",
-      "Bash(rm /tmp/c.txt)"
+      "Bash(rm /tmp/c.txt)",
+      "Bash(curl -s -H 'Authorization: Bearer 7d06a4a5-715d-4520-a19e-291d134a5b02' -H 'Content-Type: application/json' -X POST https://backboard.railway.app/graphql/v2 -d '{\"query\":\"{ project\\(id: \\\\\"6903655f-9663-43a4-b5fd-592ca4b8480f\\\\\"\\) { services { edges { node { name serviceInstances\\(first: 1\\) { edges { node { latestDeployment { status meta } } } } } } } } }\"}')",
+      "Bash(curl -s -c /tmp/c.txt -X POST https://app-production-0a17.up.railway.app/api/auth/login -H \"Content-Type: application/json\" -d '{\"username\":\"admin\",\"password\":\"admin123\"}')",
+      "Bash(curl -s -b /tmp/c.txt -X POST https://app-production-0a17.up.railway.app/api/youtube/unlink/1)"
     ]
   }
 }

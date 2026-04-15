@@ -62,6 +62,7 @@ app.get('/', (req, res) => res.redirect('/dashboard'));
 app.get('/dashboard', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'dashboard.html')));
 app.get('/artists', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'artists.html')));
 app.get('/artists/:id', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'artist-detail.html')));
+app.get('/youtube', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'youtube.html')));
 app.get('/referrals', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'referrals.html')));
 app.get('/revenue/new', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'revenue-entry.html')));
 app.get('/revenue', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'revenue-history.html')));

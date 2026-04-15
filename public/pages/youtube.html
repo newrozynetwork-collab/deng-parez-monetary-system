@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/images/favicon.png">
+    <title>YouTube - Deng Parez</title>
+    <link href="/css/style.min.css" rel="stylesheet">
+    <link href="/css/custom-app.css" rel="stylesheet">
+    <link href="/assets/extra-libs/DataTables/DataTables-1.10.16/css/dataTables.bootstrap4.min.css" rel="stylesheet">
+    <style>
+        .chart-container { position: relative; height: 300px; }
+        .yt-row-thumb { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .status-connected { background: #10b981; }
+        .status-public { background: #f59e0b; }
+    </style>
+    <script>
+        (function(){ try { var t = localStorage.getItem("dp-theme") || "light"; document.documentElement.setAttribute("data-theme", t); } catch(e){} })();
+    </script>
+</head>
+<body>
+    <div class="preloader"><div class="lds-ripple"><div class="lds-pos"></div><div class="lds-pos"></div></div></div>
+    <div id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full" data-sidebar-position="absolute" data-header-position="relative" data-boxed-layout="full">
+        <header class="topbar">
+            <nav class="navbar top-navbar navbar-expand-md navbar-dark">
+                <div class="navbar-header">
+                    <a class="nav-toggler waves-effect waves-light d-block d-md-none" href="javascript:void(0)"><i class="ti-menu ti-close"></i></a>
+                    <div class="navbar-brand"><a href="/dashboard" class="logo"><b class="logo-icon"><img src="/assets/images/logo-icon.png" alt="logo" class="dark-logo" /><img src="/assets/images/logo-light-icon.png" alt="logo" class="light-logo" /></b><span class="logo-text"><img src="/assets/images/logo-text.png" alt="logo" class="dark-logo" /><img src="/assets/images/logo-light-text.png" class="light-logo" alt="logo" /></span></a><a class="sidebartoggler d-none d-md-block" href="javascript:void(0)" data-sidebartype="mini-sidebar"><i class="mdi mdi-toggle-switch mdi-toggle-switch-off font-20"></i></a></div>
+                    <a class="topbartoggler d-block d-md-none waves-effect waves-light" href="javascript:void(0)" data-toggle="collapse" data-target="#navbarSupportedContent"><i class="ti-more"></i></a>
+                </div>
+                <div class="navbar-collapse collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav float-left mr-auto"></ul>
+                    <ul class="navbar-nav float-right"><li class="nav-item dropdown"><a class="nav-link dropdown-toggle waves-effect waves-dark pro-pic" href="#" data-toggle="dropdown"><img src="/assets/images/users/1.jpg" alt="user" class="rounded-circle" width="40"><span class="m-l-5 font-medium d-none d-sm-inline-block" id="user-name">User</span></a><div class="dropdown-menu dropdown-menu-right user-dd animated flipInY"><a class="dropdown-item" href="/settings"><i class="ti-settings m-r-5 m-l-5"></i> Settings</a><div class="dropdown-divider"></div><a class="dropdown-item" href="#" id="logout-btn"><i class="fa fa-power-off m-r-5 m-l-5"></i> Logout</a></div></li></ul>
+                </div>
+            </nav>
+        </header>
+        <aside class="left-sidebar">
+            <div class="scroll-sidebar"><nav class="sidebar-nav"><ul id="sidebarnav">
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/dashboard"><i data-feather="home" class="feather-icon"></i><span class="hide-menu">Dashboard</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/artists"><i data-feather="users" class="feather-icon"></i><span class="hide-menu">Artists</span></a></li>
+                <li class="sidebar-item selected"><a class="sidebar-link waves-effect waves-dark" href="/youtube"><i data-feather="youtube" class="feather-icon"></i><span class="hide-menu">YouTube</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/referrals"><i data-feather="git-branch" class="feather-icon"></i><span class="hide-menu">Referrals</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)"><i data-feather="dollar-sign" class="feather-icon"></i><span class="hide-menu">Revenue</span></a><ul class="collapse first-level"><li class="sidebar-item"><a href="/revenue/new" class="sidebar-link"><span class="hide-menu">New Entry</span></a></li><li class="sidebar-item"><a href="/revenue" class="sidebar-link"><span class="hide-menu">History</span></a></li></ul></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/expenses"><i data-feather="trending-down" class="feather-icon"></i><span class="hide-menu">Expenses</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/additional-income"><i data-feather="plus-circle" class="feather-icon"></i><span class="hide-menu">Additional Income</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/reports"><i data-feather="bar-chart-2" class="feather-icon"></i><span class="hide-menu">Reports</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/user-breakdown"><i data-feather="pie-chart" class="feather-icon"></i><span class="hide-menu">User Breakdown</span></a></li>
+                <li class="sidebar-item admin-only"><a class="sidebar-link waves-effect waves-dark" href="/settings"><i data-feather="settings" class="feather-icon"></i><span class="hide-menu">Settings</span></a></li>
+            </ul></nav></div>
+        </aside>
+        <div class="page-wrapper">
+            <div class="page-breadcrumb">
+                <div class="row">
+                    <div class="col-md-6 align-self-center">
+                        <h3 class="page-title text-truncate text-dark font-weight-medium mb-1">
+                            <i data-feather="youtube" style="color:#ef4444;vertical-align:middle;"></i>
+                            YouTube Hub
+                        </h3>
+                        <nav aria-label="breadcrumb"><ol class="breadcrumb m-0 p-0"><li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li><li class="breadcrumb-item active">YouTube</li></ol></nav>
+                    </div>
+                    <div class="col-md-6 align-self-center text-right">
+                        <button class="btn btn-primary admin-only" onclick="syncAllConnected()" id="sync-all-btn">
+                            <i data-feather="refresh-cw" class="feather-icon mr-1"></i> Sync All Revenue
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="container-fluid">
+                <!-- Aggregate Stats -->
+                <div class="row">
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card stat-card" style="background: linear-gradient(135deg, #ef4444, #f87171);">
+                            <div class="card-body">
+                                <i data-feather="youtube" class="text-white op-7"></i>
+                                <span class="text-white op-7 d-block my-2">Linked Channels</span>
+                                <h3 class="text-white mb-0" id="stat-channels">0</h3>
+                                <small class="text-white op-7" id="stat-connected">0 with Analytics</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card stat-card" style="background: linear-gradient(135deg, #3b82f6, #60a5fa);">
+                            <div class="card-body">
+                                <i data-feather="users" class="text-white op-7"></i>
+                                <span class="text-white op-7 d-block my-2">Total Subscribers</span>
+                                <h3 class="text-white mb-0" id="stat-subs">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card stat-card" style="background: linear-gradient(135deg, #14b8a6, #2dd4bf);">
+                            <div class="card-body">
+                                <i data-feather="eye" class="text-white op-7"></i>
+                                <span class="text-white op-7 d-block my-2">Total Views</span>
+                                <h3 class="text-white mb-0" id="stat-views">0</h3>
+                                <small class="text-white op-7" id="stat-videos">0 videos</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card stat-card" style="background: linear-gradient(135deg, #10b981, #34d399);">
+                            <div class="card-body">
+                                <i data-feather="dollar-sign" class="text-white op-7"></i>
+                                <span class="text-white op-7 d-block my-2">YT Revenue (synced)</span>
+                                <h3 class="text-white mb-0" id="stat-revenue">$0</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Revenue Trend -->
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title">Monthly Revenue Trend (All Channels)</h4>
+                                <div class="chart-container"><canvas id="revenue-chart"></canvas></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title">Top Earners</h4>
+                                <div id="top-earners"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Connected Channels Table -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-3">
+                                    <h4 class="card-title mb-0">All Linked Channels</h4>
+                                    <div class="ml-auto">
+                                        <input type="text" class="form-control form-control-sm" id="ch-search" placeholder="Search channels..." style="width:250px;">
+                                    </div>
+                                </div>
+                                <div class="table-responsive">
+                                    <table id="channels-table" class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th></th>
+                                                <th>Artist</th>
+                                                <th>Channel</th>
+                                                <th>Subscribers</th>
+                                                <th>Views</th>
+                                                <th>Videos</th>
+                                                <th>Synced Revenue</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="channels-body"></tbody>
+                                    </table>
+                                </div>
+                                <div id="empty-state" style="display:none;" class="text-center py-5">
+                                    <i data-feather="youtube" style="width:64px;height:64px;color:#ccc;"></i>
+                                    <p class="text-muted mt-3">No YouTube channels linked yet.<br>Open any artist's page and link their channel to get started.</p>
+                                    <a href="/artists" class="btn btn-primary">Go to Artists</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <footer class="footer text-center">Deng Parez Monetary System &copy; 2024</footer>
+        </div>
+    </div>
+    <script src="/assets/libs/jquery/dist/jquery.min.js"></script>
+    <script src="/assets/libs/popper.js/dist/umd/popper.min.js"></script>
+    <script src="/assets/libs/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/app.init.js"></script>
+    <script src="/js/custom.js"></script>
+    <script src="/js/feather.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="/assets/extra-libs/DataTables/DataTables-1.10.16/js/jquery.dataTables.min.js"></script>
+    <script src="/assets/extra-libs/DataTables/DataTables-1.10.16/js/dataTables.bootstrap4.min.js"></script>
+    <script src="/app/common.js"></script>
+    <script>
+    var overviewData = null;
+    var revenueChart = null;
+    var channelsTable = null;
+
+    App.init(function() {
+        loadOverview();
+        loadTrends();
+    });
+
+    function formatNum(n) {
+        n = parseInt(n || 0);
+        if (n >= 1e9) return (n/1e9).toFixed(1) + 'B';
+        if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
+        if (n >= 1e3) return (n/1e3).toFixed(1) + 'K';
+        return n.toString();
+    }
+
+    function loadOverview() {
+        App.api('GET', '/api/youtube/overview').done(function(data) {
+            overviewData = data;
+            $('#stat-channels').text(data.totals.channels);
+            $('#stat-connected').text(data.totals.connected + ' with Analytics');
+            $('#stat-subs').text(formatNum(data.totals.subscribers));
+            $('#stat-views').text(formatNum(data.totals.views));
+            $('#stat-videos').text(formatNum(data.totals.videos) + ' videos');
+            $('#stat-revenue').text(App.formatCurrency(data.totals.revenue));
+
+            renderChannelsTable(data.artists);
+            renderTopEarners(data.artists);
+            feather.replace();
+        });
+    }
+
+    function renderChannelsTable(artists) {
+        var tbody = $('#channels-body');
+        tbody.empty();
+
+        if (artists.length === 0) {
+            $('#empty-state').show();
+            $('#channels-table').hide();
+            return;
+        }
+        $('#empty-state').hide();
+        $('#channels-table').show();
+
+        artists.forEach(function(a) {
+            var thumb = a.stats.channel_thumbnail
+                ? '<img src="' + a.stats.channel_thumbnail + '" class="yt-row-thumb">'
+                : '<div class="yt-row-thumb" style="background:#ef4444;display:flex;align-items:center;justify-content:center;color:#fff;"><i data-feather="youtube" style="width:20px;height:20px;"></i></div>';
+            var statusDot = a.oauth.connected
+                ? '<span class="status-dot status-connected"></span>Analytics connected'
+                : '<span class="status-dot status-public"></span>Public only';
+            var lastSyncInfo = a.oauth.connected && a.oauth.last_synced_at
+                ? '<br><small class="text-muted">Synced ' + new Date(a.oauth.last_synced_at).toLocaleDateString() + '</small>'
+                : '';
+            tbody.append(
+                '<tr>' +
+                '<td>' + thumb + '</td>' +
+                '<td><a href="/artists/' + a.id + '" class="text-primary font-weight-medium">' + a.name + '</a>' +
+                    (a.nickname ? '<br><small class="text-muted">' + a.nickname + '</small>' : '') + '</td>' +
+                '<td><a href="' + a.youtube_channel_url + '" target="_blank">' + (a.youtube_channel_title || '(unknown)') + '</a></td>' +
+                '<td>' + formatNum(a.stats.subscriber_count) + '</td>' +
+                '<td>' + formatNum(a.stats.view_count) + '</td>' +
+                '<td>' + formatNum(a.stats.video_count) + '</td>' +
+                '<td class="text-success font-weight-medium">' + App.formatCurrency(a.revenue_total) + '</td>' +
+                '<td>' + statusDot + lastSyncInfo + '</td>' +
+                '<td>' +
+                    '<a href="/artists/' + a.id + '" class="btn btn-sm btn-outline-primary" title="View"><i class="ti-eye"></i></a>' +
+                    (a.oauth.connected ? ' <button class="btn btn-sm btn-outline-success admin-only" onclick="syncOne(' + a.id + ',this)" title="Sync revenue"><i class="ti-reload"></i></button>' : '') +
+                '</td>' +
+                '</tr>'
+            );
+        });
+
+        if ($.fn.DataTable.isDataTable('#channels-table')) $('#channels-table').DataTable().destroy();
+        channelsTable = $('#channels-table').DataTable({
+            responsive: true,
+            order: [[3, 'desc']],
+            pageLength: 25,
+            dom: 'lrtip'
+        });
+
+        $('#ch-search').off('input').on('input', function() {
+            channelsTable.search($(this).val()).draw();
+        });
+    }
+
+    function renderTopEarners(artists) {
+        var top = artists.filter(a => a.revenue_total > 0).sort((a,b) => b.revenue_total - a.revenue_total).slice(0, 5);
+        var container = $('#top-earners');
+        container.empty();
+        if (top.length === 0) {
+            container.html('<p class="text-muted text-center py-3">No revenue synced yet.<br><small>Connect YouTube Analytics on an artist to pull revenue.</small></p>');
+            return;
+        }
+        top.forEach(function(a, i) {
+            var medal = ['🥇','🥈','🥉','','', ''][i] || '';
+            container.append(
+                '<div class="d-flex align-items-center py-2 border-bottom">' +
+                '<span style="font-size:1.2em;width:30px;">' + (medal || (i+1)+'.') + '</span>' +
+                '<div class="flex-grow-1 ml-2">' +
+                    '<strong>' + a.name + '</strong><br>' +
+                    '<small class="text-muted">' + (a.youtube_channel_title || '') + '</small>' +
+                '</div>' +
+                '<span class="text-success font-weight-medium">' + App.formatCurrency(a.revenue_total) + '</span>' +
+                '</div>'
+            );
+        });
+    }
+
+    function loadTrends() {
+        App.api('GET', '/api/youtube/trends').done(function(trend) {
+            var ctx = document.getElementById('revenue-chart').getContext('2d');
+            if (revenueChart) revenueChart.destroy();
+            revenueChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: trend.map(t => t.month),
+                    datasets: [{
+                        label: 'Revenue',
+                        data: trend.map(t => t.revenue),
+                        backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                        borderColor: '#10b981',
+                        borderWidth: 1,
+                        yAxisID: 'y'
+                    }, {
+                        type: 'line',
+                        label: 'Views',
+                        data: trend.map(t => t.views),
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'transparent',
+                        tension: 0.3,
+                        yAxisID: 'y1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } },
+                    scales: {
+                        y: { beginAtZero: true, position: 'left', title: { display: true, text: 'Revenue ($)' }, ticks: { callback: v => '$' + v } },
+                        y1: { beginAtZero: true, position: 'right', title: { display: true, text: 'Views' }, grid: { drawOnChartArea: false }, ticks: { callback: formatNum } }
+                    }
+                }
+            });
+        });
+    }
+
+    function syncOne(artistId, btn) {
+        var orig = $(btn).html();
+        $(btn).prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+        App.api('POST', '/api/youtube/sync/' + artistId).done(function(res) {
+            App.showSuccess('Synced ' + res.monthsSynced + ' months · ' + App.formatCurrency(res.totalRevenue));
+            loadOverview();
+            loadTrends();
+        }).always(function() {
+            $(btn).prop('disabled', false).html(orig);
+        });
+    }
+
+    function syncAllConnected() {
+        if (!overviewData) return;
+        var connected = overviewData.artists.filter(a => a.oauth.connected);
+        if (connected.length === 0) { App.showError('No artists have Analytics connected'); return; }
+        if (!confirm('Sync revenue for ' + connected.length + ' connected channels? This may take a moment.')) return;
+
+        var btn = $('#sync-all-btn');
+        var orig = btn.html();
+        btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Syncing...');
+
+        var done = 0, failed = 0;
+        var promises = connected.map(function(a) {
+            return App.api('POST', '/api/youtube/sync/' + a.id)
+                .done(() => done++).fail(() => failed++);
+        });
+        $.when.apply($, promises).always(function() {
+            App.showSuccess('Done: ' + done + ' synced, ' + failed + ' failed');
+            btn.prop('disabled', false).html(orig);
+            loadOverview();
+            loadTrends();
+        });
+    }
+    </script>
+</body>
+</html>

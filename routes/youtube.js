@@ -227,11 +227,12 @@ router.get('/callback', async (req, res) => {
 });
 
 /**
- * Sync revenue for an artist (uses OAuth)
+ * Sync revenue for an artist (uses OAuth). Stores in youtube_revenue_history.
  */
 router.post('/sync/:artistId', requireAdmin, async (req, res) => {
   try {
-    const oauth = await req.db('youtube_accounts').where({ artist_id: req.params.artistId }).first();
+    const artistId = parseInt(req.params.artistId);
+    const oauth = await req.db('youtube_accounts').where({ artist_id: artistId }).first();
     if (!oauth) return res.status(404).json({ error: 'YouTube account not connected for this artist' });
 
     // Default: last 12 months
@@ -248,8 +249,29 @@ router.post('/sync/:artistId', requireAdmin, async (req, res) => {
       req.body.endDate || fmt(endDate)
     );
 
+    // Parse rows and store in history
+    // columnHeaders order: month, views, estimatedRevenue, estimatedAdRevenue, grossRevenue, cpm, monetizedPlaybacks
+    const rows = revenueData.rows || [];
+    const saved = [];
+    for (const r of rows) {
+      const record = {
+        artist_id: artistId,
+        channel_id: oauth.channel_id,
+        month: r[0],
+        views: parseInt(r[1]) || 0,
+        estimated_revenue: parseFloat(r[2]) || 0,
+        estimated_ad_revenue: parseFloat(r[3]) || 0,
+        gross_revenue: parseFloat(r[4]) || 0,
+        cpm: parseFloat(r[5]) || 0,
+        monetized_playbacks: parseInt(r[6]) || 0,
+        synced_at: new Date()
+      };
+      await req.db('youtube_revenue_history').insert(record).onConflict(['artist_id', 'month']).merge();
+      saved.push(record);
+    }
+
     // Update last sync
-    await req.db('youtube_accounts').where({ artist_id: req.params.artistId }).update({
+    await req.db('youtube_accounts').where({ artist_id: artistId }).update({
       last_synced_at: new Date(),
       sync_status: 'success',
       last_error: null
@@ -257,9 +279,9 @@ router.post('/sync/:artistId', requireAdmin, async (req, res) => {
 
     res.json({
       ok: true,
-      revenue: revenueData,
-      columnHeaders: revenueData.columnHeaders,
-      rows: revenueData.rows || []
+      monthsSynced: saved.length,
+      totalRevenue: saved.reduce((s, r) => s + r.estimated_revenue, 0),
+      rows: saved
     });
   } catch (err) {
     console.error('Sync error:', err);
@@ -267,6 +289,118 @@ router.post('/sync/:artistId', requireAdmin, async (req, res) => {
       sync_status: 'error',
       last_error: err.message
     }).catch(() => {});
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * Get stored revenue history for an artist
+ */
+router.get('/revenue-history/:artistId', requireAuth, async (req, res) => {
+  try {
+    const rows = await req.db('youtube_revenue_history')
+      .where({ artist_id: req.params.artistId })
+      .orderBy('month');
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * Overview: all linked YouTube channels with stats
+ */
+router.get('/overview', requireAuth, async (req, res) => {
+  try {
+    const artists = await req.db('artists')
+      .whereNotNull('youtube_channel_id')
+      .select('id', 'name', 'nickname', 'youtube_channel_id', 'youtube_channel_url', 'youtube_channel_title');
+
+    if (artists.length === 0) {
+      return res.json({ artists: [], totals: { channels: 0, subscribers: 0, views: 0, videos: 0, connected: 0, revenue: 0 } });
+    }
+
+    const artistIds = artists.map(a => a.id);
+
+    // Stats
+    const stats = await req.db('youtube_channel_stats').whereIn('artist_id', artistIds);
+    const statsMap = {};
+    stats.forEach(s => { statsMap[s.artist_id] = s; });
+
+    // OAuth accounts
+    const accounts = await req.db('youtube_accounts').whereIn('artist_id', artistIds);
+    const accountMap = {};
+    accounts.forEach(a => { accountMap[a.artist_id] = a; });
+
+    // Revenue totals from history
+    const revenueTotals = await req.db('youtube_revenue_history')
+      .whereIn('artist_id', artistIds)
+      .groupBy('artist_id')
+      .select('artist_id')
+      .sum('estimated_revenue as total_revenue')
+      .sum('views as total_views')
+      .max('month as last_month');
+    const revMap = {};
+    revenueTotals.forEach(r => { revMap[r.artist_id] = r; });
+
+    artists.forEach(a => {
+      const s = statsMap[a.id] || {};
+      const acc = accountMap[a.id];
+      const rev = revMap[a.id] || {};
+      a.stats = {
+        subscriber_count: parseInt(s.subscriber_count || 0),
+        view_count: parseInt(s.view_count || 0),
+        video_count: parseInt(s.video_count || 0),
+        channel_thumbnail: s.channel_thumbnail,
+        fetched_at: s.fetched_at
+      };
+      a.oauth = acc ? {
+        connected: true,
+        channel_title: acc.channel_title,
+        last_synced_at: acc.last_synced_at,
+        sync_status: acc.sync_status,
+        last_error: acc.last_error
+      } : { connected: false };
+      a.revenue_total = parseFloat(rev.total_revenue) || 0;
+      a.views_tracked = parseInt(rev.total_views) || 0;
+      a.last_month = rev.last_month;
+    });
+
+    // Aggregate totals
+    const totals = {
+      channels: artists.length,
+      subscribers: artists.reduce((s, a) => s + a.stats.subscriber_count, 0),
+      views: artists.reduce((s, a) => s + a.stats.view_count, 0),
+      videos: artists.reduce((s, a) => s + a.stats.video_count, 0),
+      connected: artists.filter(a => a.oauth.connected).length,
+      revenue: artists.reduce((s, a) => s + a.revenue_total, 0)
+    };
+
+    res.json({ artists, totals });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * Aggregate revenue trend across all artists (monthly)
+ */
+router.get('/trends', requireAuth, async (req, res) => {
+  try {
+    const trend = await req.db('youtube_revenue_history')
+      .groupBy('month')
+      .select('month')
+      .sum('estimated_revenue as revenue')
+      .sum('views as views')
+      .sum('monetized_playbacks as monetized_playbacks')
+      .orderBy('month');
+    res.json(trend.map(t => ({
+      month: t.month,
+      revenue: parseFloat(t.revenue) || 0,
+      views: parseInt(t.views) || 0,
+      monetized_playbacks: parseInt(t.monetized_playbacks) || 0
+    })));
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
