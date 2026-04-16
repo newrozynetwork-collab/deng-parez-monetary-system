@@ -331,6 +331,83 @@ router.post('/match-pending/:pendingId/:artistId', requireAdmin, async (req, res
 });
 
 /**
+ * Sync revenue for a standalone connected channel (by pending connection ID)
+ */
+router.post('/sync-channel/:pendingId', requireAdmin, async (req, res) => {
+  try {
+    const channel = await req.db('youtube_pending_connections').where({ id: req.params.pendingId }).first();
+    if (!channel) return res.status(404).json({ error: 'Channel not found' });
+    if (!channel.refresh_token_encrypted) return res.status(400).json({ error: 'No OAuth token for this channel' });
+
+    // Default: last 12 months
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - 12);
+    const fmt = d => d.toISOString().slice(0, 10);
+
+    const revenueData = await yt.getRevenue(
+      channel.refresh_token_encrypted,
+      channel.channel_id,
+      req.body.startDate || fmt(startDate),
+      req.body.endDate || fmt(endDate)
+    );
+
+    // Parse and store rows
+    const rows = revenueData.rows || [];
+    const saved = [];
+    for (const r of rows) {
+      const record = {
+        artist_id: null, // standalone, no artist
+        channel_id: channel.channel_id,
+        month: r[0],
+        views: parseInt(r[1]) || 0,
+        estimated_revenue: parseFloat(r[2]) || 0,
+        estimated_ad_revenue: parseFloat(r[3]) || 0,
+        gross_revenue: parseFloat(r[4]) || 0,
+        cpm: parseFloat(r[5]) || 0,
+        monetized_playbacks: parseInt(r[6]) || 0,
+        synced_at: new Date()
+      };
+      // Use channel_id + month as upsert key
+      const existing = await req.db('youtube_revenue_history')
+        .where({ channel_id: channel.channel_id, month: record.month }).first();
+      if (existing) {
+        await req.db('youtube_revenue_history').where({ id: existing.id }).update(record);
+      } else {
+        await req.db('youtube_revenue_history').insert(record);
+      }
+      saved.push(record);
+    }
+
+    res.json({
+      ok: true,
+      channel: channel.channel_title,
+      monthsSynced: saved.length,
+      totalRevenue: saved.reduce((s, r) => s + r.estimated_revenue, 0),
+      rows: saved
+    });
+  } catch (err) {
+    console.error('Channel sync error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * Get revenue history for a specific channel (by channel_id)
+ */
+router.get('/channel-revenue/:channelId', requireAuth, async (req, res) => {
+  try {
+    const rows = await req.db('youtube_revenue_history')
+      .where({ channel_id: req.params.channelId })
+      .orderBy('month');
+    const total = rows.reduce((s, r) => s + parseFloat(r.estimated_revenue || 0), 0);
+    res.json({ rows, total: Math.round(total * 100) / 100 });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
  * Admin: delete a pending connection (reject)
  */
 router.delete('/pending/:pendingId', requireAdmin, async (req, res) => {
@@ -721,17 +798,24 @@ router.get('/overview', requireAuth, async (req, res) => {
 });
 
 /**
- * Aggregate revenue trend across all artists (monthly)
+ * Aggregate revenue trend across ALL channels (monthly)
+ * Includes both artist-linked and standalone channel revenue.
  */
 router.get('/trends', requireAuth, async (req, res) => {
   try {
-    const trend = await req.db('youtube_revenue_history')
+    let query = req.db('youtube_revenue_history')
       .groupBy('month')
       .select('month')
       .sum('estimated_revenue as revenue')
       .sum('views as views')
       .sum('monetized_playbacks as monetized_playbacks')
       .orderBy('month');
+
+    // Optional date filter
+    if (req.query.start) query = query.where('month', '>=', req.query.start);
+    if (req.query.end) query = query.where('month', '<=', req.query.end);
+
+    const trend = await query;
     res.json(trend.map(t => ({
       month: t.month,
       revenue: parseFloat(t.revenue) || 0,

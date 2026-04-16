@@ -210,6 +210,7 @@
                                                 <th>Subscribers</th>
                                                 <th>Views</th>
                                                 <th>Videos</th>
+                                                <th>YT Revenue</th>
                                                 <th>Connected</th>
                                                 <th class="admin-only">Actions</th>
                                             </tr>
@@ -340,23 +341,43 @@
     function renderChannelsTable(channels) {
         var tbody = $('#channels-body');
         tbody.empty();
+
+        // Load revenue for each channel
+        var channelIds = channels.map(function(c) { return c.channel_id; });
+        var revenueLoaded = 0;
+
         channels.forEach(function(c) {
             var thumb = c.channel_thumbnail
                 ? '<img src="' + c.channel_thumbnail + '" class="yt-row-thumb">'
                 : '<div class="yt-row-thumb" style="background:#ef4444;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;">▶</div>';
             var channelUrl = c.custom_url ? 'https://youtube.com/@' + c.custom_url : 'https://youtube.com/channel/' + c.channel_id;
             tbody.append(
-                '<tr>' +
+                '<tr id="ch-row-' + c.id + '">' +
                 '<td>' + thumb + '</td>' +
                 '<td><a href="' + channelUrl + '" target="_blank" class="text-primary font-weight-medium">' + (c.channel_title || 'Unknown') + '</a>' +
                     (c.custom_url ? '<br><small class="text-muted">@' + c.custom_url + '</small>' : '') + '</td>' +
-                '<td>' + formatNum(c.subscriber_count || 0) + '</td>' +
-                '<td>' + formatNum(c.view_count || 0) + '</td>' +
-                '<td>' + formatNum(c.video_count || 0) + '</td>' +
+                '<td data-order="' + (c.subscriber_count || 0) + '">' + formatNum(c.subscriber_count || 0) + '</td>' +
+                '<td data-order="' + (c.view_count || 0) + '">' + formatNum(c.view_count || 0) + '</td>' +
+                '<td data-order="' + (c.video_count || 0) + '">' + formatNum(c.video_count || 0) + '</td>' +
+                '<td class="text-success" id="rev-' + c.id + '"><small class="text-muted">loading...</small></td>' +
                 '<td>' + new Date(c.connected_at).toLocaleDateString() + '</td>' +
-                '<td class="admin-only"><button class="btn btn-sm btn-outline-danger" onclick="removeChannel(' + c.id + ')" title="Remove"><i data-feather="trash-2" style="width:14px;height:14px;"></i></button></td>' +
+                '<td class="admin-only">' +
+                    '<button class="btn btn-sm btn-success mr-1" onclick="syncChannel(' + c.id + ',this)" title="Sync revenue"><i data-feather="refresh-cw" style="width:14px;height:14px;"></i></button>' +
+                    '<button class="btn btn-sm btn-outline-danger" onclick="removeChannel(' + c.id + ')" title="Remove"><i data-feather="trash-2" style="width:14px;height:14px;"></i></button>' +
+                '</td>' +
                 '</tr>'
             );
+
+            // Load revenue for this channel
+            App.api('GET', '/api/youtube/channel-revenue/' + encodeURIComponent(c.channel_id)).done(function(rev) {
+                if (rev.total > 0) {
+                    $('#rev-' + c.id).html('<strong>' + App.formatCurrency(rev.total) + '</strong><br><small class="text-muted">' + rev.rows.length + ' months</small>');
+                } else {
+                    $('#rev-' + c.id).html('<small class="text-muted">Not synced</small>');
+                }
+            }).fail(function() {
+                $('#rev-' + c.id).html('<small class="text-muted">—</small>');
+            });
         });
 
         if ($.fn.DataTable.isDataTable('#channels-table')) $('#channels-table').DataTable().destroy();
@@ -371,6 +392,23 @@
             dt.search($(this).val()).draw();
         });
         feather.replace();
+    }
+
+    function syncChannel(pendingId, btn) {
+        var orig = $(btn).html();
+        $(btn).prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+        App.api('POST', '/api/youtube/sync-channel/' + pendingId).done(function(res) {
+            App.showSuccess(res.channel + ': synced ' + res.monthsSynced + ' months · ' + App.formatCurrency(res.totalRevenue));
+            loadConnectedChannels();
+            loadOverview();
+            loadTrends();
+        }).fail(function(xhr) {
+            var msg = xhr.responseJSON ? xhr.responseJSON.error : 'Sync failed';
+            App.showError(msg);
+        }).always(function() {
+            $(btn).prop('disabled', false).html(orig);
+            feather.replace();
+        });
     }
 
     function loadTrends() {
