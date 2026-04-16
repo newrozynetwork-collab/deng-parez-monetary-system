@@ -288,7 +288,7 @@ router.get('/callback', async (req, res) => {
     if (!tokens.refresh_token) {
       return res.send(errorPage(
         'No refresh token received',
-        'This usually happens if you\\'ve already authorized this app before. To fix: <ol><li>Go to <a href="https://myaccount.google.com/permissions" target="_blank">Google Account Permissions</a></li><li>Remove access for "Deng Parez Monetary System"</li><li>Try connecting again</li></ol>',
+        "This usually happens if you have already authorized this app before. To fix: <ol><li>Go to <a href='https://myaccount.google.com/permissions' target='_blank'>Google Account Permissions</a></li><li>Remove access for 'Deng Parez Monetary System'</li><li>Try connecting again</li></ol>",
         isPublicFlow ? null : '/artists/' + artistId
       ));
     }
