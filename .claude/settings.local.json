@@ -94,7 +94,27 @@
       "Bash(node -c routes/youtube.js)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" https://app-production-0a17.up.railway.app/connect/b56582033e1fd13f57c679a6e42473dcce7ae3191794a0b5)",
       "Bash(curl -s https://app-production-0a17.up.railway.app/api/youtube/connect-info/b56582033e1fd13f57c679a6e42473dcce7ae3191794a0b5)",
-      "Bash(grep -iE \"logo|deng|parez|\\\\.png$\")"
+      "Bash(grep -iE \"logo|deng|parez|\\\\.png$\")",
+      "Bash(curl -s -H 'Authorization: Bearer 7d06a4a5-715d-4520-a19e-291d134a5b02' -H 'Content-Type: application/json' -X POST https://backboard.railway.app/graphql/v2 -d '{\"query\":\"{ __type\\(name: \\\\\"CustomDomainCreateInput\\\\\"\\) { name inputFields { name type { name kind ofType { name kind } } } } }\"}')",
+      "Bash(nslookup dp.tt-social.com 8.8.8.8)",
+      "Bash(nslookup tt-social.com 8.8.8.8)",
+      "Bash(nslookup dp.tt-social.com 1.1.1.1)",
+      "Bash(curl -sI -o /dev/null -w \"HTTP %{http_code}  IP: %{remote_ip}  Time: %{time_total}s\\\\n\" https://dp.tt-social.com/ --max-time 10)",
+      "Bash(curl -sI -o /dev/null -w \"HTTP %{http_code}\\\\n\" https://dp.tt-social.com/connect --max-time 10)",
+      "Bash(curl -sI -o /dev/null -w \"HTTPS: %{http_code}  Time: %{time_total}s  SSL: %{ssl_verify_result}\\\\n\" https://dp.tt-social.com/ --max-time 15)",
+      "Bash(curl -sI https://dp.tt-social.com/connect --max-time 15)",
+      "Bash(curl -s https://dp.tt-social.com/connect --max-time 15)",
+      "Bash(curl -s -H 'Authorization: Bearer 7d06a4a5-715d-4520-a19e-291d134a5b02' -H 'Content-Type: application/json' -X POST https://backboard.railway.app/graphql/v2 -d '{\"query\":\"{ customDomain\\(id: \\\\\"192f8d7a-674f-43f9-b632-22b9feb28347\\\\\"\\) { id domain status { dnsRecords { hostlabel recordType requiredValue currentValue status } certificates { domains status } } } }\"}')",
+      "Bash(curl -s -H 'Authorization: Bearer 7d06a4a5-715d-4520-a19e-291d134a5b02' -H 'Content-Type: application/json' -X POST https://backboard.railway.app/graphql/v2 -d '{\"query\":\"{ customDomain\\(id: \\\\\"192f8d7a-674f-43f9-b632-22b9feb28347\\\\\", projectId: \\\\\"6903655f-9663-43a4-b5fd-592ca4b8480f\\\\\"\\) { domain status { dnsRecords { hostlabel requiredValue currentValue status } certificates { status } } } }\"}')",
+      "Bash(curl -s -H 'Authorization: Bearer 7d06a4a5-715d-4520-a19e-291d134a5b02' -H 'Content-Type: application/json' -X POST https://backboard.railway.app/graphql/v2 -d '{\"query\":\"{ customDomain\\(id: \\\\\"192f8d7a-674f-43f9-b632-22b9feb28347\\\\\", projectId: \\\\\"6903655f-9663-43a4-b5fd-592ca4b8480f\\\\\"\\) { domain status { dnsRecords { hostlabel requiredValue currentValue status } } } }\"}')",
+      "Bash(curl -sI -w \"Status: %{http_code}\\\\n\" https://dp.tt-social.com/ --max-time 20)",
+      "Bash(curl -sI -w \"Status: %{http_code}\\\\n\" http://dp.tt-social.com/ --max-time 20)",
+      "Bash(dig +short dp.tt-social.com)",
+      "Bash(curl -v https://dp.tt-social.com/ --max-time 10)",
+      "Bash(curl -sI --resolve \"dp.tt-social.com:443:151.101.2.15\" https://dp.tt-social.com/ --max-time 15)",
+      "Bash(curl -s --resolve \"dp.tt-social.com:443:151.101.2.15\" https://dp.tt-social.com/connect --max-time 15)",
+      "Bash(nslookup dp.tt-social.com 208.67.222.222)",
+      "Bash(curl -sI --resolve \"dp.tt-social.com:443:151.101.2.15\" https://dp.tt-social.com/connect --max-time 10)"
     ]
   }
 }

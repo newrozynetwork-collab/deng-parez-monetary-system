@@ -264,14 +264,13 @@ router.get('/orphan-connect', async (req, res) => {
 });
 
 /**
- * Admin: list pending orphan connections
+ * List all connected YouTube channels (standalone, no matching needed)
  */
 router.get('/pending', requireAuth, async (req, res) => {
   try {
-    const pending = await req.db('youtube_pending_connections')
-      .whereNull('matched_at')
+    const channels = await req.db('youtube_pending_connections')
       .orderBy('connected_at', 'desc');
-    res.json(pending);
+    res.json(channels);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
