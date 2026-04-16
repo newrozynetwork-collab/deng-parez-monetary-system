@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/images/favicon.png">
+    <title>Connect Your YouTube Channel - Deng Parez</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 40px 32px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .logo img {
+            height: 40px;
+        }
+        .brand-name {
+            color: #1f2937;
+            font-size: 14px;
+            font-weight: 500;
+            margin-top: 8px;
+        }
+        .hero-icon {
+            width: 80px;
+            height: 80px;
+            background: #fee2e2;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .hero-icon svg {
+            width: 44px;
+            height: 44px;
+            color: #ef4444;
+        }
+        h1 {
+            text-align: center;
+            color: #1f2937;
+            font-size: 24px;
+            margin: 0 0 8px;
+            font-weight: 600;
+        }
+        .artist-name {
+            text-align: center;
+            color: #6b7280;
+            margin: 0 0 24px;
+            font-size: 16px;
+        }
+        .artist-name strong {
+            color: #3b82f6;
+            font-weight: 600;
+        }
+        .info-box {
+            background: #f0f9ff;
+            border-left: 4px solid #3b82f6;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            color: #1e40af;
+            line-height: 1.5;
+        }
+        .steps {
+            margin: 24px 0;
+            padding: 0;
+            list-style: none;
+        }
+        .steps li {
+            padding: 12px 0 12px 40px;
+            position: relative;
+            color: #4b5563;
+            font-size: 15px;
+            line-height: 1.4;
+        }
+        .steps li::before {
+            content: counter(step);
+            counter-increment: step;
+            position: absolute;
+            left: 0;
+            top: 10px;
+            width: 28px;
+            height: 28px;
+            background: #3b82f6;
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 13px;
+        }
+        .steps {
+            counter-reset: step;
+        }
+        .btn-primary {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            background: #ef4444;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+        }
+        .btn-primary svg {
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        .permissions {
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 20px 0;
+            font-size: 13px;
+            color: #6b7280;
+        }
+        .permissions strong {
+            color: #1f2937;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .permissions ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .permissions li {
+            margin: 4px 0;
+        }
+        .footer-note {
+            text-align: center;
+            color: #9ca3af;
+            font-size: 12px;
+            margin-top: 24px;
+        }
+        .loading, .error-state, .already-connected {
+            text-align: center;
+            padding: 20px 0;
+        }
+        .success-badge {
+            background: #d1fae5;
+            border: 1px solid #6ee7b7;
+            color: #065f46;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .error-badge {
+            background: #fee2e2;
+            border: 1px solid #fca5a5;
+            color: #991b1b;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="logo">
+            <img src="/assets/images/logo-icon.png" alt="Logo">
+            <div class="brand-name">Deng Parez Monetary System</div>
+        </div>
+
+        <div id="loading" class="loading">
+            <p>Loading...</p>
+        </div>
+
+        <div id="error-state" class="error-state" style="display:none;">
+            <div class="error-badge">
+                <strong id="error-title">Link not valid</strong>
+                <p id="error-message" style="margin:8px 0 0;">This connection link is invalid or has expired. Please request a new one.</p>
+            </div>
+        </div>
+
+        <div id="main-state" style="display:none;">
+            <div class="hero-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/>
+                    <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/>
+                </svg>
+            </div>
+            <h1>Connect Your YouTube Channel</h1>
+            <p class="artist-name">Hi <strong id="artist-display-name">there</strong>! 👋</p>
+
+            <div id="already-connected" class="already-connected" style="display:none;">
+                <div class="success-badge">
+                    <strong>✓ Already Connected</strong>
+                    <p style="margin:8px 0 0;">Channel <strong id="connected-channel"></strong> is already linked.</p>
+                </div>
+                <p style="color:#6b7280;font-size:14px;">You can close this page. If you want to reconnect with a different channel, click below.</p>
+            </div>
+
+            <div id="connect-intro">
+                <div class="info-box">
+                    <strong style="display:block;margin-bottom:4px;">What does this do?</strong>
+                    Connecting your YouTube channel allows Deng Parez to automatically track your views, subscribers, and revenue. No manual reporting needed.
+                </div>
+
+                <ol class="steps">
+                    <li>Click the button below</li>
+                    <li>Sign in with the Google account that owns your YouTube channel</li>
+                    <li>Grant permission to view your channel analytics</li>
+                    <li>Done! You can close the page after</li>
+                </ol>
+
+                <div class="permissions">
+                    <strong>🔒 We'll only have read-only access to:</strong>
+                    <ul>
+                        <li>Your channel's public info (name, subscribers, views)</li>
+                        <li>Your analytics reports (monthly revenue, watch time)</li>
+                    </ul>
+                    <p style="margin-top:10px;color:#4b5563;"><strong>We cannot:</strong> post videos, change anything, or access your other Google services.</p>
+                </div>
+            </div>
+
+            <a id="connect-btn" class="btn-primary" href="#">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33zM9.75 15.02V8.48l5.75 3.27z"/>
+                </svg>
+                Connect YouTube Channel
+            </a>
+
+            <div class="footer-note">
+                This link is private and tied to your profile.<br>
+                Your data is encrypted and never shared with third parties.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var token = window.location.pathname.split('/').pop();
+
+        fetch('/api/youtube/connect-info/' + encodeURIComponent(token))
+            .then(function(r) {
+                return r.json().then(function(d) { return { status: r.status, data: d }; });
+            })
+            .then(function(res) {
+                document.getElementById('loading').style.display = 'none';
+                if (res.status !== 200) {
+                    document.getElementById('error-state').style.display = 'block';
+                    document.getElementById('error-message').textContent = res.data.error || 'Unknown error';
+                    return;
+                }
+                var d = res.data;
+                document.getElementById('main-state').style.display = 'block';
+                document.getElementById('artist-display-name').textContent = d.artist_name || 'there';
+
+                if (d.already_connected) {
+                    document.getElementById('already-connected').style.display = 'block';
+                    document.getElementById('connect-intro').style.display = 'none';
+                    document.getElementById('connected-channel').textContent = d.connected_channel_title || 'your channel';
+                    document.getElementById('connect-btn').textContent = 'Reconnect with a different channel';
+                    document.getElementById('connect-btn').style.background = '#6b7280';
+                }
+
+                document.getElementById('connect-btn').href = '/api/youtube/public-connect/' + encodeURIComponent(token);
+            })
+            .catch(function(err) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error-state').style.display = 'block';
+                document.getElementById('error-message').textContent = 'Network error. Please try again.';
+            });
+    </script>
+</body>
+</html>

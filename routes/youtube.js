@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const crypto = require('crypto');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
 const yt = require('../services/youtube');
 
@@ -135,55 +136,175 @@ router.get('/videos/:artistId', requireAuth, async (req, res) => {
 // ============ OAUTH FLOW (for revenue data) ============
 
 /**
- * Start OAuth flow — redirects artist to Google consent page
+ * Start OAuth flow (admin) — redirects to Google consent page
  */
 router.get('/connect/:artistId', requireAdmin, (req, res) => {
   if (!yt.OAUTH_CONFIGURED) {
     return res.status(500).json({ error: 'YouTube OAuth is not configured. Set YT_CLIENT_ID and YT_CLIENT_SECRET.' });
   }
-  const url = yt.getAuthUrl(req.params.artistId);
+  const state = 'admin:' + req.params.artistId;
+  const url = yt.getAuthUrl(state);
   res.redirect(url);
 });
 
 /**
+ * Generate a shareable connect token for an artist (admin only)
+ * Returns the URL to share with the artist
+ */
+router.post('/share-link/:artistId', requireAdmin, async (req, res) => {
+  try {
+    const artistId = parseInt(req.params.artistId);
+    const artist = await req.db('artists').where({ id: artistId }).first();
+    if (!artist) return res.status(404).json({ error: 'Artist not found' });
+
+    // Generate a new token (invalidate any old ones)
+    const token = crypto.randomBytes(24).toString('hex');
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+
+    // Remove any unused tokens for this artist
+    await req.db('youtube_connect_tokens')
+      .where({ artist_id: artistId })
+      .whereNull('used_at')
+      .del();
+
+    await req.db('youtube_connect_tokens').insert({
+      artist_id: artistId,
+      token: token,
+      expires_at: expiresAt
+    });
+
+    const host = req.get('host');
+    const protocol = req.secure || req.get('x-forwarded-proto') === 'https' ? 'https' : 'http';
+    const fullUrl = `${protocol}://${host}/connect/${token}`;
+
+    res.json({
+      ok: true,
+      token,
+      url: fullUrl,
+      expires_at: expiresAt,
+      artist: { id: artist.id, name: artist.name }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * Public: get artist info by token (for the connect page)
+ */
+router.get('/connect-info/:token', async (req, res) => {
+  try {
+    const row = await req.db('youtube_connect_tokens')
+      .join('artists', 'youtube_connect_tokens.artist_id', 'artists.id')
+      .where('youtube_connect_tokens.token', req.params.token)
+      .select(
+        'youtube_connect_tokens.*',
+        'artists.name as artist_name',
+        'artists.nickname',
+        'artists.youtube_channel_id',
+        'artists.youtube_channel_title'
+      )
+      .first();
+
+    if (!row) return res.status(404).json({ error: 'Invalid or expired link' });
+    if (row.expires_at && new Date(row.expires_at) < new Date()) {
+      return res.status(410).json({ error: 'This link has expired. Please request a new one from the admin.' });
+    }
+
+    // Check if there's already an OAuth connection
+    const oauth = await req.db('youtube_accounts').where({ artist_id: row.artist_id }).first();
+
+    res.json({
+      artist_name: row.artist_name,
+      nickname: row.nickname,
+      already_connected: !!oauth,
+      connected_channel_title: oauth ? oauth.channel_title : null,
+      used: !!row.used_at,
+      channel_title: row.youtube_channel_title
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * Public: start OAuth flow using a token (no admin auth required)
+ */
+router.get('/public-connect/:token', async (req, res) => {
+  try {
+    if (!yt.OAUTH_CONFIGURED) {
+      return res.status(500).send('<h2>YouTube OAuth is not configured</h2>');
+    }
+    const row = await req.db('youtube_connect_tokens').where({ token: req.params.token }).first();
+    if (!row) return res.status(404).send('<h2>Invalid or expired link</h2>');
+    if (row.expires_at && new Date(row.expires_at) < new Date()) {
+      return res.status(410).send('<h2>This link has expired. Please request a new one.</h2>');
+    }
+
+    // Start OAuth with token-based state
+    const state = 'token:' + req.params.token;
+    const url = yt.getAuthUrl(state);
+    res.redirect(url);
+  } catch (err) {
+    res.status(500).send('<h2>Error: ' + err.message + '</h2>');
+  }
+});
+
+/**
  * OAuth callback — Google redirects here after consent
+ * State is either "admin:ID" (from admin panel) or "token:TOKEN" (from public link)
  */
 router.get('/callback', async (req, res) => {
+  const db = require('knex')(require('../knexfile'));
   try {
     const { code, state, error } = req.query;
     if (error) {
-      return res.send('<h2>Authorization cancelled</h2><p>' + error + '</p><p><a href="/artists">Back to Artists</a></p>');
+      return res.send(errorPage('Authorization cancelled', error, '/'));
     }
     if (!code || !state) {
-      return res.status(400).send('<h2>Missing code or state</h2>');
+      return res.status(400).send(errorPage('Missing code or state', 'Try again from the connect link.', '/'));
     }
 
-    const artistId = parseInt(state);
+    // Determine if admin flow or public token flow
+    let artistId, isPublicFlow = false, tokenRow = null;
+    if (state.startsWith('admin:')) {
+      artistId = parseInt(state.replace('admin:', ''));
+    } else if (state.startsWith('token:')) {
+      const token = state.replace('token:', '');
+      tokenRow = await db('youtube_connect_tokens').where({ token }).first();
+      if (!tokenRow) return res.status(404).send(errorPage('Invalid link', 'This connection link is no longer valid.', null));
+      if (tokenRow.expires_at && new Date(tokenRow.expires_at) < new Date()) {
+        return res.status(410).send(errorPage('Link expired', 'Ask the admin for a new link.', null));
+      }
+      artistId = tokenRow.artist_id;
+      isPublicFlow = true;
+    } else {
+      // Backward compat — raw artist ID
+      artistId = parseInt(state);
+    }
+
     const tokens = await yt.exchangeCodeForTokens(code);
 
     if (!tokens.refresh_token) {
-      return res.send(`
-        <h2>⚠️ No refresh token received</h2>
-        <p>This usually happens if you've already authorized this app before. To fix:</p>
-        <ol>
-          <li>Go to <a href="https://myaccount.google.com/permissions" target="_blank">Google Account Permissions</a></li>
-          <li>Remove access for "Deng Parez Monetary System"</li>
-          <li>Try connecting again</li>
-        </ol>
-        <p><a href="/artists/${artistId}">Back to Artist</a></p>
-      `);
+      return res.send(errorPage(
+        'No refresh token received',
+        'This usually happens if you\\'ve already authorized this app before. To fix: <ol><li>Go to <a href="https://myaccount.google.com/permissions" target="_blank">Google Account Permissions</a></li><li>Remove access for "Deng Parez Monetary System"</li><li>Try connecting again</li></ol>',
+        isPublicFlow ? null : '/artists/' + artistId
+      ));
     }
 
-    // Figure out which channel the OAuth belongs to
     const encryptedRefresh = yt.encrypt(tokens.refresh_token);
     const channelInfo = await yt.getAuthenticatedChannel(encryptedRefresh);
 
     if (!channelInfo) {
-      return res.status(400).send('<h2>Could not identify channel</h2><p>Make sure the Google account you signed in with owns a YouTube channel.</p>');
+      return res.status(400).send(errorPage(
+        'Could not identify channel',
+        'Make sure the Google account you signed in with owns a YouTube channel.',
+        isPublicFlow ? null : '/artists/' + artistId
+      ));
     }
 
-    // Save to DB
-    const db = require('knex')(require('../knexfile'));
+    // Save OAuth
     await db('youtube_accounts').insert({
       artist_id: artistId,
       channel_id: channelInfo.channel_id,
@@ -193,7 +314,7 @@ router.get('/callback', async (req, res) => {
       sync_status: 'connected'
     }).onConflict('artist_id').merge();
 
-    // If artist doesn't have channel linked yet, link it now
+    // Auto-link if not already linked
     const artist = await db('artists').where({ id: artistId }).first();
     if (artist && !artist.youtube_channel_id) {
       await db('artists').where({ id: artistId }).update({
@@ -203,28 +324,100 @@ router.get('/callback', async (req, res) => {
       });
     }
 
+    // Also cache public stats
+    const publicInfo = await yt.getChannelInfo(channelInfo.channel_id);
+    if (publicInfo) {
+      await db('youtube_channel_stats').insert({
+        artist_id: artistId,
+        channel_id: publicInfo.channel_id,
+        subscriber_count: publicInfo.subscriber_count,
+        view_count: publicInfo.view_count,
+        video_count: publicInfo.video_count,
+        channel_thumbnail: publicInfo.thumbnail,
+        channel_description: publicInfo.description?.slice(0, 1000),
+        fetched_at: new Date()
+      }).onConflict('artist_id').merge();
+    }
+
+    // Mark token as used
+    if (tokenRow) {
+      await db('youtube_connect_tokens').where({ id: tokenRow.id }).update({
+        used_at: new Date(),
+        used_channel_id: channelInfo.channel_id
+      });
+    }
+
     await db.destroy();
+
+    // Success page
+    const backButton = isPublicFlow
+      ? ''
+      : `<a class="btn" href="/artists/${artistId}">Back to Artist</a>`;
+    const redirectScript = isPublicFlow
+      ? ''
+      : `<script>setTimeout(() => window.location.href = '/artists/${artistId}', 3000);</script>`;
+    const artistName = artist ? artist.name : 'the artist';
 
     res.send(`
       <html><head><title>YouTube Connected</title>
-      <style>body{font-family:system-ui,sans-serif;padding:40px;text-align:center;background:#f5f7fa;}
-        .card{background:#fff;border-radius:12px;padding:30px;max-width:500px;margin:0 auto;box-shadow:0 4px 12px rgba(0,0,0,0.08);}
-        h2{color:#10b981;} .btn{background:#3b82f6;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:20px;}</style>
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <style>
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:40px 20px;text-align:center;background:linear-gradient(135deg,#1e3a8a 0%,#3b82f6 100%);min-height:100vh;margin:0;}
+        .card{background:#fff;border-radius:16px;padding:40px;max-width:500px;margin:40px auto;box-shadow:0 10px 40px rgba(0,0,0,0.15);}
+        .icon{width:80px;height:80px;background:#10b981;border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;}
+        .icon svg{width:40px;height:40px;color:#fff;stroke:#fff;stroke-width:3;fill:none;}
+        h2{color:#10b981;margin:0 0 10px;font-size:28px;}
+        p{color:#4b5563;font-size:16px;line-height:1.5;}
+        .channel{background:#f3f4f6;padding:15px;border-radius:8px;margin:20px 0;}
+        .channel strong{color:#1f2937;font-size:18px;display:block;margin-bottom:4px;}
+        .btn{background:#3b82f6;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:20px;font-weight:500;}
+      </style>
       </head><body>
       <div class="card">
-        <h2>✅ YouTube Connected!</h2>
-        <p><strong>${channelInfo.title}</strong> is now linked.</p>
-        <p>You can now pull revenue data for this channel.</p>
-        <a class="btn" href="/artists/${artistId}">Back to Artist</a>
+        <div class="icon">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <h2>You're all set!</h2>
+        <p>Your YouTube channel has been successfully connected for <strong>${artistName}</strong>.</p>
+        <div class="channel">
+          <strong>${channelInfo.title}</strong>
+          <span style="color:#6b7280;font-size:14px;">Channel ID: ${channelInfo.channel_id}</span>
+        </div>
+        <p>${isPublicFlow ? 'You can now close this page. Deng Parez will sync your revenue data automatically.' : 'Revenue data is now available for syncing.'}</p>
+        ${backButton}
       </div>
-      <script>setTimeout(() => window.location.href = '/artists/${artistId}', 3000);</script>
+      ${redirectScript}
       </body></html>
     `);
   } catch (err) {
     console.error('OAuth callback error:', err);
-    res.status(500).send('<h2>Error: ' + err.message + '</h2><p><a href="/artists">Back</a></p>');
+    await db.destroy().catch(() => {});
+    res.status(500).send(errorPage('Error', err.message, null));
   }
 });
+
+function errorPage(title, message, backUrl) {
+  const back = backUrl ? `<a href="${backUrl}" style="background:#3b82f6;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:20px;">Go Back</a>` : '';
+  return `
+    <html><head><title>${title}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:40px 20px;text-align:center;background:#f5f7fa;min-height:100vh;margin:0;}
+      .card{background:#fff;border-radius:16px;padding:40px;max-width:500px;margin:40px auto;box-shadow:0 10px 40px rgba(0,0,0,0.08);}
+      h2{color:#ef4444;margin:0 0 15px;}
+      p,li{color:#4b5563;font-size:16px;line-height:1.6;}
+      ol,ul{text-align:left;}
+      a{color:#3b82f6;}
+    </style>
+    </head><body>
+    <div class="card">
+      <h2>${title}</h2>
+      <div style="text-align:left;">${message}</div>
+      ${back}
+    </div>
+    </body></html>
+  `;
+}
 
 /**
  * Sync revenue for an artist (uses OAuth). Stores in youtube_revenue_history.

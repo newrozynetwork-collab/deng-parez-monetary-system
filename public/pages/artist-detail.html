@@ -95,8 +95,8 @@
                                 </div>
                                 <!-- Not linked state -->
                                 <div id="yt-not-linked">
-                                    <p class="text-muted mb-2">Link this artist's YouTube channel to see public stats and optionally sync revenue.</p>
-                                    <div class="input-group">
+                                    <p class="text-muted mb-2">Link this artist's YouTube channel to see public stats and sync revenue.</p>
+                                    <div class="input-group mb-3">
                                         <input type="text" id="yt-input" class="form-control" placeholder="Channel URL, @handle, or channel ID (UC...)">
                                         <div class="input-group-append">
                                             <button class="btn btn-primary admin-only" onclick="linkYouTube()">
@@ -104,7 +104,13 @@
                                             </button>
                                         </div>
                                     </div>
-                                    <small class="text-muted">Examples: <code>@artistname</code>, <code>youtube.com/@artistname</code>, <code>youtube.com/channel/UC...</code></small>
+                                    <small class="text-muted d-block mb-3">Examples: <code>@artistname</code>, <code>youtube.com/@artistname</code>, <code>youtube.com/channel/UC...</code></small>
+                                    <div class="alert alert-info admin-only" style="padding:10px 12px;font-size:14px;">
+                                        <strong>💡 Easier option:</strong> Send the artist a private link and they'll connect their channel themselves.
+                                        <button class="btn btn-sm btn-primary ml-2" onclick="generateShareLink()">
+                                            <i data-feather="share-2" class="feather-icon mr-1"></i> Generate Share Link
+                                        </button>
+                                    </div>
                                 </div>
                                 <!-- Linked state -->
                                 <div id="yt-linked" style="display:none;">
@@ -141,8 +147,11 @@
                                                 <i data-feather="info" class="feather-icon mr-1"></i>
                                                 <strong>Connect for revenue access:</strong> Authorize YouTube Analytics to sync revenue data automatically.
                                             </div>
-                                            <button class="btn btn-sm btn-danger" onclick="connectYouTubeOAuth()">
-                                                <i data-feather="link-2" class="feather-icon mr-1"></i> Connect YouTube Analytics
+                                            <button class="btn btn-sm btn-danger mr-2" onclick="connectYouTubeOAuth()">
+                                                <i data-feather="link-2" class="feather-icon mr-1"></i> Connect (admin)
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="generateShareLink()">
+                                                <i data-feather="share-2" class="feather-icon mr-1"></i> Send link to artist
                                             </button>
                                         </div>
                                         <div id="yt-oauth-connected" style="display:none;">
@@ -189,6 +198,48 @@
             <footer class="footer text-center">Deng Parez Monetary System &copy; 2024</footer>
         </div>
     </div>
+    <!-- Share Link Modal -->
+    <div class="modal fade" id="shareLinkModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i data-feather="share-2" class="feather-icon mr-1"></i> Share Link with Artist
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>Send this private link to <strong id="share-artist-name"></strong>. They can click it and connect their YouTube channel themselves — no login needed.</p>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="share-link-input" readonly style="font-family:monospace;font-size:13px;">
+                        <div class="input-group-append">
+                            <button class="btn btn-primary" onclick="copyShareLink()" id="copy-btn">
+                                <i data-feather="copy" class="feather-icon mr-1"></i> Copy
+                            </button>
+                        </div>
+                    </div>
+                    <small class="text-muted d-block mt-2">This link expires in 30 days. Only use it for this specific artist.</small>
+                    <hr>
+                    <h6>Quick share:</h6>
+                    <div>
+                        <a id="share-whatsapp" class="btn btn-sm btn-success mr-1" target="_blank">
+                            <i class="fa fa-whatsapp mr-1"></i> WhatsApp
+                        </a>
+                        <a id="share-email" class="btn btn-sm btn-info mr-1">
+                            <i data-feather="mail" class="feather-icon mr-1"></i> Email
+                        </a>
+                        <a id="share-telegram" class="btn btn-sm btn-primary" target="_blank">
+                            <i class="fa fa-telegram mr-1"></i> Telegram
+                        </a>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="/assets/libs/jquery/dist/jquery.min.js"></script>
     <script src="/assets/libs/popper.js/dist/umd/popper.min.js"></script>
     <script src="/assets/libs/bootstrap/dist/js/bootstrap.min.js"></script>
@@ -341,6 +392,36 @@
 
     function connectYouTubeOAuth() {
         window.location.href = '/api/youtube/connect/' + artistId;
+    }
+
+    function generateShareLink() {
+        App.api('POST', '/api/youtube/share-link/' + artistId).done(function(res) {
+            $('#share-artist-name').text(res.artist.name);
+            $('#share-link-input').val(res.url);
+            var msg = 'Hi! Please connect your YouTube channel to Deng Parez: ' + res.url;
+            $('#share-whatsapp').attr('href', 'https://wa.me/?text=' + encodeURIComponent(msg));
+            $('#share-telegram').attr('href', 'https://t.me/share/url?url=' + encodeURIComponent(res.url) + '&text=' + encodeURIComponent('Connect your YouTube channel to Deng Parez'));
+            $('#share-email').attr('href', 'mailto:?subject=' + encodeURIComponent('Connect your YouTube channel') + '&body=' + encodeURIComponent(msg));
+            $('#shareLinkModal').modal('show');
+            feather.replace();
+        });
+    }
+
+    function copyShareLink() {
+        var input = document.getElementById('share-link-input');
+        input.select();
+        input.setSelectionRange(0, 99999);
+        try {
+            navigator.clipboard.writeText(input.value).then(function() {
+                var btn = $('#copy-btn');
+                var original = btn.html();
+                btn.html('<i class="fa fa-check mr-1"></i> Copied!').removeClass('btn-primary').addClass('btn-success');
+                setTimeout(function() { btn.html(original).removeClass('btn-success').addClass('btn-primary'); feather.replace(); }, 2000);
+            });
+        } catch (e) {
+            document.execCommand('copy');
+            App.showSuccess('Link copied to clipboard');
+        }
     }
 
     function disconnectYouTubeOAuth() {
