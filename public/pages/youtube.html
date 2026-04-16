@@ -85,7 +85,7 @@
                                     Universal Connect Link
                                 </h5>
                                 <p class="mb-0" style="color:rgba(255,255,255,0.85);font-size:14px;">
-                                    Share this single link with any artist. They click → authorize YouTube → done. You'll see their channel in "Pending Connections" below to match to the right artist.
+                                    Share this single link with any artist. They click → authorize YouTube → done. Their channel appears in Connected Channels automatically.
                                 </p>
                             </div>
                             <div class="col-md-5">
@@ -139,9 +139,9 @@
                         <div class="card stat-card" style="background: linear-gradient(135deg, #ef4444, #f87171);">
                             <div class="card-body">
                                 <i data-feather="youtube" class="text-white op-7"></i>
-                                <span class="text-white op-7 d-block my-2">Linked Channels</span>
+                                <span class="text-white op-7 d-block my-2">Connected Channels</span>
                                 <h3 class="text-white mb-0" id="stat-channels">0</h3>
-                                <small class="text-white op-7" id="stat-connected">0 with Analytics</small>
+                                <small class="text-white op-7" id="stat-connected">0 connected</small>
                             </div>
                         </div>
                     </div>
@@ -299,7 +299,7 @@
     }
 
     function setupUniversalLink() {
-        var url = window.location.origin + '/connect';
+        var url = 'https://dp.tt-social.com/connect';
         $('#universal-link').val(url);
         var msg = 'Hi! Please connect your YouTube channel to Deng Parez: ' + url;
         $('#uni-whatsapp').attr('href', 'https://wa.me/?text=' + encodeURIComponent(msg));
@@ -336,14 +336,11 @@
         App.api('GET', '/api/youtube/overview').done(function(data) {
             overviewData = data;
             $('#stat-channels').text(data.totals.channels);
-            $('#stat-connected').text(data.totals.connected + ' with Analytics');
+            $('#stat-connected').text(data.totals.connected + ' connected');
             $('#stat-subs').text(formatNum(data.totals.subscribers));
             $('#stat-views').text(formatNum(data.totals.views));
             $('#stat-videos').text(formatNum(data.totals.videos) + ' videos');
             $('#stat-revenue').text(App.formatCurrency(data.totals.revenue));
-
-            renderChannelsTable(data.artists);
-            renderTopEarners(data.artists);
             feather.replace();
         });
     }

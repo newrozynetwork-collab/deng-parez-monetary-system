@@ -660,75 +660,61 @@ router.get('/revenue-history/:artistId', requireAuth, async (req, res) => {
 });
 
 /**
- * Overview: all linked YouTube channels with stats
+ * Overview: stats from ALL connected YouTube channels
+ * (both standalone/orphan channels and artist-linked ones)
  */
 router.get('/overview', requireAuth, async (req, res) => {
   try {
-    const artists = await req.db('artists')
+    // Get standalone connected channels (from /connect universal link)
+    const standalone = await req.db('youtube_pending_connections').orderBy('connected_at', 'desc');
+
+    // Get artist-linked channels
+    const linked = await req.db('artists')
       .whereNotNull('youtube_channel_id')
-      .select('id', 'name', 'nickname', 'youtube_channel_id', 'youtube_channel_url', 'youtube_channel_title');
+      .leftJoin('youtube_channel_stats', 'artists.id', 'youtube_channel_stats.artist_id')
+      .leftJoin('youtube_accounts', 'artists.id', 'youtube_accounts.artist_id')
+      .select(
+        'artists.id', 'artists.name', 'artists.nickname',
+        'artists.youtube_channel_id', 'artists.youtube_channel_url', 'artists.youtube_channel_title',
+        'youtube_channel_stats.subscriber_count', 'youtube_channel_stats.view_count',
+        'youtube_channel_stats.video_count', 'youtube_channel_stats.channel_thumbnail',
+        'youtube_accounts.last_synced_at', 'youtube_accounts.sync_status'
+      );
 
-    if (artists.length === 0) {
-      return res.json({ artists: [], totals: { channels: 0, subscribers: 0, views: 0, videos: 0, connected: 0, revenue: 0 } });
-    }
+    // Combine totals from both sources
+    let totalSubs = 0, totalViews = 0, totalVideos = 0;
 
-    const artistIds = artists.map(a => a.id);
-
-    // Stats
-    const stats = await req.db('youtube_channel_stats').whereIn('artist_id', artistIds);
-    const statsMap = {};
-    stats.forEach(s => { statsMap[s.artist_id] = s; });
-
-    // OAuth accounts
-    const accounts = await req.db('youtube_accounts').whereIn('artist_id', artistIds);
-    const accountMap = {};
-    accounts.forEach(a => { accountMap[a.artist_id] = a; });
-
-    // Revenue totals from history
-    const revenueTotals = await req.db('youtube_revenue_history')
-      .whereIn('artist_id', artistIds)
-      .groupBy('artist_id')
-      .select('artist_id')
-      .sum('estimated_revenue as total_revenue')
-      .sum('views as total_views')
-      .max('month as last_month');
-    const revMap = {};
-    revenueTotals.forEach(r => { revMap[r.artist_id] = r; });
-
-    artists.forEach(a => {
-      const s = statsMap[a.id] || {};
-      const acc = accountMap[a.id];
-      const rev = revMap[a.id] || {};
-      a.stats = {
-        subscriber_count: parseInt(s.subscriber_count || 0),
-        view_count: parseInt(s.view_count || 0),
-        video_count: parseInt(s.video_count || 0),
-        channel_thumbnail: s.channel_thumbnail,
-        fetched_at: s.fetched_at
-      };
-      a.oauth = acc ? {
-        connected: true,
-        channel_title: acc.channel_title,
-        last_synced_at: acc.last_synced_at,
-        sync_status: acc.sync_status,
-        last_error: acc.last_error
-      } : { connected: false };
-      a.revenue_total = parseFloat(rev.total_revenue) || 0;
-      a.views_tracked = parseInt(rev.total_views) || 0;
-      a.last_month = rev.last_month;
+    standalone.forEach(c => {
+      totalSubs += parseInt(c.subscriber_count || 0);
+      totalViews += parseInt(c.view_count || 0);
+      totalVideos += parseInt(c.video_count || 0);
     });
 
-    // Aggregate totals
+    linked.forEach(a => {
+      totalSubs += parseInt(a.subscriber_count || 0);
+      totalViews += parseInt(a.view_count || 0);
+      totalVideos += parseInt(a.video_count || 0);
+    });
+
+    // Avoid double-counting if a channel is both standalone and linked
+    const standaloneIds = new Set(standalone.map(c => c.channel_id));
+    const uniqueLinked = linked.filter(a => !standaloneIds.has(a.youtube_channel_id));
+    const totalChannels = standalone.length + uniqueLinked.length;
+
     const totals = {
-      channels: artists.length,
-      subscribers: artists.reduce((s, a) => s + a.stats.subscriber_count, 0),
-      views: artists.reduce((s, a) => s + a.stats.view_count, 0),
-      videos: artists.reduce((s, a) => s + a.stats.video_count, 0),
-      connected: artists.filter(a => a.oauth.connected).length,
-      revenue: artists.reduce((s, a) => s + a.revenue_total, 0)
+      channels: totalChannels,
+      subscribers: totalSubs,
+      views: totalViews,
+      videos: totalVideos,
+      connected: standalone.length + linked.filter(a => a.sync_status).length,
+      revenue: 0 // Will be populated from youtube_revenue_history if any
     };
 
-    res.json({ artists, totals });
+    // Check for any revenue data
+    const revTotal = await req.db('youtube_revenue_history').sum('estimated_revenue as total').first();
+    totals.revenue = parseFloat(revTotal.total) || 0;
+
+    res.json({ artists: linked, standalone, totals });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
