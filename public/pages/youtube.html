@@ -85,7 +85,7 @@
                                     Universal Connect Link
                                 </h5>
                                 <p class="mb-0" style="color:rgba(255,255,255,0.85);font-size:14px;">
-                                    Share this single link with any artist. They'll select their name from the list and connect their YouTube channel themselves — no login required.
+                                    Share this single link with any artist. They click → authorize YouTube → done. You'll see their channel in "Pending Connections" below to match to the right artist.
                                 </p>
                             </div>
                             <div class="col-md-5">
@@ -112,6 +112,21 @@
                         </div>
                     </div>
                 </div>
+                <!-- Pending Connections -->
+                <div class="card" id="pending-card" style="display:none;border-left:4px solid #f59e0b;">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <h4 class="card-title mb-0">
+                                <i data-feather="alert-circle" class="feather-icon mr-1" style="color:#f59e0b;"></i>
+                                Pending Connections
+                                <span class="badge badge-warning ml-1" id="pending-count">0</span>
+                            </h4>
+                            <small class="text-muted ml-3">Artists who connected via the universal link. Match them to the correct artist.</small>
+                        </div>
+                        <div id="pending-list"></div>
+                    </div>
+                </div>
+
                 <!-- Aggregate Stats -->
                 <div class="row">
                     <div class="col-lg-3 col-md-6">
@@ -230,11 +245,82 @@
     var revenueChart = null;
     var channelsTable = null;
 
+    var allArtists = [];
+
     App.init(function() {
         setupUniversalLink();
+        loadPending();
         loadOverview();
         loadTrends();
+        // Pre-load artist list for matching dropdown
+        App.api('GET', '/api/artists').done(function(arts) {
+            allArtists = arts.map(function(a) { return { id: a.id, name: a.name, nickname: a.nickname, has_channel: !!a.youtube_channel_id }; });
+        });
     });
+
+    function loadPending() {
+        App.api('GET', '/api/youtube/pending').done(function(pending) {
+            if (pending.length === 0) {
+                $('#pending-card').hide();
+                return;
+            }
+            $('#pending-card').show();
+            $('#pending-count').text(pending.length);
+            var container = $('#pending-list');
+            container.empty();
+            pending.forEach(function(p) {
+                var thumb = p.channel_thumbnail
+                    ? '<img src="' + p.channel_thumbnail + '" style="width:48px;height:48px;border-radius:50%;object-fit:cover;">'
+                    : '<div style="width:48px;height:48px;border-radius:50%;background:#ef4444;display:flex;align-items:center;justify-content:center;color:#fff;"><i data-feather="youtube"></i></div>';
+
+                var artistOptions = '<option value="">— Select an artist to match —</option>';
+                allArtists.forEach(function(a) {
+                    var label = a.name + (a.nickname ? ' (' + a.nickname + ')' : '') + (a.has_channel ? ' ⚠️ already has channel' : '');
+                    artistOptions += '<option value="' + a.id + '">' + label + '</option>';
+                });
+
+                container.append(
+                    '<div class="row align-items-center py-3 border-bottom" data-pending-id="' + p.id + '">' +
+                    '<div class="col-md-1">' + thumb + '</div>' +
+                    '<div class="col-md-4"><strong>' + (p.channel_title || 'Unknown') + '</strong>' +
+                        (p.custom_url ? '<br><small class="text-muted">@' + p.custom_url + '</small>' : '') +
+                        '<br><small class="text-muted">' + formatNum(p.subscriber_count) + ' subs · ' + formatNum(p.view_count) + ' views · ' + formatNum(p.video_count) + ' videos</small>' +
+                        '<br><small class="text-muted">Connected ' + new Date(p.connected_at).toLocaleString() + '</small></div>' +
+                    '<div class="col-md-5 admin-only"><select class="form-control custom-select" id="match-select-' + p.id + '">' + artistOptions + '</select></div>' +
+                    '<div class="col-md-2 admin-only">' +
+                        '<button class="btn btn-sm btn-success mr-1" onclick="matchPending(' + p.id + ')"><i data-feather="check" style="width:14px;height:14px;"></i> Match</button>' +
+                        '<button class="btn btn-sm btn-outline-danger" onclick="rejectPending(' + p.id + ')" title="Reject"><i data-feather="x" style="width:14px;height:14px;"></i></button>' +
+                    '</div>' +
+                    '</div>'
+                );
+            });
+            feather.replace();
+        });
+    }
+
+    function matchPending(pendingId) {
+        var artistId = $('#match-select-' + pendingId).val();
+        if (!artistId) { App.showError('Please select an artist to match'); return; }
+
+        var artistLabel = $('#match-select-' + pendingId + ' option:selected').text();
+        if (artistLabel.indexOf('already has channel') > -1) {
+            if (!confirm('This artist already has a YouTube channel linked. Replace it with this new one?')) return;
+        }
+
+        App.api('POST', '/api/youtube/match-pending/' + pendingId + '/' + artistId).done(function(res) {
+            App.showSuccess('Matched: ' + res.channel + ' → ' + res.artist);
+            loadPending();
+            loadOverview();
+        });
+    }
+
+    function rejectPending(pendingId) {
+        if (!confirm('Reject this pending connection? The artist will need to reconnect.')) return;
+        App.api('DELETE', '/api/youtube/pending/' + pendingId).done(function() {
+            App.showSuccess('Pending connection removed');
+            loadPending();
+        });
+    }
 
     function setupUniversalLink() {
         var url = window.location.origin + '/connect';

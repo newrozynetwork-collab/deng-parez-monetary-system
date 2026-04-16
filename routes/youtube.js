@@ -247,47 +247,99 @@ router.post('/share-link/:artistId', requireAdmin, async (req, res) => {
 });
 
 /**
- * Public: searchable list of artists for the universal connect page
- * Returns only id + name + nickname + connection status
+ * Public: start OAuth flow for an orphan (unassigned) channel.
+ * Artist doesn't need to identify themselves. Admin matches them later.
+ * state format: "orphan"
  */
-router.get('/public-artists', async (req, res) => {
+router.get('/orphan-connect', async (req, res) => {
   try {
-    const artists = await req.db('artists')
-      .leftJoin('youtube_accounts', 'artists.id', 'youtube_accounts.artist_id')
-      .select(
-        'artists.id',
-        'artists.name',
-        'artists.nickname',
-        'youtube_accounts.channel_title as connected_channel_title',
-        'youtube_accounts.connected_at'
-      )
-      .orderBy('artists.name');
-    res.json(artists);
+    if (!yt.OAUTH_CONFIGURED) {
+      return res.status(500).send('<h2>YouTube OAuth is not configured</h2>');
+    }
+    const url = yt.getAuthUrl('orphan');
+    res.redirect(url);
+  } catch (err) {
+    res.status(500).send('<h2>Error: ' + err.message + '</h2>');
+  }
+});
+
+/**
+ * Admin: list pending orphan connections
+ */
+router.get('/pending', requireAuth, async (req, res) => {
+  try {
+    const pending = await req.db('youtube_pending_connections')
+      .whereNull('matched_at')
+      .orderBy('connected_at', 'desc');
+    res.json(pending);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
 /**
- * Public: start OAuth flow for a self-identified artist (universal link)
- * state format: "public:<artistId>"
+ * Admin: match a pending connection to an artist
  */
-router.get('/universal-connect/:artistId', async (req, res) => {
+router.post('/match-pending/:pendingId/:artistId', requireAdmin, async (req, res) => {
   try {
-    if (!yt.OAUTH_CONFIGURED) {
-      return res.status(500).send('<h2>YouTube OAuth is not configured</h2>');
-    }
+    const pendingId = parseInt(req.params.pendingId);
     const artistId = parseInt(req.params.artistId);
-    if (!artistId) return res.status(400).send('<h2>Invalid artist</h2>');
+
+    const pending = await req.db('youtube_pending_connections').where({ id: pendingId }).first();
+    if (!pending) return res.status(404).json({ error: 'Pending connection not found' });
 
     const artist = await req.db('artists').where({ id: artistId }).first();
-    if (!artist) return res.status(404).send('<h2>Artist not found</h2>');
+    if (!artist) return res.status(404).json({ error: 'Artist not found' });
 
-    const state = 'public:' + artistId;
-    const url = yt.getAuthUrl(state);
-    res.redirect(url);
+    // Create OAuth account for the artist
+    await req.db('youtube_accounts').insert({
+      artist_id: artistId,
+      channel_id: pending.channel_id,
+      channel_title: pending.channel_title,
+      refresh_token_encrypted: pending.refresh_token_encrypted,
+      connected_at: pending.connected_at,
+      sync_status: 'connected'
+    }).onConflict('artist_id').merge();
+
+    // Link the channel to the artist
+    await req.db('artists').where({ id: artistId }).update({
+      youtube_channel_id: pending.channel_id,
+      youtube_channel_url: 'https://www.youtube.com/channel/' + pending.channel_id,
+      youtube_channel_title: pending.channel_title
+    });
+
+    // Cache stats
+    await req.db('youtube_channel_stats').insert({
+      artist_id: artistId,
+      channel_id: pending.channel_id,
+      subscriber_count: pending.subscriber_count,
+      view_count: pending.view_count,
+      video_count: pending.video_count,
+      channel_thumbnail: pending.channel_thumbnail,
+      fetched_at: new Date()
+    }).onConflict('artist_id').merge();
+
+    // Mark pending as matched
+    await req.db('youtube_pending_connections').where({ id: pendingId }).update({
+      matched_at: new Date(),
+      matched_artist_id: artistId
+    });
+
+    res.json({ ok: true, artist: artist.name, channel: pending.channel_title });
   } catch (err) {
-    res.status(500).send('<h2>Error: ' + err.message + '</h2>');
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * Admin: delete a pending connection (reject)
+ */
+router.delete('/pending/:pendingId', requireAdmin, async (req, res) => {
+  try {
+    await req.db('youtube_pending_connections').where({ id: req.params.pendingId }).del();
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -368,8 +420,12 @@ router.get('/callback', async (req, res) => {
     }
 
     // Determine flow type from state
-    let artistId, isPublicFlow = false, tokenRow = null;
-    if (state.startsWith('admin:')) {
+    let artistId, isPublicFlow = false, tokenRow = null, isOrphan = false;
+    if (state === 'orphan') {
+      // Orphan: no artist selected. Goes to pending queue.
+      isOrphan = true;
+      isPublicFlow = true;
+    } else if (state.startsWith('admin:')) {
       artistId = parseInt(state.replace('admin:', ''));
     } else if (state.startsWith('token:')) {
       const token = state.replace('token:', '');
@@ -381,7 +437,6 @@ router.get('/callback', async (req, res) => {
       artistId = tokenRow.artist_id;
       isPublicFlow = true;
     } else if (state.startsWith('public:')) {
-      // Universal link flow - artist self-identified
       artistId = parseInt(state.replace('public:', ''));
       isPublicFlow = true;
     } else {
@@ -409,25 +464,43 @@ router.get('/callback', async (req, res) => {
       ));
     }
 
-    // Save OAuth tokens only - no auto-linking, no auto-caching
-    // Admin must explicitly link the channel and refresh stats manually
-    await db('youtube_accounts').insert({
-      artist_id: artistId,
-      channel_id: channelInfo.channel_id,
-      channel_title: channelInfo.title,
-      refresh_token_encrypted: encryptedRefresh,
-      connected_at: new Date(),
-      sync_status: 'connected'
-    }).onConflict('artist_id').merge();
+    let artist = null;
 
-    const artist = await db('artists').where({ id: artistId }).first();
+    if (isOrphan) {
+      // Orphan flow: save to pending queue; admin will match later
+      // Fetch public stats to include in pending entry
+      const publicInfo = await yt.getChannelInfo(channelInfo.channel_id);
+      await db('youtube_pending_connections').insert({
+        channel_id: channelInfo.channel_id,
+        channel_title: channelInfo.title,
+        channel_thumbnail: publicInfo ? publicInfo.thumbnail : null,
+        custom_url: publicInfo ? publicInfo.custom_url : null,
+        refresh_token_encrypted: encryptedRefresh,
+        subscriber_count: publicInfo ? publicInfo.subscriber_count : 0,
+        view_count: publicInfo ? publicInfo.view_count : 0,
+        video_count: publicInfo ? publicInfo.video_count : 0,
+        connected_at: new Date()
+      }).onConflict('channel_id').merge();
+    } else {
+      // Save OAuth tokens for specific artist
+      await db('youtube_accounts').insert({
+        artist_id: artistId,
+        channel_id: channelInfo.channel_id,
+        channel_title: channelInfo.title,
+        refresh_token_encrypted: encryptedRefresh,
+        connected_at: new Date(),
+        sync_status: 'connected'
+      }).onConflict('artist_id').merge();
 
-    // Mark token as used
-    if (tokenRow) {
-      await db('youtube_connect_tokens').where({ id: tokenRow.id }).update({
-        used_at: new Date(),
-        used_channel_id: channelInfo.channel_id
-      });
+      artist = await db('artists').where({ id: artistId }).first();
+
+      // Mark token as used
+      if (tokenRow) {
+        await db('youtube_connect_tokens').where({ id: tokenRow.id }).update({
+          used_at: new Date(),
+          used_channel_id: channelInfo.channel_id
+        });
+      }
     }
 
     await db.destroy();
@@ -439,7 +512,10 @@ router.get('/callback', async (req, res) => {
     const redirectScript = isPublicFlow
       ? ''
       : `<script>setTimeout(() => window.location.href = '/artists/${artistId}', 3000);</script>`;
-    const artistName = artist ? artist.name : 'the artist';
+    const artistName = isOrphan ? 'your account' : (artist ? artist.name : 'the artist');
+    const orphanNote = isOrphan
+      ? `<p style="color:#6b7280;font-size:14px;margin-top:14px;">Our team will link this channel to your profile shortly.</p>`
+      : '';
 
     res.send(`
       <html><head><title>YouTube Connected</title>
@@ -467,6 +543,7 @@ router.get('/callback', async (req, res) => {
           <span style="color:#6b7280;font-size:14px;">Channel ID: ${channelInfo.channel_id}</span>
         </div>
         <p>${isPublicFlow ? 'You can now close this page. Deng Parez will sync your revenue data automatically.' : 'Revenue data is now available for syncing.'}</p>
+        ${orphanNote}
         ${backButton}
       </div>
       ${redirectScript}

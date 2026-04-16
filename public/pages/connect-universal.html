@@ -21,8 +21,8 @@
         .card {
             background: #fff;
             border-radius: 16px;
-            padding: 36px 28px;
-            max-width: 500px;
+            padding: 40px 32px;
+            max-width: 480px;
             width: 100%;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
         }
@@ -38,163 +38,91 @@
             margin-top: 8px;
         }
         .hero-icon {
-            width: 72px;
-            height: 72px;
+            width: 88px;
+            height: 88px;
             background: #fee2e2;
             border-radius: 50%;
-            margin: 0 auto 16px;
+            margin: 0 auto 20px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
-        .hero-icon svg { width: 40px; height: 40px; color: #ef4444; }
+        .hero-icon svg { width: 48px; height: 48px; color: #ef4444; }
         h1 {
             text-align: center;
             color: #1f2937;
-            font-size: 22px;
-            margin: 0 0 8px;
+            font-size: 26px;
+            margin: 0 0 10px;
             font-weight: 600;
         }
         .subtitle {
             text-align: center;
             color: #6b7280;
-            margin: 0 0 24px;
-            font-size: 14px;
-        }
-        .form-group {
-            margin-bottom: 18px;
-        }
-        .form-group label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 8px;
-        }
-        .search-wrapper {
-            position: relative;
-        }
-        #artist-search {
-            width: 100%;
-            padding: 14px 14px 14px 42px;
-            border: 2px solid #e5e7eb;
-            border-radius: 10px;
+            margin: 0 0 28px;
             font-size: 15px;
-            outline: none;
-            transition: border-color 0.2s;
+            line-height: 1.5;
         }
-        #artist-search:focus { border-color: #3b82f6; }
-        .search-icon {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #9ca3af;
-            pointer-events: none;
+        .steps {
+            background: #f0f9ff;
+            border-left: 4px solid #3b82f6;
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-bottom: 24px;
         }
-        #artist-list {
-            max-height: 280px;
-            overflow-y: auto;
-            border: 1px solid #e5e7eb;
-            border-radius: 10px;
-            margin-top: 8px;
-            background: #f9fafb;
-        }
-        #artist-list .item {
-            padding: 10px 14px;
-            cursor: pointer;
-            border-bottom: 1px solid #e5e7eb;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 14px;
-            transition: background 0.15s;
-        }
-        #artist-list .item:last-child { border-bottom: none; }
-        #artist-list .item:hover { background: #e0e7ff; }
-        #artist-list .item.selected { background: #dbeafe; border-left: 3px solid #3b82f6; }
-        #artist-list .nickname {
-            color: #9ca3af;
-            font-size: 12px;
-            margin-left: 6px;
-        }
-        #artist-list .badge-connected {
-            background: #10b981;
-            color: #fff;
-            padding: 2px 8px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 500;
-        }
-        #empty-msg {
-            padding: 20px;
-            text-align: center;
-            color: #9ca3af;
-            font-size: 14px;
-        }
-        .loading-artists {
-            padding: 20px;
-            text-align: center;
-            color: #6b7280;
-            font-size: 14px;
-        }
-        .selected-artist {
-            background: #dbeafe;
-            border: 2px solid #3b82f6;
-            border-radius: 10px;
-            padding: 14px;
-            margin-top: 14px;
-            display: none;
-        }
-        .selected-artist strong {
+        .steps h3 {
+            margin: 0 0 10px;
             color: #1e40af;
-            font-size: 16px;
-            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-        .selected-artist .already {
-            color: #059669;
-            font-size: 13px;
-            margin-top: 4px;
+        .steps ol {
+            margin: 0;
+            padding-left: 20px;
+            color: #1e3a8a;
+            font-size: 14px;
+            line-height: 1.7;
         }
         .btn-primary {
             display: block;
             width: 100%;
-            padding: 16px;
+            padding: 18px;
             background: #ef4444;
             color: #fff;
             border: none;
-            border-radius: 10px;
-            font-size: 16px;
+            border-radius: 12px;
+            font-size: 17px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
-            margin-top: 20px;
+            text-decoration: none;
+            text-align: center;
         }
-        .btn-primary:hover:not(:disabled) {
+        .btn-primary:hover {
             background: #dc2626;
             transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+            box-shadow: 0 8px 24px rgba(239, 68, 68, 0.4);
         }
-        .btn-primary:disabled {
-            background: #d1d5db;
-            cursor: not-allowed;
+        .btn-primary svg {
+            vertical-align: middle;
+            margin-right: 8px;
         }
-        .btn-primary svg { vertical-align: middle; margin-right: 8px; }
         .permissions {
             background: #f9fafb;
             border-radius: 8px;
-            padding: 14px;
-            margin-top: 18px;
+            padding: 14px 16px;
+            margin-top: 20px;
             font-size: 12px;
             color: #6b7280;
             line-height: 1.5;
         }
-        .permissions strong { color: #1f2937; display: block; margin-bottom: 4px; }
+        .permissions strong { color: #1f2937; display: block; margin-bottom: 6px; }
         .footer-note {
             text-align: center;
             color: #9ca3af;
-            font-size: 11px;
-            margin-top: 20px;
+            font-size: 12px;
+            margin-top: 18px;
             line-height: 1.5;
         }
     </style>
@@ -213,110 +141,34 @@
             </svg>
         </div>
         <h1>Connect Your YouTube Channel</h1>
-        <p class="subtitle">Step 1: Find your name in the list</p>
+        <p class="subtitle">Link your channel to Deng Parez to have your revenue & analytics tracked automatically.</p>
 
-        <div class="form-group">
-            <div class="search-wrapper">
-                <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-                <input type="text" id="artist-search" placeholder="Type your name or nickname..." autocomplete="off">
-            </div>
-            <div id="artist-list">
-                <div class="loading-artists">Loading artists...</div>
-            </div>
+        <div class="steps">
+            <h3>How it works</h3>
+            <ol>
+                <li>Click the button below</li>
+                <li>Sign in with the Google account that owns your YouTube channel</li>
+                <li>Approve the read-only access</li>
+                <li>Done! You can close the page</li>
+            </ol>
         </div>
 
-        <div class="selected-artist" id="selected-box">
-            <strong id="selected-name"></strong>
-            <div class="already" id="already-connected" style="display:none;">✓ You've already connected a channel. Clicking below will let you reconnect with a different one.</div>
-        </div>
-
-        <button class="btn-primary" id="connect-btn" disabled onclick="connectChannel()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        <a href="/api/youtube/orphan-connect" class="btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33zM9.75 15.02V8.48l5.75 3.27z"/>
             </svg>
-            <span id="btn-text">Select your name above</span>
-        </button>
+            Connect YouTube Channel
+        </a>
 
         <div class="permissions">
-            <strong>🔒 Read-only access:</strong>
-            We'll only see your channel's public info and analytics. We cannot post, delete, or change anything on your channel.
+            <strong>🔒 Read-only access</strong>
+            We only view your channel's public info and analytics. We cannot post videos, change anything, or access your other Google services.
         </div>
 
         <div class="footer-note">
-            Only select your own name. Your data is encrypted and private.
+            Your connection is encrypted and private.<br>
+            Our team will match your channel to your account.
         </div>
     </div>
-
-    <script>
-        var artists = [];
-        var selectedId = null;
-
-        fetch('/api/youtube/public-artists')
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                artists = data;
-                render(data);
-            })
-            .catch(function() {
-                document.getElementById('artist-list').innerHTML = '<div class="loading-artists" style="color:#ef4444;">Could not load artists. Please reload the page.</div>';
-            });
-
-        function render(list) {
-            var container = document.getElementById('artist-list');
-            if (list.length === 0) {
-                container.innerHTML = '<div id="empty-msg">No match found. Try a different spelling.</div>';
-                return;
-            }
-            var html = '';
-            list.forEach(function(a) {
-                var connected = a.connected_channel_title ? '<span class="badge-connected">Connected</span>' : '';
-                var nickname = a.nickname ? '<span class="nickname">(' + escapeHtml(a.nickname) + ')</span>' : '';
-                html += '<div class="item" data-id="' + a.id + '" onclick="selectArtist(' + a.id + ')">' +
-                    '<div><strong>' + escapeHtml(a.name) + '</strong>' + nickname + '</div>' +
-                    connected +
-                    '</div>';
-            });
-            container.innerHTML = html;
-        }
-
-        function escapeHtml(s) {
-            return (s || '').replace(/[&<>"']/g, function(c) {
-                return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
-            });
-        }
-
-        document.getElementById('artist-search').addEventListener('input', function(e) {
-            var q = e.target.value.toLowerCase().trim();
-            if (!q) { render(artists); return; }
-            var filtered = artists.filter(function(a) {
-                return a.name.toLowerCase().indexOf(q) !== -1 ||
-                       (a.nickname && a.nickname.toLowerCase().indexOf(q) !== -1);
-            });
-            render(filtered);
-        });
-
-        function selectArtist(id) {
-            selectedId = id;
-            var a = artists.find(function(x) { return x.id === id; });
-            if (!a) return;
-
-            document.querySelectorAll('#artist-list .item').forEach(function(el) {
-                el.classList.remove('selected');
-                if (parseInt(el.dataset.id) === id) el.classList.add('selected');
-            });
-
-            document.getElementById('selected-box').style.display = 'block';
-            document.getElementById('selected-name').textContent = 'Selected: ' + a.name;
-            document.getElementById('already-connected').style.display = a.connected_channel_title ? 'block' : 'none';
-
-            document.getElementById('connect-btn').disabled = false;
-            document.getElementById('btn-text').textContent = 'Connect YouTube Channel';
-        }
-
-        function connectChannel() {
-            if (!selectedId) return;
-            window.location.href = '/api/youtube/universal-connect/' + selectedId;
-        }
-    </script>
 </body>
 </html>
