@@ -83,16 +83,20 @@
                         </div>
                     </div>
                     <div class="col-lg-8">
-                        <!-- YouTube Channel Card -->
-                        <div class="card">
+                        <!-- YouTube Channel Card (independent from platform revenue) -->
+                        <div class="card" style="border: 2px solid rgba(239, 68, 68, 0.15);">
                             <div class="card-body">
-                                <div class="d-flex align-items-center mb-3">
+                                <div class="d-flex align-items-center mb-2">
                                     <h4 class="card-title mb-0">
                                         <i data-feather="youtube" class="feather-icon mr-1" style="color:#ef4444;"></i>
-                                        YouTube Channel
+                                        YouTube Section
                                     </h4>
                                     <div class="ml-auto" id="yt-actions"></div>
                                 </div>
+                                <p class="text-muted mb-3" style="font-size:12px;">
+                                    <i data-feather="info" style="width:12px;height:12px;vertical-align:text-bottom;"></i>
+                                    This section tracks YouTube separately. Data here is not combined with the platform revenue, referrals, or reports below.
+                                </p>
                                 <!-- Not linked state -->
                                 <div id="yt-not-linked">
                                     <p class="text-muted mb-2">Link this artist's YouTube channel to see public stats and sync revenue.</p>
@@ -106,17 +110,28 @@
                                     </div>
                                     <small class="text-muted d-block mb-3">Examples: <code>@artistname</code>, <code>youtube.com/@artistname</code>, <code>youtube.com/channel/UC...</code></small>
                                     <div class="alert alert-info admin-only" style="padding:10px 12px;font-size:14px;">
-                                        <strong>💡 Easier option:</strong> Send the artist a private link and they'll connect their channel themselves.
+                                        <strong>💡 Easier option:</strong> Send the artist a private link and they'll authorize their channel themselves.
                                         <button class="btn btn-sm btn-primary ml-2" onclick="generateShareLink()">
                                             <i data-feather="share-2" class="feather-icon mr-1"></i> Generate Share Link
+                                        </button>
+                                    </div>
+                                    <!-- Show authorized channel available for linking -->
+                                    <div id="yt-pending-link" class="alert alert-success admin-only" style="display:none;padding:12px;">
+                                        <strong>✓ Channel authorized via OAuth</strong>
+                                        <p class="mb-2" style="font-size:13px;">
+                                            The artist has authorized <strong id="yt-pending-channel"></strong>.
+                                        </p>
+                                        <button class="btn btn-sm btn-success" onclick="linkAuthorizedChannel()">
+                                            <i data-feather="link" class="feather-icon mr-1"></i> Link this channel
                                         </button>
                                     </div>
                                 </div>
                                 <!-- Linked state -->
                                 <div id="yt-linked" style="display:none;">
                                     <div class="d-flex align-items-center mb-3">
-                                        <img id="yt-thumbnail" src="" style="width:60px;height:60px;border-radius:50%;margin-right:15px;">
-                                        <div>
+                                        <img id="yt-thumbnail" src="" style="width:60px;height:60px;border-radius:50%;margin-right:15px;object-fit:cover;">
+                                        <div style="flex-grow:1;">
+                                            <small class="text-muted d-block">Linked channel</small>
                                             <h5 class="mb-0"><a id="yt-channel-link" target="_blank"></a></h5>
                                             <small class="text-muted" id="yt-sync-info"></small>
                                         </div>
@@ -141,11 +156,22 @@
                                             </div>
                                         </div>
                                     </div>
+                                    <hr style="border-color:rgba(239,68,68,0.1);">
+                                    <!-- Authorization mismatch warning -->
+                                    <div id="yt-auth-mismatch" class="alert alert-warning admin-only" style="display:none;padding:12px;">
+                                        <strong>⚠️ Authorized channel is different from linked channel</strong>
+                                        <p class="mb-2" style="font-size:13px;">
+                                            The artist authorized <strong id="yt-auth-channel"></strong> via OAuth, but the linked channel is <strong id="yt-linked-title-inline"></strong>.
+                                        </p>
+                                        <button class="btn btn-sm btn-warning" onclick="linkAuthorizedChannel()">
+                                            Use authorized channel instead
+                                        </button>
+                                    </div>
                                     <div id="yt-oauth-section" class="admin-only">
                                         <div id="yt-oauth-not-connected">
-                                            <div class="alert alert-info mb-2" style="padding:10px;">
-                                                <i data-feather="info" class="feather-icon mr-1"></i>
-                                                <strong>Connect for revenue access:</strong> Authorize YouTube Analytics to sync revenue data automatically.
+                                            <div class="alert alert-light mb-2" style="padding:10px;border:1px dashed #cbd5e1;">
+                                                <strong>Revenue access (OAuth):</strong>
+                                                <p class="mb-0" style="font-size:13px;">Authorize YouTube Analytics to sync monetary data. Revenue stays in this YouTube section.</p>
                                             </div>
                                             <button class="btn btn-sm btn-danger mr-2" onclick="connectYouTubeOAuth()">
                                                 <i data-feather="link-2" class="feather-icon mr-1"></i> Connect (admin)
@@ -291,13 +317,8 @@
             $('#artist-referrals').html(refsHtml);
             if (a.notes) { $('#artist-notes').text(a.notes); $('#artist-notes-section').show(); }
 
-            // YouTube
-            if (a.youtube_channel_id) {
-                loadYouTubeStats(a);
-            } else {
-                $('#yt-not-linked').show();
-                $('#yt-linked').hide();
-            }
+            // YouTube — always load status since OAuth may exist without a linked channel
+            loadYouTubeStats(a);
             feather.replace();
         });
     }
@@ -334,28 +355,63 @@
     // ============ YouTube Integration ============
 
     function loadYouTubeStats(artist) {
-        App.api('GET', '/api/youtube/stats/' + artistId).done(function(stats) {
+        App.api('GET', '/api/youtube/stats/' + artistId).done(function(s) {
+            // Reset all states
             $('#yt-not-linked').hide();
-            $('#yt-linked').show();
-            if (stats.channel_thumbnail) $('#yt-thumbnail').attr('src', stats.channel_thumbnail);
-            $('#yt-channel-link').text(artist.youtube_channel_title || 'YouTube Channel').attr('href', artist.youtube_channel_url);
-            $('#yt-subs').text(formatNum(stats.subscriber_count));
-            $('#yt-views').text(formatNum(stats.view_count));
-            $('#yt-videos-count').text(formatNum(stats.video_count));
-            var fetched = new Date(stats.fetched_at);
-            $('#yt-sync-info').text('Stats updated ' + fetched.toLocaleString());
+            $('#yt-linked').hide();
+            $('#yt-pending-link').hide();
+            $('#yt-auth-mismatch').hide();
+            $('#yt-actions').empty();
 
-            if (stats.oauth_connected) {
+            // Case 1: No linked channel
+            if (!s.linked) {
+                $('#yt-not-linked').show();
+                // If OAuth exists but no link, show "Link this authorized channel" prompt
+                if (s.oauth_connected) {
+                    $('#yt-pending-channel').text(s.oauth_channel_title || s.oauth_channel_id);
+                    $('#yt-pending-link').show();
+                }
+                feather.replace();
+                return;
+            }
+
+            // Case 2: Channel is linked
+            $('#yt-linked').show();
+            if (s.channel_thumbnail) $('#yt-thumbnail').attr('src', s.channel_thumbnail);
+            $('#yt-channel-link').text(s.linked_channel_title || 'YouTube Channel').attr('href', s.linked_channel_url);
+            $('#yt-subs').text(formatNum(s.subscriber_count));
+            $('#yt-views').text(formatNum(s.view_count));
+            $('#yt-videos-count').text(formatNum(s.video_count));
+            if (s.fetched_at) {
+                $('#yt-sync-info').text('Public stats updated ' + new Date(s.fetched_at).toLocaleString());
+            }
+
+            // OAuth state
+            if (s.oauth_connected) {
+                // Check if authorized channel matches linked channel
+                if (!s.oauth_matches_linked) {
+                    $('#yt-auth-channel').text(s.oauth_channel_title || s.oauth_channel_id);
+                    $('#yt-linked-title-inline').text(s.linked_channel_title || s.linked_channel_id);
+                    $('#yt-auth-mismatch').show();
+                }
                 $('#yt-oauth-not-connected').hide();
                 $('#yt-oauth-connected').show();
-                $('#yt-last-sync').text(stats.last_synced_at ? 'Last synced ' + new Date(stats.last_synced_at).toLocaleString() : 'Never synced');
+                $('#yt-last-sync').text(s.oauth_last_synced_at ? 'Last synced ' + new Date(s.oauth_last_synced_at).toLocaleString() : 'Authorized, not yet synced');
             } else {
                 $('#yt-oauth-not-connected').show();
                 $('#yt-oauth-connected').hide();
             }
 
-            $('#yt-actions').html('<button class="btn btn-sm btn-outline-secondary mr-1 admin-only" onclick="refreshYouTubeStats()" title="Refresh stats"><i data-feather="refresh-cw" style="width:14px;height:14px;"></i></button><button class="btn btn-sm btn-outline-danger admin-only" onclick="unlinkYouTube()" title="Unlink channel"><i data-feather="x" style="width:14px;height:14px;"></i></button>');
+            $('#yt-actions').html('<button class="btn btn-sm btn-outline-secondary mr-1 admin-only" onclick="refreshYouTubeStats()" title="Refresh public stats"><i data-feather="refresh-cw" style="width:14px;height:14px;"></i></button><button class="btn btn-sm btn-outline-danger admin-only" onclick="unlinkYouTube()" title="Unlink channel"><i data-feather="x" style="width:14px;height:14px;"></i></button>');
             feather.replace();
+        });
+    }
+
+    function linkAuthorizedChannel() {
+        if (!confirm('Link the OAuth-authorized channel to this artist?')) return;
+        App.api('POST', '/api/youtube/link-authorized/' + artistId).done(function(res) {
+            App.showSuccess('Channel linked: ' + (res.channel ? res.channel.title : ''));
+            loadArtist(artistId);
         });
     }
 

@@ -72,18 +72,36 @@ router.post('/unlink/:artistId', requireAdmin, async (req, res) => {
 });
 
 /**
- * Get cached channel stats (and refresh if stale)
+ * Get combined channel status: linked channel stats + OAuth authorization info
+ * Always returns status object even if nothing is set, so UI can react.
  */
 router.get('/stats/:artistId', requireAuth, async (req, res) => {
   try {
     const artist = await req.db('artists').where({ id: req.params.artistId }).first();
-    if (!artist || !artist.youtube_channel_id) {
-      return res.status(404).json({ error: 'No YouTube channel linked' });
+    if (!artist) return res.status(404).json({ error: 'Artist not found' });
+
+    const oauth = await req.db('youtube_accounts').where({ artist_id: req.params.artistId }).first();
+
+    const response = {
+      artist_id: artist.id,
+      linked: !!artist.youtube_channel_id,
+      linked_channel_id: artist.youtube_channel_id,
+      linked_channel_title: artist.youtube_channel_title,
+      linked_channel_url: artist.youtube_channel_url,
+      oauth_connected: !!oauth,
+      oauth_channel_id: oauth ? oauth.channel_id : null,
+      oauth_channel_title: oauth ? oauth.channel_title : null,
+      oauth_last_synced_at: oauth ? oauth.last_synced_at : null,
+      oauth_sync_status: oauth ? oauth.sync_status : null,
+      oauth_matches_linked: oauth && oauth.channel_id === artist.youtube_channel_id
+    };
+
+    if (!artist.youtube_channel_id) {
+      return res.json(response);
     }
 
     let stats = await req.db('youtube_channel_stats').where({ artist_id: req.params.artistId }).first();
 
-    // Refresh if older than 1 hour or on-demand
     const stale = !stats || (Date.now() - new Date(stats.fetched_at).getTime()) > 60 * 60 * 1000;
     const forceRefresh = req.query.refresh === '1';
 
@@ -104,13 +122,52 @@ router.get('/stats/:artistId', requireAuth, async (req, res) => {
       }
     }
 
-    // Check if this artist has OAuth connected
-    const oauth = await req.db('youtube_accounts').where({ artist_id: req.params.artistId }).first();
-    stats.oauth_connected = !!oauth;
-    stats.last_synced_at = oauth ? oauth.last_synced_at : null;
-    stats.sync_status = oauth ? oauth.sync_status : null;
+    if (stats) {
+      response.subscriber_count = parseInt(stats.subscriber_count || 0);
+      response.view_count = parseInt(stats.view_count || 0);
+      response.video_count = parseInt(stats.video_count || 0);
+      response.channel_thumbnail = stats.channel_thumbnail;
+      response.channel_description = stats.channel_description;
+      response.fetched_at = stats.fetched_at;
+    }
 
-    res.json(stats);
+    res.json(response);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * Link the OAuth-authorized channel to the artist (explicit admin action)
+ */
+router.post('/link-authorized/:artistId', requireAdmin, async (req, res) => {
+  try {
+    const artistId = parseInt(req.params.artistId);
+    const oauth = await req.db('youtube_accounts').where({ artist_id: artistId }).first();
+    if (!oauth) return res.status(404).json({ error: 'No OAuth authorization found' });
+
+    await req.db('artists').where({ id: artistId }).update({
+      youtube_channel_id: oauth.channel_id,
+      youtube_channel_url: 'https://www.youtube.com/channel/' + oauth.channel_id,
+      youtube_channel_title: oauth.channel_title
+    });
+
+    // Cache public stats now (explicit)
+    const info = await yt.getChannelInfo(oauth.channel_id);
+    if (info) {
+      await req.db('youtube_channel_stats').insert({
+        artist_id: artistId,
+        channel_id: info.channel_id,
+        subscriber_count: info.subscriber_count,
+        view_count: info.view_count,
+        video_count: info.video_count,
+        channel_thumbnail: info.thumbnail,
+        channel_description: info.description?.slice(0, 1000),
+        fetched_at: new Date()
+      }).onConflict('artist_id').merge();
+    }
+
+    res.json({ ok: true, channel: info });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -304,7 +361,8 @@ router.get('/callback', async (req, res) => {
       ));
     }
 
-    // Save OAuth
+    // Save OAuth tokens only - no auto-linking, no auto-caching
+    // Admin must explicitly link the channel and refresh stats manually
     await db('youtube_accounts').insert({
       artist_id: artistId,
       channel_id: channelInfo.channel_id,
@@ -314,30 +372,7 @@ router.get('/callback', async (req, res) => {
       sync_status: 'connected'
     }).onConflict('artist_id').merge();
 
-    // Auto-link if not already linked
     const artist = await db('artists').where({ id: artistId }).first();
-    if (artist && !artist.youtube_channel_id) {
-      await db('artists').where({ id: artistId }).update({
-        youtube_channel_id: channelInfo.channel_id,
-        youtube_channel_url: 'https://www.youtube.com/channel/' + channelInfo.channel_id,
-        youtube_channel_title: channelInfo.title
-      });
-    }
-
-    // Also cache public stats
-    const publicInfo = await yt.getChannelInfo(channelInfo.channel_id);
-    if (publicInfo) {
-      await db('youtube_channel_stats').insert({
-        artist_id: artistId,
-        channel_id: publicInfo.channel_id,
-        subscriber_count: publicInfo.subscriber_count,
-        view_count: publicInfo.view_count,
-        video_count: publicInfo.video_count,
-        channel_thumbnail: publicInfo.thumbnail,
-        channel_description: publicInfo.description?.slice(0, 1000),
-        fetched_at: new Date()
-      }).onConflict('artist_id').merge();
-    }
 
     // Mark token as used
     if (tokenRow) {
