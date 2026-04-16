@@ -247,6 +247,51 @@ router.post('/share-link/:artistId', requireAdmin, async (req, res) => {
 });
 
 /**
+ * Public: searchable list of artists for the universal connect page
+ * Returns only id + name + nickname + connection status
+ */
+router.get('/public-artists', async (req, res) => {
+  try {
+    const artists = await req.db('artists')
+      .leftJoin('youtube_accounts', 'artists.id', 'youtube_accounts.artist_id')
+      .select(
+        'artists.id',
+        'artists.name',
+        'artists.nickname',
+        'youtube_accounts.channel_title as connected_channel_title',
+        'youtube_accounts.connected_at'
+      )
+      .orderBy('artists.name');
+    res.json(artists);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * Public: start OAuth flow for a self-identified artist (universal link)
+ * state format: "public:<artistId>"
+ */
+router.get('/universal-connect/:artistId', async (req, res) => {
+  try {
+    if (!yt.OAUTH_CONFIGURED) {
+      return res.status(500).send('<h2>YouTube OAuth is not configured</h2>');
+    }
+    const artistId = parseInt(req.params.artistId);
+    if (!artistId) return res.status(400).send('<h2>Invalid artist</h2>');
+
+    const artist = await req.db('artists').where({ id: artistId }).first();
+    if (!artist) return res.status(404).send('<h2>Artist not found</h2>');
+
+    const state = 'public:' + artistId;
+    const url = yt.getAuthUrl(state);
+    res.redirect(url);
+  } catch (err) {
+    res.status(500).send('<h2>Error: ' + err.message + '</h2>');
+  }
+});
+
+/**
  * Public: get artist info by token (for the connect page)
  */
 router.get('/connect-info/:token', async (req, res) => {
@@ -322,7 +367,7 @@ router.get('/callback', async (req, res) => {
       return res.status(400).send(errorPage('Missing code or state', 'Try again from the connect link.', '/'));
     }
 
-    // Determine if admin flow or public token flow
+    // Determine flow type from state
     let artistId, isPublicFlow = false, tokenRow = null;
     if (state.startsWith('admin:')) {
       artistId = parseInt(state.replace('admin:', ''));
@@ -335,8 +380,11 @@ router.get('/callback', async (req, res) => {
       }
       artistId = tokenRow.artist_id;
       isPublicFlow = true;
+    } else if (state.startsWith('public:')) {
+      // Universal link flow - artist self-identified
+      artistId = parseInt(state.replace('public:', ''));
+      isPublicFlow = true;
     } else {
-      // Backward compat — raw artist ID
       artistId = parseInt(state);
     }
 

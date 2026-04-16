@@ -93,7 +93,8 @@
       "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(l['severity'][:5], '|', l['message'][:200]\\) for l in d['data']['deploymentLogs']]\")",
       "Bash(node -c routes/youtube.js)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" https://app-production-0a17.up.railway.app/connect/b56582033e1fd13f57c679a6e42473dcce7ae3191794a0b5)",
-      "Bash(curl -s https://app-production-0a17.up.railway.app/api/youtube/connect-info/b56582033e1fd13f57c679a6e42473dcce7ae3191794a0b5)"
+      "Bash(curl -s https://app-production-0a17.up.railway.app/api/youtube/connect-info/b56582033e1fd13f57c679a6e42473dcce7ae3191794a0b5)",
+      "Bash(grep -iE \"logo|deng|parez|\\\\.png$\")"
     ]
   }
 }

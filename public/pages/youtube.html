@@ -74,6 +74,44 @@
                     <strong>YouTube data is tracked separately.</strong>
                     Numbers shown here are YouTube-only and do not affect the main Dashboard, Revenue, Reports, or artist splits. Revenue entries on the "Revenue" page are your platform/manual revenue and remain independent.
                 </div>
+
+                <!-- Universal Share Link -->
+                <div class="card" style="background: linear-gradient(135deg, #3b82f6 0%, #1e3a8a 100%); border: none;">
+                    <div class="card-body" style="color:#fff;">
+                        <div class="row align-items-center">
+                            <div class="col-md-7">
+                                <h5 style="color:#fff;margin-bottom:6px;">
+                                    <i data-feather="share-2" class="feather-icon mr-1" style="vertical-align:text-bottom;"></i>
+                                    Universal Connect Link
+                                </h5>
+                                <p class="mb-0" style="color:rgba(255,255,255,0.85);font-size:14px;">
+                                    Share this single link with any artist. They'll select their name from the list and connect their YouTube channel themselves — no login required.
+                                </p>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="input-group">
+                                    <input type="text" id="universal-link" class="form-control" readonly style="font-family:monospace;font-size:13px;background:#fff;color:#1f2937;">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-light" onclick="copyUniversalLink()" id="copy-universal-btn">
+                                            <i data-feather="copy" class="feather-icon"></i>
+                                        </button>
+                                        <a href="/connect" target="_blank" class="btn btn-light" title="Preview">
+                                            <i data-feather="external-link" class="feather-icon"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="mt-2" style="text-align:right;">
+                                    <a id="uni-whatsapp" class="btn btn-sm btn-success mr-1" target="_blank" style="color:#fff;">
+                                        <i class="fa fa-whatsapp mr-1"></i> WhatsApp
+                                    </a>
+                                    <a id="uni-telegram" class="btn btn-sm btn-info" target="_blank" style="color:#fff;">
+                                        <i class="fa fa-telegram mr-1"></i> Telegram
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <!-- Aggregate Stats -->
                 <div class="row">
                     <div class="col-lg-3 col-md-6">
@@ -193,9 +231,36 @@
     var channelsTable = null;
 
     App.init(function() {
+        setupUniversalLink();
         loadOverview();
         loadTrends();
     });
+
+    function setupUniversalLink() {
+        var url = window.location.origin + '/connect';
+        $('#universal-link').val(url);
+        var msg = 'Hi! Please connect your YouTube channel to Deng Parez: ' + url;
+        $('#uni-whatsapp').attr('href', 'https://wa.me/?text=' + encodeURIComponent(msg));
+        $('#uni-telegram').attr('href', 'https://t.me/share/url?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent('Connect your YouTube channel to Deng Parez'));
+    }
+
+    function copyUniversalLink() {
+        var input = document.getElementById('universal-link');
+        input.select(); input.setSelectionRange(0, 99999);
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(input.value).then(function() {
+                var btn = $('#copy-universal-btn');
+                btn.html('<i class="fa fa-check"></i>').addClass('btn-success').removeClass('btn-light');
+                setTimeout(function() {
+                    btn.html('<i data-feather="copy" class="feather-icon"></i>').addClass('btn-light').removeClass('btn-success');
+                    feather.replace();
+                }, 2000);
+            });
+        } else {
+            document.execCommand('copy');
+            App.showSuccess('Link copied');
+        }
+    }
 
     function formatNum(n) {
         n = parseInt(n || 0);
