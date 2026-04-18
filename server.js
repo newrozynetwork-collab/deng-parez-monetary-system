@@ -73,6 +73,7 @@ app.get('/expenses', (req, res) => res.sendFile(path.join(__dirname, 'public', '
 app.get('/additional-income', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'additional-income.html')));
 app.get('/reports', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'reports.html')));
 app.get('/user-breakdown', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'user-breakdown.html')));
+app.get('/report-generator', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'report-generator.html')));
 app.get('/settings', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'settings.html')));
 
 // Run migrations on startup, then start server

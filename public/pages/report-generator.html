@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/images/favicon.png">
+    <title>Report Generator - Deng Parez</title>
+    <link href="/css/style.min.css" rel="stylesheet">
+    <link href="/css/custom-app.css" rel="stylesheet">
+    <script>
+        (function(){ try { var t = localStorage.getItem("dp-theme") || "light"; document.documentElement.setAttribute("data-theme", t); } catch(e){} })();
+    </script>
+    <style>
+        .rg-dropzone { border: 2px dashed #d5d5e0; border-radius: 12px; padding: 40px 20px; text-align: center; cursor: pointer; transition: all 0.2s; background: #fafafb; }
+        [data-theme="dark"] .rg-dropzone { border-color: #3a3a4a; background: #1a1a24; }
+        .rg-dropzone:hover, .rg-dropzone.drag { border-color: #f158d0; background: rgba(241,88,208,0.04); }
+        .rg-dropzone .icon { font-size: 2.5rem; color: #f158d0; margin-bottom: 10px; display: block; }
+        .rg-file-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: #f7f7fb; border-radius: 8px; margin-bottom: 6px; font-size: 0.9rem; }
+        [data-theme="dark"] .rg-file-row { background: #1a1a24; }
+        .rg-file-row .fname { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .rg-file-row .fmeta { color: #888; font-size: 0.8rem; }
+        .rg-tab { cursor: pointer; padding: 7px 14px; border: 1px solid #d5d5e0; border-radius: 6px; background: #fff; font-size: 0.82rem; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: all 0.15s; }
+        [data-theme="dark"] .rg-tab { background: #1a1a24; border-color: #3a3a4a; color: #e8e8f0; }
+        .rg-tab:hover { border-color: #f158d0; color: #f158d0; }
+        .rg-tab.active { background: #f158d0; color: #fff; border-color: #f158d0; font-weight: 600; }
+        .rg-col-chip { display: inline-flex; align-items: center; gap: 5px; background: #f7f7fb; border: 1px solid #e0e0ea; border-radius: 6px; padding: 4px 9px; font-size: 0.75rem; font-family: monospace; }
+        [data-theme="dark"] .rg-col-chip { background: #1a1a24; border-color: #3a3a4a; }
+        .rg-col-chip .lett { color: #f158d0; font-weight: 700; font-size: 0.7rem; }
+        .rg-val-chip { display: inline-flex; align-items: center; gap: 5px; padding: 4px 11px; border-radius: 6px; border: 1px solid #d5d5e0; background: #fff; cursor: pointer; font-size: 0.75rem; font-family: monospace; user-select: none; transition: all 0.1s; }
+        [data-theme="dark"] .rg-val-chip { background: #1a1a24; border-color: #3a3a4a; color: #e8e8f0; }
+        .rg-val-chip:hover { border-color: #e74c3c; color: #e74c3c; }
+        .rg-val-chip.selected { border-color: #e74c3c; background: rgba(231,76,60,0.1); color: #e74c3c; }
+        .rg-val-chip .chk { width: 11px; height: 11px; border-radius: 2px; border: 1px solid currentColor; display: inline-flex; align-items: center; justify-content: center; font-size: 0.55rem; }
+        .rg-val-chip.selected .chk::after { content: '✓'; }
+        .rg-val-grid { display: flex; flex-wrap: wrap; gap: 5px; max-height: 180px; overflow-y: auto; padding: 10px; background: #fafafb; border-radius: 8px; }
+        [data-theme="dark"] .rg-val-grid { background: #131319; }
+        .rg-preview-table-wrap { overflow-x: auto; border: 1px solid #e0e0ea; border-radius: 8px; }
+        [data-theme="dark"] .rg-preview-table-wrap { border-color: #3a3a4a; }
+        .rg-preview-table { width: 100%; font-size: 0.75rem; font-family: monospace; border-collapse: collapse; margin: 0; }
+        .rg-preview-table th { background: #f7f7fb; color: #f158d0; padding: 6px 10px; text-align: left; white-space: nowrap; border-bottom: 1px solid #e0e0ea; font-weight: 600; }
+        [data-theme="dark"] .rg-preview-table th { background: #1a1a24; border-color: #3a3a4a; }
+        .rg-preview-table td { padding: 5px 10px; color: #666; white-space: nowrap; max-width: 180px; overflow: hidden; text-overflow: ellipsis; border-bottom: 1px solid #f0f0f5; }
+        [data-theme="dark"] .rg-preview-table td { color: #aaa; border-color: #2a2a38; }
+        .rg-log { background: #fafafb; border-radius: 8px; padding: 12px; max-height: 180px; overflow-y: auto; font-family: monospace; font-size: 0.72rem; color: #666; }
+        [data-theme="dark"] .rg-log { background: #131319; color: #aaa; }
+        .rg-log-item { padding: 2px 0; }
+        .rg-progress-wrap { display: none; margin-top: 15px; }
+        .rg-progress-wrap.show { display: block; }
+        .rg-stat { background: #f7f7fb; border-radius: 8px; padding: 14px; text-align: center; }
+        [data-theme="dark"] .rg-stat { background: #1a1a24; }
+        .rg-stat-num { font-size: 1.4rem; font-weight: 700; color: #f158d0; }
+        .rg-stat-label { font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 3px; }
+        .rg-gen-card { background: #f7f7fb; border-radius: 8px; padding: 14px; margin-bottom: 8px; }
+        [data-theme="dark"] .rg-gen-card { background: #1a1a24; }
+        .rg-gen-card.err { border-left: 3px solid #e74c3c; }
+        .rg-gen-card .fname { font-weight: 600; margin-bottom: 4px; }
+        .rg-gen-card .fmeta { font-size: 0.78rem; color: #888; display: flex; gap: 14px; flex-wrap: wrap; }
+        .rg-gen-card .fmeta b { color: #f158d0; font-weight: 500; }
+        .rg-gen-card .fnet { color: #28a745; font-weight: 700; }
+        .rg-section-label { font-size: 0.68rem; color: #888; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+    <div class="preloader"><div class="lds-ripple"><div class="lds-pos"></div><div class="lds-pos"></div></div></div>
+    <div id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full" data-sidebar-position="absolute" data-header-position="relative" data-boxed-layout="full">
+        <header class="topbar">
+            <nav class="navbar top-navbar navbar-expand-md navbar-dark">
+                <div class="navbar-header">
+                    <a class="nav-toggler waves-effect waves-light d-block d-md-none" href="javascript:void(0)"><i class="ti-menu ti-close"></i></a>
+                    <div class="navbar-brand"><a href="/dashboard" class="logo"><b class="logo-icon"><img src="/assets/images/logo-icon.png" alt="logo" class="dark-logo" /><img src="/assets/images/logo-light-icon.png" alt="logo" class="light-logo" /></b><span class="logo-text"><img src="/assets/images/logo-text.png" alt="logo" class="dark-logo" /><img src="/assets/images/logo-light-text.png" class="light-logo" alt="logo" /></span></a><a class="sidebartoggler d-none d-md-block" href="javascript:void(0)" data-sidebartype="mini-sidebar"><i class="mdi mdi-toggle-switch mdi-toggle-switch-off font-20"></i></a></div>
+                    <a class="topbartoggler d-block d-md-none waves-effect waves-light" href="javascript:void(0)" data-toggle="collapse" data-target="#navbarSupportedContent"><i class="ti-more"></i></a>
+                </div>
+                <div class="navbar-collapse collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav float-left mr-auto"></ul>
+                    <ul class="navbar-nav float-right"><li class="nav-item dropdown"><a class="nav-link dropdown-toggle waves-effect waves-dark pro-pic" href="#" data-toggle="dropdown"><img src="/assets/images/users/1.jpg" alt="user" class="rounded-circle" width="40"><span class="m-l-5 font-medium d-none d-sm-inline-block" id="user-name">User</span></a><div class="dropdown-menu dropdown-menu-right user-dd animated flipInY"><a class="dropdown-item" href="/settings"><i class="ti-settings m-r-5 m-l-5"></i> Settings</a><div class="dropdown-divider"></div><a class="dropdown-item" href="#" id="logout-btn"><i class="fa fa-power-off m-r-5 m-l-5"></i> Logout</a></div></li></ul>
+                </div>
+            </nav>
+        </header>
+        <aside class="left-sidebar">
+            <div class="scroll-sidebar"><nav class="sidebar-nav"><ul id="sidebarnav">
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/dashboard"><i data-feather="home" class="feather-icon"></i><span class="hide-menu">Dashboard</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/artists"><i data-feather="users" class="feather-icon"></i><span class="hide-menu">Artists</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/youtube"><i data-feather="youtube" class="feather-icon"></i><span class="hide-menu">YouTube</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/referrals"><i data-feather="git-branch" class="feather-icon"></i><span class="hide-menu">Referrals</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)"><i data-feather="dollar-sign" class="feather-icon"></i><span class="hide-menu">Revenue</span></a><ul class="collapse first-level"><li class="sidebar-item"><a href="/revenue/new" class="sidebar-link"><span class="hide-menu">New Entry</span></a></li><li class="sidebar-item"><a href="/revenue" class="sidebar-link"><span class="hide-menu">History</span></a></li></ul></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/expenses"><i data-feather="trending-down" class="feather-icon"></i><span class="hide-menu">Expenses</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/additional-income"><i data-feather="plus-circle" class="feather-icon"></i><span class="hide-menu">Additional Income</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/reports"><i data-feather="bar-chart-2" class="feather-icon"></i><span class="hide-menu">Reports</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/user-breakdown"><i data-feather="pie-chart" class="feather-icon"></i><span class="hide-menu">User Breakdown</span></a></li>
+                <li class="sidebar-item selected"><a class="sidebar-link waves-effect waves-dark" href="/report-generator"><i data-feather="file-text" class="feather-icon"></i><span class="hide-menu">Report Generator</span></a></li>
+                <li class="sidebar-item admin-only"><a class="sidebar-link waves-effect waves-dark" href="/settings"><i data-feather="settings" class="feather-icon"></i><span class="hide-menu">Settings</span></a></li>
+            </ul></nav></div>
+        </aside>
+        <div class="page-wrapper">
+            <div class="page-breadcrumb">
+                <div class="row">
+                    <div class="col-12 align-self-center">
+                        <h3 class="page-title text-truncate text-dark font-weight-medium mb-1">Report Generator</h3>
+                        <div class="d-flex align-items-center">
+                            <nav aria-label="breadcrumb">
+                                <ol class="breadcrumb m-0 p-0">
+                                    <li class="breadcrumb-item"><a href="/dashboard">Home</a></li>
+                                    <li class="breadcrumb-item active" aria-current="page">Upload → Modify → Generate</li>
+                                </ol>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="container-fluid">
+
+                <!-- STEP 1: UPLOAD -->
+                <div class="card" id="step1">
+                    <div class="card-body">
+                        <h5 class="card-title"><i data-feather="upload" class="feather-icon"></i> Step 1 — Upload Distribution Statement(s)</h5>
+                        <p class="text-muted" style="font-size:0.85rem;">Drop one or more CSV / XLSX files. Everything runs in your browser — nothing is uploaded to the server.</p>
+                        <div class="rg-dropzone" id="rgDz" onclick="document.getElementById('rgFileInput').click()">
+                            <span class="icon"><i data-feather="music" style="width:40px;height:40px;"></i></span>
+                            <h5 class="mb-1">Drop CSV or Excel files here</h5>
+                            <p class="text-muted mb-2" style="font-size:0.8rem;">or click to browse — multi-file supported</p>
+                            <div>
+                                <span class="badge badge-light">.CSV</span>
+                                <span class="badge badge-light">.XLSX</span>
+                                <span class="badge badge-light">.XLS</span>
+                            </div>
+                        </div>
+                        <input type="file" id="rgFileInput" accept=".csv,.xlsx,.xls" multiple style="display:none;">
+                        <div id="rgFileList" style="margin-top:14px;"></div>
+                        <div id="rgStep1Actions" style="margin-top:14px; display:none;">
+                            <button class="btn btn-primary" onclick="rgGoToStep2()"><i data-feather="arrow-right" class="feather-sm"></i> Next: Modify</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 2: MODIFY -->
+                <div class="card" id="rgStep2" style="display:none;">
+                    <div class="card-body">
+                        <h5 class="card-title"><i data-feather="edit-3" class="feather-icon"></i> Step 2 — Modify Files</h5>
+                        <div id="rgTabs" style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px;"></div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="rg-section-label">Columns</div>
+                                <div id="rgColGrid" style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:12px;"></div>
+                                <div class="rg-section-label">Preview (first 5 rows)</div>
+                                <div class="rg-preview-table-wrap"><table class="rg-preview-table" id="rgPreviewTable"></table></div>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="text-danger mb-3"><i data-feather="trash-2" class="feather-sm"></i> Delete a Column</h6>
+                                        <label class="small text-muted">Select column to remove</label>
+                                        <select class="form-control form-control-sm" id="rgDelSel"></select>
+                                        <div class="custom-control custom-checkbox mt-2">
+                                            <input type="checkbox" class="custom-control-input" id="rgDelAll">
+                                            <label class="custom-control-label small" for="rgDelAll">Apply to all files</label>
+                                        </div>
+                                        <button class="btn btn-danger btn-sm mt-2" onclick="rgOpDeleteColumn()">Delete Column</button>
+                                        <div id="rgDelAlert" style="margin-top:8px;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="text-danger mb-3"><i data-feather="filter" class="feather-sm"></i> Remove Rows by Value</h6>
+                                        <label class="small text-muted">Select column to scan</label>
+                                        <select class="form-control form-control-sm" id="rgFilSel" onchange="rgLoadColumnValues()"></select>
+                                        <div id="rgValPanel" style="display:none; margin-top:10px;">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span class="small text-muted" id="rgVpTitle">Unique values</span>
+                                                <div>
+                                                    <button class="btn btn-sm btn-outline-secondary" style="font-size:0.7rem; padding:2px 8px;" onclick="rgValSelectAll()">All</button>
+                                                    <button class="btn btn-sm btn-outline-secondary" style="font-size:0.7rem; padding:2px 8px;" onclick="rgValClear()">Clear</button>
+                                                </div>
+                                            </div>
+                                            <div class="rg-val-grid" id="rgValGrid"></div>
+                                        </div>
+                                        <div class="custom-control custom-checkbox mt-2">
+                                            <input type="checkbox" class="custom-control-input" id="rgFilAll">
+                                            <label class="custom-control-label small" for="rgFilAll">Apply to all files</label>
+                                        </div>
+                                        <button class="btn btn-danger btn-sm mt-2" id="rgFilBtn" onclick="rgOpRemoveRows()" disabled>Remove Rows</button>
+                                        <div id="rgFilAlert" style="margin-top:8px;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="text-primary mb-3"><i data-feather="x" class="feather-sm"></i> Multiply a Column</h6>
+                                        <label class="small text-muted">Column</label>
+                                        <select class="form-control form-control-sm" id="rgMulSel"></select>
+                                        <label class="small text-muted mt-2">Multiplier (e.g. 0.9)</label>
+                                        <input type="number" class="form-control form-control-sm" id="rgMulVal" step="any" placeholder="0.9">
+                                        <div class="custom-control custom-checkbox mt-2">
+                                            <input type="checkbox" class="custom-control-input" id="rgMulAll">
+                                            <label class="custom-control-label small" for="rgMulAll">Apply to all files</label>
+                                        </div>
+                                        <button class="btn btn-primary btn-sm mt-2" onclick="rgOpMultiplyColumn()">Apply Multiplier</button>
+                                        <div id="rgMulAlert" style="margin-top:8px;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr>
+                        <div class="rg-section-label">Operations Log (all files)</div>
+                        <div class="rg-log" id="rgOpsLog"><div class="rg-log-item">No operations applied yet.</div></div>
+
+                        <div class="mt-3">
+                            <button class="btn btn-outline-secondary" onclick="rgDownloadModified()"><i data-feather="download" class="feather-sm"></i> Download Modified Files</button>
+                            <button class="btn btn-primary" onclick="rgGoToStep3()"><i data-feather="arrow-right" class="feather-sm"></i> Next: Generate Reports</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 3: GENERATE -->
+                <div class="card" id="rgStep3" style="display:none;">
+                    <div class="card-body">
+                        <h5 class="card-title"><i data-feather="download-cloud" class="feather-icon"></i> Step 3 — Generate Royalty Reports</h5>
+                        <div class="row" id="rgGenStats" style="margin-bottom:14px;"></div>
+                        <div id="rgGenFiles"></div>
+                        <div class="rg-progress-wrap" id="rgGenProgress">
+                            <div class="progress" style="height: 4px;">
+                                <div class="progress-bar bg-primary" id="rgGenProgressFill" style="width: 0%;"></div>
+                            </div>
+                            <div class="text-center small text-muted mt-1" id="rgGenProgressText">Preparing…</div>
+                        </div>
+                        <div class="mt-3">
+                            <button class="btn btn-success" id="rgGenBtn" onclick="rgGenerateAllReports()"><i data-feather="download" class="feather-sm"></i> Generate &amp; Download All Reports</button>
+                            <button class="btn btn-outline-secondary" onclick="rgResetAll()"><i data-feather="refresh-cw" class="feather-sm"></i> Start Over</button>
+                        </div>
+                        <div id="rgGenAlert" style="margin-top:12px;"></div>
+                    </div>
+                </div>
+
+            </div>
+
+            <footer class="footer text-center">All Rights Reserved by Deng Parez Monetary System. © <span id="curr-year"></span></footer>
+        </div>
+    </div>
+
+    <script src="/assets/libs/jquery/dist/jquery.min.js"></script>
+    <script src="/assets/libs/popper.js/dist/umd/popper.min.js"></script>
+    <script src="/assets/libs/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/app.init.js"></script>
+    <script src="/js/custom.js"></script>
+    <script src="/js/feather.min.js"></script>
+    <script src="/app/common.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+    <script>
+    document.getElementById('curr-year').textContent = new Date().getFullYear();
+
+    $(function() {
+        App.init(function(user) {
+            feather.replace();
+        });
+    });
+
+    // ════════════════════════════════════════════════════════
+    // STATE & HELPERS
+    // ════════════════════════════════════════════════════════
+    let rgFiles = [];
+    let rgActiveId = null;
+    let rgSelectedValues = new Set();
+    const $rg = (id) => document.getElementById(id);
+
+    function rgColLetter(i){
+        let s = '', n = i + 1;
+        while (n > 0) {
+            const r = (n - 1) % 26;
+            s = String.fromCharCode(65 + r) + s;
+            n = Math.floor((n - 1) / 26);
+        }
+        return s;
+    }
+
+    function rgIsNumericCell(v){
+        if (typeof v === 'number' && !isNaN(v)) return true;
+        if (typeof v !== 'string') return false;
+        const s = v.trim();
+        if (s === '') return false;
+        return /^-?\d*\.?\d+(e[-+]?\d+)?$/i.test(s);
+    }
+
+    const RG_MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    function rgMonthInfo(val){
+        if (val === null || val === undefined || val === '') return null;
+        const mk = (mo, y) => ({ display: `${RG_MONTH_NAMES[mo-1]} ${y}`, sortKey: `${y}-${String(mo).padStart(2,'0')}` });
+        if (val instanceof Date && !isNaN(val)) return mk(val.getMonth()+1, val.getFullYear());
+        const s = String(val).trim();
+        if (!s) return null;
+        let m = s.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})$/);
+        if (m) {
+            const a = parseInt(m[1]), b = parseInt(m[2]), y = parseInt(m[3]);
+            let mo;
+            if (a > 12) mo = b;
+            else if (b > 12) mo = a;
+            else mo = b;
+            if (mo >= 1 && mo <= 12) return mk(mo, y);
+        }
+        m = s.match(/^(\d{4})[\/.\-](\d{1,2})[\/.\-](\d{1,2})$/);
+        if (m) {
+            const y = parseInt(m[1]), mo = parseInt(m[2]);
+            if (mo >= 1 && mo <= 12) return mk(mo, y);
+        }
+        const lookup = {jan:1,january:1,feb:2,february:2,mar:3,march:3,apr:4,april:4,may:5,jun:6,june:6,jul:7,july:7,aug:8,august:8,sep:9,sept:9,september:9,oct:10,october:10,nov:11,november:11,dec:12,december:12};
+        m = s.match(/^([A-Za-z]+)\s+(\d{4})$/);
+        if (m) {
+            const mo = lookup[m[1].toLowerCase()];
+            const y = parseInt(m[2]);
+            if (mo) return mk(mo, y);
+        }
+        m = s.match(/^(\d{4})\s+([A-Za-z]+)$/);
+        if (m) {
+            const mo = lookup[m[2].toLowerCase()];
+            const y = parseInt(m[1]);
+            if (mo) return mk(mo, y);
+        }
+        const d = new Date(s);
+        if (!isNaN(d)) return mk(d.getMonth()+1, d.getFullYear());
+        return { display: s, sortKey: s };
+    }
+
+    function rgGetSheetData(f){
+        return XLSX.utils.sheet_to_json(f.workbook.Sheets[f.sheetName], { header: 1, defval: '' });
+    }
+    function rgActiveFile(){ return rgFiles.find(f => f.id === rgActiveId); }
+
+    function rgTriggerDownload(blob, name){
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = name;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+    }
+
+    function rgShowAlert(id, type, msg){
+        const el = $rg(id);
+        const cls = type === 'success' ? 'alert-success' : 'alert-danger';
+        el.innerHTML = `<div class="alert ${cls}" style="font-size:0.78rem; padding:6px 10px; margin-bottom:0;">${msg}</div>`;
+        if (type === 'success') setTimeout(() => { el.innerHTML = ''; }, 8000);
+    }
+
+    // ════════════════════════════════════════════════════════
+    // STEP 1: UPLOAD
+    // ════════════════════════════════════════════════════════
+    const rgDz = $rg('rgDz');
+    rgDz.addEventListener('dragover', e => { e.preventDefault(); rgDz.classList.add('drag'); });
+    rgDz.addEventListener('dragleave', () => rgDz.classList.remove('drag'));
+    rgDz.addEventListener('drop', e => { e.preventDefault(); rgDz.classList.remove('drag'); rgHandleFiles(e.dataTransfer.files); });
+    $rg('rgFileInput').addEventListener('change', e => rgHandleFiles(e.target.files));
+
+    async function rgHandleFiles(fileList){
+        for (const f of fileList) {
+            const ext = f.name.split('.').pop().toLowerCase();
+            if (!['csv','xlsx','xls'].includes(ext)) continue;
+            try {
+                const buf = await f.arrayBuffer();
+                let wb;
+                if (ext === 'csv') {
+                    const text = new TextDecoder('utf-8').decode(new Uint8Array(buf));
+                    wb = XLSX.read(text, { type: 'string', raw: true, cellDates: false });
+                } else {
+                    wb = XLSX.read(new Uint8Array(buf), { type: 'array', cellDates: true });
+                }
+                rgFiles.push({
+                    id: 'f' + Math.random().toString(36).slice(2, 9),
+                    name: f.name, ext, workbook: wb, sheetName: wb.SheetNames[0], ops: []
+                });
+            } catch (err) {
+                App.showError(`Could not read ${f.name}: ${err.message}`);
+            }
+        }
+        rgRenderFileList();
+    }
+
+    function rgRenderFileList(){
+        const list = $rg('rgFileList');
+        list.innerHTML = '';
+        rgFiles.forEach(f => {
+            const data = rgGetSheetData(f);
+            const rowCount = Math.max(0, data.length - 1);
+            const colCount = (data[0] || []).length;
+            const row = document.createElement('div');
+            row.className = 'rg-file-row';
+            const fname = document.createElement('span'); fname.className = 'fname'; fname.textContent = f.name;
+            const fmeta = document.createElement('span'); fmeta.className = 'fmeta'; fmeta.textContent = `${rowCount.toLocaleString()} rows · ${colCount} cols`;
+            const btn = document.createElement('button');
+            btn.className = 'btn btn-sm btn-outline-danger';
+            btn.style.padding = '2px 10px';
+            btn.style.fontSize = '0.72rem';
+            btn.textContent = 'Remove';
+            btn.onclick = () => { rgFiles = rgFiles.filter(x => x.id !== f.id); rgRenderFileList(); };
+            row.append(fname, fmeta, btn);
+            list.appendChild(row);
+        });
+        $rg('rgStep1Actions').style.display = rgFiles.length > 0 ? 'block' : 'none';
+    }
+
+    // ════════════════════════════════════════════════════════
+    // STEP 2: MODIFY
+    // ════════════════════════════════════════════════════════
+    function rgGoToStep2(){
+        if (rgFiles.length === 0) return;
+        rgActiveId = rgFiles[0].id;
+        $rg('rgStep2').style.display = 'block';
+        $rg('rgStep2').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        rgRefreshActive();
+        setTimeout(() => feather.replace(), 50);
+    }
+
+    function rgRenderTabs(){
+        const tabs = $rg('rgTabs');
+        tabs.innerHTML = '';
+        rgFiles.forEach(f => {
+            const t = document.createElement('button');
+            t.className = 'rg-tab' + (f.id === rgActiveId ? ' active' : '');
+            const label = f.ops.length > 0 ? `${f.name} · ${f.ops.length} ops` : f.name;
+            t.textContent = label;
+            t.title = label;
+            t.onclick = () => { rgActiveId = f.id; rgRefreshActive(); };
+            tabs.appendChild(t);
+        });
+    }
+
+    function rgRefreshActive(){
+        const f = rgActiveFile();
+        if (!f) return;
+        rgRenderTabs();
+        const data = rgGetSheetData(f);
+        const headers = data[0] || [];
+        rgRenderColumnChips(headers);
+        rgBuildPreview(data, headers);
+        rgPopulateSelects(headers);
+        rgUpdateOpsLog();
+    }
+
+    function rgRenderColumnChips(headers){
+        const grid = $rg('rgColGrid');
+        grid.innerHTML = '';
+        headers.forEach((h, i) => {
+            const c = document.createElement('span'); c.className = 'rg-col-chip';
+            const l = document.createElement('span'); l.className = 'lett'; l.textContent = `(${rgColLetter(i)})`;
+            const n = document.createElement('span'); n.textContent = (h !== '' ? String(h) : '(empty)');
+            c.append(l, n);
+            grid.appendChild(c);
+        });
+    }
+
+    function rgBuildPreview(data, headers){
+        const t = $rg('rgPreviewTable');
+        t.innerHTML = '';
+        const thead = t.createTHead();
+        const hrow = thead.insertRow();
+        headers.forEach((h, i) => {
+            const th = document.createElement('th');
+            th.textContent = `${rgColLetter(i)} · ${h !== '' ? String(h) : '—'}`;
+            hrow.appendChild(th);
+        });
+        const tbody = t.createTBody();
+        data.slice(1, 6).forEach(row => {
+            const tr = tbody.insertRow();
+            headers.forEach((_, i) => {
+                const td = tr.insertCell();
+                const v = row[i];
+                td.textContent = (v === undefined || v === '') ? '—' : String(v);
+            });
+        });
+    }
+
+    function rgPopulateSelects(headers){
+        const mk = (id) => {
+            const sel = $rg(id);
+            const prev = sel.value;
+            sel.innerHTML = '';
+            const opt0 = document.createElement('option');
+            opt0.value = ''; opt0.textContent = '— choose column —';
+            sel.appendChild(opt0);
+            headers.forEach((h, i) => {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.textContent = `${rgColLetter(i)} · ${h !== '' ? String(h) : '(empty)'}`;
+                sel.appendChild(opt);
+            });
+            if (prev !== '' && parseInt(prev) < headers.length) sel.value = prev;
+        };
+        mk('rgDelSel'); mk('rgFilSel'); mk('rgMulSel');
+        $rg('rgValPanel').style.display = 'none';
+        $rg('rgFilBtn').disabled = true;
+        rgSelectedValues = new Set();
+    }
+
+    function rgApplyOp(f, op){
+        const data = rgGetSheetData(f);
+        const headers = data[0] || [];
+        if (headers.length === 0) return { ok: false };
+
+        if (op.type === 'delete') {
+            const idx = headers.findIndex(h => String(h) === op.colName);
+            if (idx < 0) return { ok: false };
+            const newData = data.map(row => { const r = [...row]; r.splice(idx, 1); return r; });
+            f.workbook.Sheets[f.sheetName] = XLSX.utils.aoa_to_sheet(newData);
+            f.ops.push({ type: 'delete', colName: op.colName });
+            return { ok: true };
+        }
+        if (op.type === 'filter') {
+            const idx = headers.findIndex(h => String(h) === op.colName);
+            if (idx < 0) return { ok: false };
+            const before = data.length - 1;
+            const newData = [data[0], ...data.slice(1).filter(row => {
+                const cell = String(row[idx] !== undefined ? row[idx] : '').trim();
+                if (op.values.has('__EMPTY__') && cell === '') return false;
+                return !op.values.has(cell);
+            })];
+            const removed = before - (newData.length - 1);
+            f.workbook.Sheets[f.sheetName] = XLSX.utils.aoa_to_sheet(newData);
+            f.ops.push({ type: 'filter', colName: op.colName, values: [...op.values], removed });
+            return { ok: true, removed };
+        }
+        if (op.type === 'multiply') {
+            const idx = headers.findIndex(h => String(h) === op.colName);
+            if (idx < 0) return { ok: false };
+            let changed = 0;
+            for (let r = 1; r < data.length; r++) {
+                const cell = data[r][idx];
+                if (rgIsNumericCell(cell)) { data[r][idx] = parseFloat(cell) * op.val; changed++; }
+            }
+            f.workbook.Sheets[f.sheetName] = XLSX.utils.aoa_to_sheet(data);
+            f.ops.push({ type: 'multiply', colName: op.colName, val: op.val, changed });
+            return { ok: true, changed };
+        }
+        return { ok: false };
+    }
+
+    function rgOpDeleteColumn(){
+        const idx = parseInt($rg('rgDelSel').value);
+        if (isNaN(idx)) return rgShowAlert('rgDelAlert', 'error', 'Please select a column.');
+        const all = $rg('rgDelAll').checked;
+        const f = rgActiveFile();
+        const colName = rgGetSheetData(f)[0][idx];
+        const targets = all ? rgFiles : [f];
+        let ok = 0;
+        targets.forEach(tf => { if (rgApplyOp(tf, { type:'delete', colName }).ok) ok++; });
+        rgShowAlert('rgDelAlert', 'success', `✓ Deleted "${colName}" in ${ok}/${targets.length} file${targets.length!==1?'s':''}`);
+        rgRefreshActive();
+    }
+
+    function rgLoadColumnValues(){
+        const idx = parseInt($rg('rgFilSel').value);
+        rgSelectedValues = new Set();
+        $rg('rgFilBtn').disabled = true;
+        if (isNaN(idx)) { $rg('rgValPanel').style.display = 'none'; return; }
+        const data = rgGetSheetData(rgActiveFile());
+        const colName = data[0][idx] !== '' ? data[0][idx] : `Column ${rgColLetter(idx)}`;
+        const values = data.slice(1).map(row => String(row[idx] !== undefined ? row[idx] : '').trim());
+        const hasEmpty = values.some(v => v === '');
+        const uniq = [...new Set(values.filter(v => v !== ''))].sort((a,b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+        $rg('rgVpTitle').textContent = `${uniq.length + (hasEmpty ? 1 : 0)} unique values in "${colName}"`;
+        const grid = $rg('rgValGrid');
+        grid.innerHTML = '';
+        if (hasEmpty) {
+            const chip = document.createElement('div');
+            chip.className = 'rg-val-chip';
+            chip.dataset.value = '__EMPTY__';
+            const chk = document.createElement('span'); chk.className = 'chk';
+            const txt = document.createElement('span'); txt.style.fontStyle = 'italic'; txt.textContent = '(empty)';
+            chip.append(chk, txt);
+            chip.onclick = () => rgToggleVal(chip, '__EMPTY__');
+            grid.appendChild(chip);
+        }
+        uniq.forEach(v => {
+            const chip = document.createElement('div');
+            chip.className = 'rg-val-chip';
+            chip.dataset.value = v;
+            const chk = document.createElement('span'); chk.className = 'chk';
+            const txt = document.createElement('span'); txt.textContent = v;
+            chip.append(chk, txt);
+            chip.onclick = () => rgToggleVal(chip, v);
+            grid.appendChild(chip);
+        });
+        $rg('rgValPanel').style.display = 'block';
+    }
+
+    function rgToggleVal(chip, v){
+        if (rgSelectedValues.has(v)) { rgSelectedValues.delete(v); chip.classList.remove('selected'); }
+        else { rgSelectedValues.add(v); chip.classList.add('selected'); }
+        $rg('rgFilBtn').disabled = rgSelectedValues.size === 0;
+    }
+    function rgValSelectAll(){
+        document.querySelectorAll('#rgValGrid .rg-val-chip').forEach(c => { c.classList.add('selected'); rgSelectedValues.add(c.dataset.value); });
+        $rg('rgFilBtn').disabled = rgSelectedValues.size === 0;
+    }
+    function rgValClear(){
+        document.querySelectorAll('#rgValGrid .rg-val-chip').forEach(c => c.classList.remove('selected'));
+        rgSelectedValues = new Set();
+        $rg('rgFilBtn').disabled = true;
+    }
+
+    function rgOpRemoveRows(){
+        const idx = parseInt($rg('rgFilSel').value);
+        if (isNaN(idx) || rgSelectedValues.size === 0) return;
+        const all = $rg('rgFilAll').checked;
+        const f = rgActiveFile();
+        const colName = rgGetSheetData(f)[0][idx];
+        const targets = all ? rgFiles : [f];
+        let totalRemoved = 0, ok = 0;
+        targets.forEach(tf => {
+            const res = rgApplyOp(tf, { type:'filter', colName, values: new Set(rgSelectedValues) });
+            if (res.ok) { ok++; totalRemoved += res.removed || 0; }
+        });
+        const valsDisp = [...rgSelectedValues].map(v => v === '__EMPTY__' ? '(empty)' : v).join(', ');
+        rgShowAlert('rgFilAlert', 'success', `✓ Removed ${totalRemoved} row${totalRemoved!==1?'s':''} across ${ok}/${targets.length} file${targets.length!==1?'s':''} matching: ${valsDisp}`);
+        rgRefreshActive();
+    }
+
+    function rgOpMultiplyColumn(){
+        const idx = parseInt($rg('rgMulSel').value);
+        const val = parseFloat($rg('rgMulVal').value);
+        if (isNaN(idx)) return rgShowAlert('rgMulAlert', 'error', 'Please select a column.');
+        if (isNaN(val)) return rgShowAlert('rgMulAlert', 'error', 'Please enter a valid number.');
+        const all = $rg('rgMulAll').checked;
+        const f = rgActiveFile();
+        const colName = rgGetSheetData(f)[0][idx];
+        const targets = all ? rgFiles : [f];
+        let totalChanged = 0, ok = 0;
+        targets.forEach(tf => {
+            const res = rgApplyOp(tf, { type:'multiply', colName, val });
+            if (res.ok) { ok++; totalChanged += res.changed || 0; }
+        });
+        rgShowAlert('rgMulAlert', 'success', `✓ Multiplied ${totalChanged} cells × ${val} across ${ok}/${targets.length} file${targets.length!==1?'s':''}`);
+        rgRefreshActive();
+    }
+
+    function rgUpdateOpsLog(){
+        const log = $rg('rgOpsLog');
+        log.innerHTML = '';
+        const all = rgFiles.flatMap(f => f.ops.map(op => ({ ...op, file: f.name })));
+        if (all.length === 0) {
+            const div = document.createElement('div'); div.className = 'rg-log-item'; div.textContent = 'No operations applied yet.';
+            log.appendChild(div); return;
+        }
+        all.forEach((op, i) => {
+            const div = document.createElement('div'); div.className = 'rg-log-item';
+            let text = `${i+1}. [${op.file}] `;
+            if (op.type === 'delete') text += `Deleted column "${op.colName}"`;
+            else if (op.type === 'multiply') text += `Multiplied "${op.colName}" × ${op.val} (${op.changed} cells)`;
+            else if (op.type === 'filter') {
+                const disp = op.values.map(v => v === '__EMPTY__' ? '(empty)' : v).join(', ');
+                text += `Removed ${op.removed} rows from "${op.colName}" matching [${disp}]`;
+            }
+            div.textContent = text;
+            log.appendChild(div);
+        });
+    }
+
+    async function rgDownloadModified(){
+        if (rgFiles.length === 0) return;
+        if (rgFiles.length === 1) {
+            const f = rgFiles[0];
+            const out = f.name.replace(/\.[^.]+$/, '') + '_modified.xlsx';
+            XLSX.writeFile(f.workbook, out);
+            return;
+        }
+        const zip = new JSZip();
+        for (const f of rgFiles) {
+            const buf = XLSX.write(f.workbook, { type: 'array', bookType: 'xlsx' });
+            const name = f.name.replace(/\.[^.]+$/, '') + '_modified.xlsx';
+            zip.file(name, buf);
+        }
+        const blob = await zip.generateAsync({ type: 'blob' });
+        rgTriggerDownload(blob, 'modified_files.zip');
+    }
+
+    // ════════════════════════════════════════════════════════
+    // STEP 3: GENERATE
+    // ════════════════════════════════════════════════════════
+    function rgGoToStep3(){
+        $rg('rgStep3').style.display = 'block';
+        $rg('rgStep3').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        rgRenderGenPreview();
+        setTimeout(() => feather.replace(), 50);
+    }
+
+    function rgParseForReport(f){
+        const rows = XLSX.utils.sheet_to_json(f.workbook.Sheets[f.sheetName], { defval: '' });
+        if (rows.length === 0) return { error: 'empty file' };
+        const headers = Object.keys(rows[0]);
+        const findH = (...cands) => {
+            for (const c of cands) {
+                const h = headers.find(x => x.toUpperCase().includes(c.toUpperCase()));
+                if (h) return h;
+            }
+            return null;
+        };
+        const artistCol  = findH('PRODUCT ARTIST', 'TRACK ARTIST', 'ARTIST NAME', 'ARTIST', 'PRODUCT_ARTIST');
+        const trackCol   = findH('TRACK TITLE', 'TRACK', 'SONG', 'PRODUCT');
+        const storeCol   = findH('STORE', 'PLATFORM', 'DSP', 'SERVICE');
+        const revenueCol = findH('NET REVENUE', 'NET SHARE ACCOUNT CURRENCY', 'NET SHARE', 'NET_REVENUE', 'NET_SHARE', 'EARNINGS', 'REVENUE', 'AMOUNT');
+        const monthCol   = findH('REPORTING MONTH', 'SALES MONTH', 'MONTH', 'PERIOD', 'DATE');
+        if (!artistCol || !revenueCol) return { error: `missing columns (artist: ${artistCol}, revenue: ${revenueCol})` };
+        const artistsMap = {};
+        let totalRows = 0, grandTotal = 0;
+        const platforms = new Set(), tracks = new Set();
+        rows.forEach(row => {
+            const artist = String(row[artistCol] || '').trim();
+            const track  = String((trackCol && row[trackCol]) || '').trim() || 'Unknown Track';
+            const store  = String((storeCol && row[storeCol]) || '').trim() || 'Unknown';
+            const rev    = parseFloat(row[revenueCol]) || 0;
+            if (!artist || rev === 0) return;
+            totalRows++;
+            platforms.add(store); tracks.add(track); grandTotal += rev;
+            if (!artistsMap[artist]) artistsMap[artist] = { rows: [], platforms: {}, tracks: {}, months: {} };
+            artistsMap[artist].rows.push({ track, store, rev });
+            artistsMap[artist].platforms[store] = (artistsMap[artist].platforms[store] || 0) + rev;
+            artistsMap[artist].tracks[track] = (artistsMap[artist].tracks[track] || 0) + rev;
+            if (monthCol) {
+                const mi = rgMonthInfo(row[monthCol]);
+                if (mi) {
+                    if (!artistsMap[artist].months[mi.sortKey]) artistsMap[artist].months[mi.sortKey] = { display: mi.display, total: 0, platforms: {} };
+                    artistsMap[artist].months[mi.sortKey].total += rev;
+                    artistsMap[artist].months[mi.sortKey].platforms[store] = (artistsMap[artist].months[mi.sortKey].platforms[store] || 0) + rev;
+                }
+            }
+        });
+        const artistNames = Object.keys(artistsMap).sort();
+        return { artistsMap, artistNames, totalRows, platforms: platforms.size, tracks: tracks.size, grandTotal };
+    }
+
+    function rgRenderGenPreview(){
+        rgFiles.forEach(f => f._parsed = rgParseForReport(f));
+        const container = $rg('rgGenFiles');
+        container.innerHTML = '';
+        let totalArtists = 0, totalTracks = 0, totalRev = 0, okFiles = 0;
+        rgFiles.forEach(f => {
+            const p = f._parsed;
+            const card = document.createElement('div');
+            card.className = 'rg-gen-card' + (p.error ? ' err' : '');
+            const title = document.createElement('div'); title.className = 'fname'; title.textContent = f.name;
+            const meta = document.createElement('div'); meta.className = 'fmeta';
+            card.append(title, meta);
+            if (p.error) {
+                meta.textContent = `✗ ${p.error}`;
+            } else {
+                okFiles++;
+                totalArtists += p.artistNames.length;
+                totalTracks += p.tracks;
+                totalRev += p.grandTotal;
+                const mk = (label, val, cls) => {
+                    const s = document.createElement('span');
+                    s.appendChild(document.createTextNode(label + ' '));
+                    const b = document.createElement(cls ? 'span' : 'b');
+                    if (cls) b.className = cls;
+                    b.textContent = val;
+                    s.appendChild(b);
+                    return s;
+                };
+                meta.append(
+                    mk('Artists:', p.artistNames.length),
+                    mk('Tracks:', p.tracks),
+                    mk('Platforms:', p.platforms),
+                    mk('Rows:', p.totalRows.toLocaleString()),
+                    mk('Net:', '$' + p.grandTotal.toFixed(2), 'fnet')
+                );
+            }
+            container.appendChild(card);
+        });
+        const stats = $rg('rgGenStats');
+        stats.innerHTML = '';
+        const mkCol = (n, l) => {
+            const c = document.createElement('div'); c.className = 'col-md-3 col-6';
+            const d = document.createElement('div'); d.className = 'rg-stat';
+            const n1 = document.createElement('div'); n1.className = 'rg-stat-num'; n1.textContent = n;
+            const l1 = document.createElement('div'); l1.className = 'rg-stat-label'; l1.textContent = l;
+            d.append(n1, l1); c.append(d); return c;
+        };
+        stats.append(
+            mkCol(okFiles + '/' + rgFiles.length, 'Files Ready'),
+            mkCol(totalArtists, 'Artists'),
+            mkCol(totalTracks, 'Tracks'),
+            mkCol('$' + totalRev.toFixed(2), 'Net Revenue')
+        );
+        $rg('rgGenBtn').disabled = okFiles === 0;
+    }
+
+    function rgBuildReportWorkbook(parsed){
+        const { artistsMap, artistNames } = parsed;
+        const wb = XLSX.utils.book_new();
+        const makeStyle = (bg, fg = 'FFFFFF', bold = false, align = 'center') => ({
+            fill: { fgColor: { rgb: bg } },
+            font: { color: { rgb: fg }, bold, name: 'Arial', sz: 10 },
+            alignment: { horizontal: align, vertical: 'center', wrapText: true },
+            border: {
+                top:    { style: 'thin', color: { rgb: '2A2A38' } },
+                bottom: { style: 'thin', color: { rgb: '2A2A38' } },
+                left:   { style: 'thin', color: { rgb: '2A2A38' } },
+                right:  { style: 'thin', color: { rgb: '2A2A38' } }
+            }
+        });
+        artistNames.forEach(artist => {
+            const a = artistsMap[artist];
+            const sortedTracks = Object.keys(a.tracks).sort((x, y) => x.localeCompare(y));
+            const allPlats = Object.keys(a.platforms).sort();
+            const aoa = [], styles = {};
+            let r = 0;
+
+            aoa.push([`🎵 ${artist} — گزارشی داهات`]);
+            styles[XLSX.utils.encode_cell({ r: 0, c: 0 })] = makeStyle('7A5C1E', 'C9A84C', true, 'left');
+            r = 1; aoa.push([]); r++;
+
+            aoa.push(['Track / گۆرانی', 'Store / پلاتفۆرم', 'Revenue / داهات ($)']);
+            [0,1,2].forEach(c => styles[XLSX.utils.encode_cell({ r, c })] = makeStyle('1E3A5F', 'FFFFFF', true));
+            r++;
+
+            const dataStartRow = r;
+            const sortedRows = [...a.rows].sort((x, y) => x.track.localeCompare(y.track));
+            sortedRows.forEach(row => {
+                aoa.push([row.track, row.store, row.rev]);
+                const bg = (r - dataStartRow) % 2 === 0 ? '111118' : '1A1A24';
+                styles[XLSX.utils.encode_cell({ r, c: 0 })] = makeStyle(bg, 'E8E8F0', false, 'left');
+                styles[XLSX.utils.encode_cell({ r, c: 1 })] = makeStyle(bg, 'C9A84C', false);
+                styles[XLSX.utils.encode_cell({ r, c: 2 })] = makeStyle(bg, '4ADE80', false);
+                r++;
+            });
+            const detailTotal = sortedRows.reduce((s, row) => s + row.rev, 0);
+            aoa.push(['', 'کۆی گشتی داهات ↓', detailTotal]);
+            styles[XLSX.utils.encode_cell({ r, c: 0 })] = makeStyle('4A1942', 'FFFFFF', true);
+            styles[XLSX.utils.encode_cell({ r, c: 1 })] = makeStyle('4A1942', 'F9C74F', true);
+            styles[XLSX.utils.encode_cell({ r, c: 2 })] = makeStyle('4A1942', '90E0EF', true);
+            r++; aoa.push([]); r++; aoa.push([]); r++;
+
+            let monthDataStart = -1;
+            const sortedMonthKeys = Object.keys(a.months || {}).sort();
+            if (sortedMonthKeys.length > 0) {
+                aoa.push(['مانگ / Month', 'پلاتفۆرم / Platform', 'کۆی داهات ($)']);
+                [0,1,2].forEach(c => styles[XLSX.utils.encode_cell({ r, c })] = makeStyle('0E2A4A', '93C5FD', true));
+                r++;
+                monthDataStart = r;
+                let groupEven = true;
+                sortedMonthKeys.forEach(mk => {
+                    const m = a.months[mk];
+                    const sortedPlats = Object.keys(m.platforms).sort((x, y) => m.platforms[y] - m.platforms[x]);
+                    const groupBg = groupEven ? '0a1a2f' : '0f2040';
+                    sortedPlats.forEach((plat, i) => {
+                        aoa.push([i === 0 ? m.display : '', plat, m.platforms[plat]]);
+                        styles[XLSX.utils.encode_cell({ r, c: 0 })] = makeStyle(groupBg, '60A5FA', i === 0, 'left');
+                        styles[XLSX.utils.encode_cell({ r, c: 1 })] = makeStyle(groupBg, 'C9A84C', false, 'left');
+                        styles[XLSX.utils.encode_cell({ r, c: 2 })] = makeStyle(groupBg, '4ADE80', false);
+                        r++;
+                    });
+                    aoa.push(['', 'کۆی مانگ ↓', m.total]);
+                    styles[XLSX.utils.encode_cell({ r, c: 0 })] = makeStyle('1E3A5F', 'F9C74F', true);
+                    styles[XLSX.utils.encode_cell({ r, c: 1 })] = makeStyle('1E3A5F', 'F9C74F', true, 'left');
+                    styles[XLSX.utils.encode_cell({ r, c: 2 })] = makeStyle('1E3A5F', '90E0EF', true);
+                    r++;
+                    groupEven = !groupEven;
+                });
+                aoa.push(['', 'کۆی گشتی', detailTotal]);
+                styles[XLSX.utils.encode_cell({ r, c: 0 })] = makeStyle('2D1B69', 'F9C74F', true);
+                styles[XLSX.utils.encode_cell({ r, c: 1 })] = makeStyle('2D1B69', 'F9C74F', true, 'left');
+                styles[XLSX.utils.encode_cell({ r, c: 2 })] = makeStyle('2D1B69', '90E0EF', true);
+                r++;
+                aoa.push([]); r++; aoa.push([]); r++;
+            }
+
+            aoa.push(['پلاتفۆرم', 'کۆی داهات ($)', '٪ لە گشتی']);
+            [0,1,2].forEach(c => styles[XLSX.utils.encode_cell({ r, c })] = makeStyle('0D3B2E', 'A7F3D0', true));
+            r++;
+            const platDataStart = r;
+            const gTotal = Object.values(a.platforms).reduce((s, v) => s + v, 0);
+            allPlats.forEach(p => {
+                const val = a.platforms[p];
+                const pct = gTotal > 0 ? val/gTotal : 0;
+                aoa.push([p, val, pct]);
+                const bg = (r - platDataStart) % 2 === 0 ? '0a1a0f' : '0f2017';
+                styles[XLSX.utils.encode_cell({ r, c: 0 })] = makeStyle(bg, 'C9A84C', false, 'left');
+                styles[XLSX.utils.encode_cell({ r, c: 1 })] = makeStyle(bg, '4ADE80', false);
+                styles[XLSX.utils.encode_cell({ r, c: 2 })] = makeStyle(bg, '86EFAC', false);
+                r++;
+            });
+            aoa.push(['کۆی گشتی', gTotal, 1]);
+            styles[XLSX.utils.encode_cell({ r, c: 0 })] = makeStyle('1B4332', 'F9C74F', true, 'left');
+            styles[XLSX.utils.encode_cell({ r, c: 1 })] = makeStyle('1B4332', '90E0EF', true);
+            styles[XLSX.utils.encode_cell({ r, c: 2 })] = makeStyle('1B4332', 'A7F3D0', true);
+            r++; aoa.push([]); r++; aoa.push([]); r++;
+
+            aoa.push(['گۆرانی', 'کۆی داهات ($)', '٪ لە گشتی']);
+            [0,1,2].forEach(c => styles[XLSX.utils.encode_cell({ r, c })] = makeStyle('1A0B2E', 'D8B4FE', true));
+            r++;
+            const trackDataStart = r;
+            sortedTracks.forEach(t => {
+                const val = a.tracks[t];
+                const pct = gTotal > 0 ? val/gTotal : 0;
+                aoa.push([t, val, pct]);
+                const bg = (r - trackDataStart) % 2 === 0 ? '100720' : '170A2C';
+                styles[XLSX.utils.encode_cell({ r, c: 0 })] = makeStyle(bg, 'E8E8F0', false, 'left');
+                styles[XLSX.utils.encode_cell({ r, c: 1 })] = makeStyle(bg, 'A78BFA', false);
+                styles[XLSX.utils.encode_cell({ r, c: 2 })] = makeStyle(bg, 'C4B5FD', false);
+                r++;
+            });
+            aoa.push(['کۆی گشتی', gTotal, 1]);
+            styles[XLSX.utils.encode_cell({ r, c: 0 })] = makeStyle('2D1B69', 'F9C74F', true, 'left');
+            styles[XLSX.utils.encode_cell({ r, c: 1 })] = makeStyle('2D1B69', '90E0EF', true);
+            styles[XLSX.utils.encode_cell({ r, c: 2 })] = makeStyle('2D1B69', 'C4B5FD', true);
+            r++; aoa.push([]); r++;
+
+            aoa.push(['', '💰 کۆی گشتی داهات', detailTotal]);
+            [0,1,2].forEach(c => styles[XLSX.utils.encode_cell({ r, c })] = makeStyle('5C1A5C', 'FFD700', true));
+
+            const ws = XLSX.utils.aoa_to_sheet(aoa);
+            Object.keys(styles).forEach(addr => { if (!ws[addr]) ws[addr] = {}; ws[addr].s = styles[addr]; });
+            const applyFmt = (rIdx, cIdx, fmt) => {
+                const a2 = XLSX.utils.encode_cell({ r: rIdx, c: cIdx });
+                if (ws[a2]) ws[a2].z = fmt;
+            };
+            for (let i = dataStartRow; i <= r; i++) applyFmt(i, 2, '#,##0.000');
+            for (let i = platDataStart; i <= r; i++) { applyFmt(i, 1, '#,##0.000'); applyFmt(i, 2, '0.00%'); }
+            for (let i = trackDataStart; i <= r; i++) { applyFmt(i, 1, '#,##0.000'); applyFmt(i, 2, '0.00%'); }
+            ws['!cols'] = [{ wch: 40 }, { wch: 28 }, { wch: 18 }];
+            ws['!rows'] = [{ hpt: 28 }];
+            ws['!ref'] = XLSX.utils.encode_range({ s: {r:0,c:0}, e: {r,c:2} });
+            let sheetName = artist.replace(/[:\\/\*\?\[\]]/g, '').substring(0, 31);
+            XLSX.utils.book_append_sheet(wb, ws, sheetName);
+        });
+        return wb;
+    }
+
+    async function rgGenerateAllReports(){
+        rgFiles.forEach(f => f._parsed = rgParseForReport(f));
+        const targets = rgFiles.filter(f => f._parsed && !f._parsed.error);
+        if (targets.length === 0) return;
+        $rg('rgGenBtn').disabled = true;
+        $rg('rgGenProgress').classList.add('show');
+        const zip = targets.length > 1 ? new JSZip() : null;
+        for (let i = 0; i < targets.length; i++) {
+            const f = targets[i];
+            const pct = Math.round(((i+1)/targets.length) * 90);
+            $rg('rgGenProgressFill').style.width = pct + '%';
+            $rg('rgGenProgressText').textContent = `Building ${f.name}… (${i+1}/${targets.length})`;
+            await new Promise(r => setTimeout(r, 10));
+            try {
+                const wb = rgBuildReportWorkbook(f._parsed);
+                const outName = f.name.replace(/\.[^.]+$/, '') + '_royalty_report.xlsx';
+                if (zip) {
+                    const buf = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+                    zip.file(outName, buf);
+                } else {
+                    XLSX.writeFile(wb, outName);
+                }
+            } catch (e) {
+                rgShowAlert('rgGenAlert', 'error', `Failed on ${f.name}: ${e.message}`);
+            }
+        }
+        if (zip) {
+            $rg('rgGenProgressText').textContent = 'Zipping…';
+            const blob = await zip.generateAsync({ type: 'blob' });
+            rgTriggerDownload(blob, 'royalty_reports.zip');
+        }
+        $rg('rgGenProgressFill').style.width = '100%';
+        $rg('rgGenProgressText').textContent = '✓ Done!';
+        rgShowAlert('rgGenAlert', 'success', `✓ Generated ${targets.length} report${targets.length!==1?'s':''}`);
+        App.showSuccess(`Generated ${targets.length} royalty report${targets.length!==1?'s':''}`);
+        $rg('rgGenBtn').disabled = false;
+    }
+
+    function rgResetAll(){
+        rgFiles = []; rgActiveId = null; rgSelectedValues = new Set();
+        $rg('rgFileInput').value = '';
+        $rg('rgFileList').innerHTML = '';
+        $rg('rgStep1Actions').style.display = 'none';
+        $rg('rgStep2').style.display = 'none';
+        $rg('rgStep3').style.display = 'none';
+        $rg('rgGenProgress').classList.remove('show');
+        $rg('rgGenProgressFill').style.width = '0%';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    </script>
+</body>
+</html>

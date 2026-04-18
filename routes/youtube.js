@@ -339,9 +339,10 @@ router.post('/sync-channel/:pendingId', requireAdmin, async (req, res) => {
     if (!channel) return res.status(404).json({ error: 'Channel not found' });
     if (!channel.refresh_token_encrypted) return res.status(400).json({ error: 'No OAuth token for this channel' });
 
-    // Default: last 12 months
+    // Default: last 12 months, aligned to 1st of month (required for month dimension)
     const endDate = new Date();
-    const startDate = new Date();
+    endDate.setDate(1); // 1st of current month
+    const startDate = new Date(endDate);
     startDate.setMonth(startDate.getMonth() - 12);
     const fmt = d => d.toISOString().slice(0, 10);
 
@@ -664,9 +665,10 @@ router.post('/sync/:artistId', requireAdmin, async (req, res) => {
     const oauth = await req.db('youtube_accounts').where({ artist_id: artistId }).first();
     if (!oauth) return res.status(404).json({ error: 'YouTube account not connected for this artist' });
 
-    // Default: last 12 months
+    // Default: last 12 months, aligned to 1st of month
     const endDate = new Date();
-    const startDate = new Date();
+    endDate.setDate(1);
+    const startDate = new Date(endDate);
     startDate.setMonth(startDate.getMonth() - 12);
 
     const fmt = d => d.toISOString().slice(0, 10);
