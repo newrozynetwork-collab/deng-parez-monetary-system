@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Royalty Insights · Mar 2025 – Feb 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&family=Noto+Kufi+Arabic:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --bg-0: #07080d;
+  --bg-1: #0e1018;
+  --bg-2: #151823;
+  --surface: #1a1e2a;
+  --surface-h: #202535;
+  --border: #242a3d;
+  --border-l: #2e3549;
+  --text: #e6e8ef;
+  --text-d: #a3a9bc;
+  --muted: #6a7085;
+  --teal: #2dd4bf;
+  --teal-d: #14b8a6;
+  --coral: #fb7185;
+  --gold: #fbbf24;
+  --violet: #a78bfa;
+  --blue: #60a5fa;
+  --green: #34d399;
+  --red: #f87171;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  background: var(--bg-0);
+  color: var(--text);
+  font-family: 'Inter', system-ui, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background-image:
+    radial-gradient(ellipse 60% 40% at 20% 0%, rgba(45,212,191,0.08) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 80% 0%, rgba(167,139,250,0.06) 0%, transparent 50%);
+}
+html[lang="ku"] body { font-family: 'Noto Kufi Arabic', 'Inter', system-ui, sans-serif; }
+html[lang="ku"] h1 { letter-spacing: 0; }
+
+.container { max-width: 1280px; margin: 0 auto; padding: 36px 28px 80px; }
+
+/* ─── BRANDING BAR ─── */
+.brand-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, rgba(45,212,191,0.08) 0%, rgba(167,139,250,0.06) 100%);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+.brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.brand-mark {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--teal) 0%, var(--violet) 100%);
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 1rem;
+  color: #000;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: -1px;
+}
+.brand-meta { display: flex; flex-direction: column; line-height: 1.2; gap: 2px; }
+.brand-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+.brand-tagline {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+html[lang="ku"] .brand-tagline { font-family: 'Noto Kufi Arabic'; letter-spacing: 0; font-size: 0.78rem; }
+.brand-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.66rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--teal);
+  background: rgba(45,212,191,0.1);
+  padding: 5px 12px;
+  border-radius: 100px;
+  border: 1px solid rgba(45,212,191,0.2);
+}
+html[lang="ku"] .brand-tag { font-family: 'Noto Kufi Arabic'; letter-spacing: 0; font-size: 0.78rem; }
+
+/* ─── PLATFORM CARDS ─── */
+.platforms-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+.platform-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s, border-color 0.2s;
+}
+.platform-card:hover { transform: translateY(-2px); border-color: var(--border-l); }
+.platform-card.inactive { opacity: 0.4; }
+.platform-card .accent-stripe {
+  position: absolute;
+  top: 0; left: 0;
+  width: 4px; height: 100%;
+}
+html[dir="rtl"] .platform-card .accent-stripe { left: auto; right: 0; }
+.platform-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.platform-icon {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: #fff;
+  flex-shrink: 0;
+  font-family: 'JetBrains Mono', monospace;
+}
+.platform-name {
+  flex: 1;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.platform-rev {
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--teal);
+  line-height: 1;
+  margin-bottom: 4px;
+  direction: ltr;
+}
+.platform-pct-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--text-d);
+  margin-bottom: 10px;
+  direction: ltr;
+}
+.platform-bar {
+  height: 5px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.platform-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.8s ease;
+}
+
+/* ─── LANG TOGGLE ─── */
+.lang-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 100;
+  display: inline-flex;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 4px;
+  gap: 2px;
+  backdrop-filter: blur(8px);
+}
+html[dir="rtl"] .lang-toggle { right: auto; left: 20px; }
+.lang-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-d);
+  padding: 7px 14px;
+  border-radius: 100px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 1.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.lang-btn:hover { color: var(--text); }
+.lang-btn.active { background: var(--teal); color: #000; }
+html[lang="ku"] .lang-btn { font-family: 'Noto Kufi Arabic', monospace; letter-spacing: 0; }
+
+/* ─── HEADER ─── */
+.header {
+  margin-bottom: 36px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.header .title-block { flex: 1; min-width: 260px; }
+.eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 3px;
+  color: var(--teal);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+html[lang="ku"] .eyebrow { font-family: 'Noto Kufi Arabic'; letter-spacing: 1px; font-size: 0.85rem; }
+.eyebrow::before {
+  content: '';
+  width: 24px; height: 1px;
+  background: var(--teal);
+}
+h1 {
+  font-size: clamp(2.2rem, 5vw, 3.5rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -1.5px;
+  margin-bottom: 8px;
+}
+h1 .accent {
+  background: linear-gradient(135deg, var(--teal) 0%, var(--violet) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.subtitle {
+  color: var(--text-d);
+  font-size: 1rem;
+  font-weight: 400;
+}
+.artist-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 10px 18px 10px 12px;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+html[dir="rtl"] .artist-chip { padding: 10px 12px 10px 18px; }
+.artist-chip .dot {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--teal) 0%, var(--violet) 100%);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #000;
+}
+.artist-chip .label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  color: var(--muted);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+html[lang="ku"] .artist-chip .label { font-family: 'Noto Kufi Arabic'; letter-spacing: 0; font-size: 0.75rem; }
+.artist-chip .meta { display: flex; flex-direction: column; line-height: 1.2; }
+
+/* ─── HERO METRIC ─── */
+.hero-metric {
+  background: linear-gradient(135deg, rgba(45,212,191,0.08) 0%, rgba(167,139,250,0.05) 100%);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 32px 36px;
+  margin-bottom: 28px;
+  position: relative;
+  overflow: hidden;
+}
+.hero-metric::before {
+  content: '';
+  position: absolute;
+  top: -50%; right: -10%;
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(45,212,191,0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-metric .label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+html[lang="ku"] .hero-metric .label { font-family: 'Noto Kufi Arabic'; letter-spacing: 0; font-size: 0.85rem; }
+.hero-amount {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.hero-amount .big {
+  font-size: clamp(3rem, 8vw, 5.5rem);
+  font-weight: 800;
+  letter-spacing: -3px;
+  line-height: 1;
+  background: linear-gradient(135deg, #fff 0%, var(--teal) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-variant-numeric: tabular-nums;
+  direction: ltr;
+}
+.hero-amount .currency {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 2px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.hero-caption {
+  margin-top: 16px;
+  color: var(--text-d);
+  font-size: 0.95rem;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.hero-caption .pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 4px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--text);
+}
+html[lang="ku"] .hero-caption .pill { font-family: 'Noto Kufi Arabic'; font-size: 0.82rem; }
+.hero-caption .pill b {
+  color: var(--teal);
+  font-weight: 600;
+}
+.hero-caption .pill.star {
+  background: linear-gradient(135deg, rgba(251,191,36,0.15) 0%, rgba(251,113,133,0.08) 100%);
+  border-color: rgba(251,191,36,0.3);
+}
+.hero-caption .pill.star b { color: var(--gold); }
+
+/* ─── STATS ─── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 28px;
+}
+.stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  position: relative;
+  transition: transform 0.2s, border-color 0.2s;
+  cursor: default;
+}
+.stat:hover { transform: translateY(-2px); border-color: var(--border-l); }
+.stat .icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 14px;
+  background: rgba(45,212,191,0.12);
+  color: var(--teal);
+}
+.stat:nth-child(2) .icon { background: rgba(167,139,250,0.12); color: var(--violet); }
+.stat:nth-child(3) .icon { background: rgba(251,191,36,0.12); color: var(--gold); }
+.stat:nth-child(4) .icon { background: rgba(251,113,133,0.12); color: var(--coral); }
+.stat .num {
+  font-size: 1.9rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  margin-bottom: 4px;
+  direction: ltr;
+}
+.stat .lbl {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+html[lang="ku"] .stat .lbl { font-family: 'Noto Kufi Arabic'; letter-spacing: 0; font-size: 0.85rem; }
+.stat .sub {
+  margin-top: 6px;
+  color: var(--text-d);
+  font-size: 0.78rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ─── GRID ─── */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+.grid-full { margin-bottom: 20px; }
+@media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 768px) {
+  .container { padding: 60px 16px 60px; }
+  .lang-toggle { top: 12px; right: 12px; padding: 3px; }
+  html[dir="rtl"] .lang-toggle { left: 12px; right: auto; }
+  .lang-btn { padding: 6px 12px; font-size: 0.68rem; letter-spacing: 1px; }
+  .header { margin-bottom: 24px; gap: 14px; }
+  .hero-metric { padding: 22px 20px; margin-bottom: 20px; }
+  .stats-grid { gap: 10px; margin-bottom: 20px; }
+  .stat { padding: 16px; }
+  .stat .icon { width: 32px; height: 32px; margin-bottom: 10px; }
+  .card { padding: 18px; }
+  .card-head { margin-bottom: 16px; }
+  .chart-wrap { height: 260px; }
+  .track-bar { width: 100%; }
+  .country-controls { width: 100%; }
+}
+
+@media (max-width: 560px) {
+  h1 { font-size: 2.1rem; letter-spacing: -1px; }
+  .subtitle { font-size: 0.88rem; }
+  .artist-chip { padding: 8px 14px 8px 10px; font-size: 0.82rem; }
+  .artist-chip .dot { width: 28px; height: 28px; font-size: 0.75rem; }
+  .hero-amount .big { font-size: 2.8rem; letter-spacing: -2px; }
+  .hero-amount .currency { font-size: 0.9rem; }
+  .hero-caption { gap: 6px; font-size: 0.85rem; }
+  .hero-caption .pill { font-size: 0.68rem; padding: 3px 9px; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .stat .num { font-size: 1.5rem; }
+  .stat .lbl { font-size: 0.68rem; letter-spacing: 0.8px; }
+  .stat .sub { font-size: 0.72rem; }
+  .card { padding: 16px; border-radius: 12px; }
+  .card-title { font-size: 0.94rem; }
+  .card-sub { font-size: 0.74rem; }
+  .card-tag { font-size: 0.62rem; padding: 2px 8px; }
+  .country-row { padding: 8px 10px; grid-template-columns: 26px 1fr auto; gap: 8px; font-size: 0.82rem; }
+  .country-row .flag { width: 20px; height: 15px; font-size: 12px; }
+  .country-row .rank { font-size: 0.65rem; }
+  .country-row .val { font-size: 0.76rem; }
+  .country-row .flag-label { gap: 7px; }
+  .tx-row { grid-template-columns: 1fr auto; gap: 6px 10px; padding: 10px 12px; }
+  .tx-name { grid-column: 1 / -1; font-size: 0.85rem; }
+  .tx-qty { text-align: left; }
+  html[dir="rtl"] .tx-qty { text-align: right; }
+  .tx-rev { font-size: 0.9rem; min-width: 60px; }
+  .tracks-table { display: block; }
+  .tracks-table thead { display: none; }
+  .tracks-table tbody { display: block; }
+  .tracks-table tr.trow { display: flex; flex-direction: column; margin-bottom: 8px; }
+  .tracks-table tr.trow td {
+    display: block; padding: 14px 16px;
+    border-left: 1px solid var(--border); border-right: 1px solid var(--border);
+  }
+  .tracks-table tr.trow td:first-child {
+    border-radius: 10px 10px 0 0; border-bottom: none;
+    border-top: 1px solid var(--border);
+  }
+  .tracks-table tr.trow td:last-child {
+    border-radius: 0 0 10px 10px; border-top: none;
+    border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    text-align: left !important;
+  }
+  .track-rev { font-size: 1rem; }
+  .track-pct { margin-top: 0; }
+  .track-title { font-size: 0.92rem; }
+  .track-meta .chip { font-size: 0.66rem; padding: 2px 7px; }
+  .store-row { font-size: 0.82rem; padding: 7px 8px; }
+  .store-row .val { font-size: 0.72rem; }
+}
+
+@media (max-width: 380px) {
+  .stats-grid { grid-template-columns: 1fr; }
+  h1 { font-size: 1.8rem; }
+  .hero-amount .big { font-size: 2.4rem; }
+  .hero-metric { padding: 18px 16px; }
+  .lang-btn { padding: 5px 10px; font-size: 0.64rem; }
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  transition: border-color 0.2s;
+}
+.card:hover { border-color: var(--border-l); }
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+}
+.card-sub {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.card-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.66rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--teal);
+  background: rgba(45,212,191,0.1);
+  padding: 3px 10px;
+  border-radius: 100px;
+}
+html[lang="ku"] .card-tag { font-family: 'Noto Kufi Arabic'; letter-spacing: 0; font-size: 0.78rem; }
+.chart-wrap { position: relative; height: 300px; }
+
+/* ─── STORE LEGEND ─── */
+.store-legend {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.store-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  transition: background 0.15s;
+  cursor: pointer;
+}
+.store-row:hover { background: var(--surface-h); }
+.store-row .swatch {
+  width: 10px; height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.store-row .name { flex: 1; }
+.store-row .val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--text-d);
+  font-variant-numeric: tabular-nums;
+  direction: ltr;
+}
+.store-row.muted .name, .store-row.muted .val { opacity: 0.4; }
+.store-row.muted .swatch { opacity: 0.3; }
+
+/* ─── COUNTRY BARS ─── */
+.country-controls {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.country-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-d);
+  padding: 5px 12px;
+  border-radius: 100px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+html[lang="ku"] .country-btn { font-family: 'Noto Kufi Arabic'; letter-spacing: 0; font-size: 0.8rem; }
+.country-btn:hover { color: var(--text); border-color: var(--border-l); }
+.country-btn.active { background: var(--teal); color: #000; border-color: var(--teal); font-weight: 600; }
+.country-list { display: flex; flex-direction: column; gap: 6px; }
+.country-row {
+  display: grid;
+  grid-template-columns: 30px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.15s;
+}
+.country-row:hover { background: var(--surface-h); }
+.country-row .rank {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--muted);
+  text-align: right;
+  direction: ltr;
+}
+.country-row .flag-label { display: flex; align-items: center; gap: 10px; }
+.country-row .flag {
+  width: 24px; height: 18px;
+  border-radius: 3px;
+  background: var(--surface-h);
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.country-row .bar-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(45,212,191,0.14) 0%, rgba(45,212,191,0.04) 100%);
+  z-index: 0;
+  pointer-events: none;
+  transition: width 0.5s ease;
+  border-radius: 8px;
+}
+html[dir="rtl"] .country-row .bar-bg {
+  background: linear-gradient(270deg, rgba(45,212,191,0.14) 0%, rgba(45,212,191,0.04) 100%);
+}
+.country-row .name, .country-row .val { position: relative; z-index: 1; }
+.country-row .val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--teal);
+  font-weight: 600;
+  direction: ltr;
+}
+.country-row.zero .val { color: var(--muted); }
+.country-row.zero .bar-bg { display: none; }
+
+/* ─── TRACKS ─── */
+.tracks-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 4px;
+}
+.tracks-table th {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.66rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: left;
+  padding: 0 14px 10px;
+  font-weight: 500;
+}
+html[dir="rtl"] .tracks-table th { text-align: right; }
+html[dir="rtl"] .tracks-table th.right { text-align: left; }
+html[lang="ku"] .tracks-table th { font-family: 'Noto Kufi Arabic'; letter-spacing: 0; font-size: 0.82rem; }
+.tracks-table th.right { text-align: right; }
+.tracks-table tr.trow { transition: background 0.15s; }
+.tracks-table tr.trow:hover td { background: var(--surface-h); }
+.tracks-table tr.trow td {
+  background: var(--bg-2);
+  padding: 14px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+.tracks-table tr.trow td:first-child { border-left: 1px solid var(--border); border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
+.tracks-table tr.trow td:last-child { border-right: 1px solid var(--border); border-top-right-radius: 10px; border-bottom-right-radius: 10px; text-align: right; }
+html[dir="rtl"] .tracks-table tr.trow td:last-child { text-align: left; }
+.track-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+  font-size: 0.95rem;
+}
+.track-meta {
+  color: var(--text-d);
+  font-size: 0.78rem;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.track-meta .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  color: var(--text-d);
+  background: var(--surface);
+  padding: 2px 8px;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+}
+html[lang="ku"] .track-meta .chip { font-family: 'Noto Kufi Arabic'; font-size: 0.78rem; }
+.track-bar {
+  width: 220px;
+  max-width: 100%;
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+.track-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--teal) 0%, var(--violet) 100%);
+  border-radius: 3px;
+  transition: width 0.8s ease;
+}
+.track-rev {
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--teal);
+  direction: ltr;
+}
+.track-pct {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--muted);
+  margin-top: 2px;
+  direction: ltr;
+}
+
+/* ─── TX TYPES ─── */
+.tx-list { display: flex; flex-direction: column; gap: 10px; }
+.tx-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 14px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition: border-color 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+.tx-row:hover { border-color: var(--border-l); }
+.tx-row .tx-bar {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(167,139,250,0.1) 0%, transparent 100%);
+  z-index: 0;
+  pointer-events: none;
+}
+html[dir="rtl"] .tx-row .tx-bar {
+  background: linear-gradient(270deg, rgba(167,139,250,0.1) 0%, transparent 100%);
+}
+.tx-row > * { position: relative; z-index: 1; }
+.tx-name {
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+.tx-qty {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text-d);
+  text-align: right;
+  direction: ltr;
+}
+.tx-qty .n {
+  color: var(--text);
+  font-weight: 600;
+}
+.tx-rev {
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+  color: var(--violet);
+  font-weight: 700;
+  font-size: 0.95rem;
+  min-width: 70px;
+  text-align: right;
+  direction: ltr;
+}
+
+footer {
+  margin-top: 50px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 1px;
+}
+html[lang="ku"] footer { font-family: 'Noto Kufi Arabic'; letter-spacing: 0; font-size: 0.85rem; }
+</style>
+</head>
+<body>
+
+<div class="lang-toggle">
+  <button class="lang-btn active" data-lang="en">EN</button>
+  <button class="lang-btn" data-lang="ku">کوردی</button>
+</div>
+
+<div class="container">
+
+<!-- BRANDING -->
+<div class="brand-bar">
+  <div class="brand-logo">
+    <div class="brand-mark">DP</div>
+    <div class="brand-meta">
+      <span class="brand-name">Deng Parez</span>
+      <span class="brand-tagline" data-i18n="brandTagline">Digital Distribution &amp; Royalty Management</span>
+    </div>
+  </div>
+  <span class="brand-tag" data-i18n="officialReport">Official Artist Report</span>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="title-block">
+    <div class="eyebrow" data-i18n="eyebrow">Royalty Insights</div>
+    <h1><span data-i18n="dateRangeStart">March 2025 —</span><br><span class="accent" data-i18n="dateRangeEnd">February 2026</span></h1>
+    <p class="subtitle" data-i18n="subtitle">Distribution revenue breakdown across platforms, territories &amp; tracks</p>
+  </div>
+  <div class="artist-chip">
+    <div class="dot">NY</div>
+    <div class="meta">
+      <span class="label" data-i18n="artist">Artist</span>
+      <span>Nadia Yassen</span>
+    </div>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero-metric">
+  <div class="label" data-i18n="totalNetRevenue">Total Net Revenue</div>
+  <div class="hero-amount">
+    <span class="big" id="heroAmount">$0.00</span>
+    <span class="currency">USD</span>
+  </div>
+  <div class="hero-caption">
+    <span class="pill star">⭐ <span data-i18n="topTrackLabel">Top track:</span> <b id="heroTopTrack">—</b></span>
+    <span class="pill">📈 <b id="heroStreams">0</b> <span data-i18n="transactions">transactions</span></span>
+    <span class="pill">🌍 <b id="heroCountries">0</b> <span data-i18n="countriesReached">countries reached</span></span>
+    <span class="pill">🎵 <b id="heroTracks">0</b> <span data-i18n="tracksEarning">tracks earning</span></span>
+    <span class="pill">🏪 <b id="heroStores">0</b> <span data-i18n="platforms">platforms</span></span>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats-grid">
+  <div class="stat">
+    <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+    <div class="num" id="stTopCountryRev">—</div>
+    <div class="lbl" data-i18n="topCountryRev">Top Country Revenue</div>
+    <div class="sub" id="stTopCountryName">—</div>
+  </div>
+  <div class="stat">
+    <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15 8.5 22 9.2 17 14 18.5 21 12 17.5 5.5 21 7 14 2 9.2 9 8.5 12 2"/></svg></div>
+    <div class="num" id="stTopTrackRev">—</div>
+    <div class="lbl" data-i18n="topTrackRev">Top Track Revenue</div>
+    <div class="sub" id="stTopTrackName">—</div>
+  </div>
+  <div class="stat">
+    <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+    <div class="num" id="stMainPlatform">—</div>
+    <div class="lbl" data-i18n="mainPlatform">Main Platform</div>
+    <div class="sub" id="stMainPlatformPct">—</div>
+  </div>
+  <div class="stat">
+    <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 6-6"/></svg></div>
+    <div class="num" id="stAvgPerStream">—</div>
+    <div class="lbl" data-i18n="avgPerTransaction">Avg per Transaction</div>
+    <div class="sub" data-i18n="acrossAllTypes">across all types</div>
+  </div>
+</div>
+
+<!-- STORE + TX TYPES -->
+<div class="grid-2">
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="card-title" data-i18n="platformRevenueShare">Platform Revenue Share</div>
+        <div class="card-sub" data-i18n="distributionByStore">Distribution by store</div>
+      </div>
+      <span class="card-tag">USD</span>
+    </div>
+    <div class="chart-wrap"><canvas id="storeChart"></canvas></div>
+    <div class="store-legend" id="storeLegend"></div>
+  </div>
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="card-title" data-i18n="transactionTypes">Transaction Types</div>
+        <div class="card-sub" data-i18n="txCategoryRevenue">Revenue &amp; volume by stream category</div>
+      </div>
+      <span class="card-tag" id="txTypesTag">8 Types</span>
+    </div>
+    <div class="tx-list" id="txList"></div>
+  </div>
+</div>
+
+<!-- PLATFORMS DETAIL -->
+<div class="grid-full">
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="card-title" data-i18n="platformsTitle">Platforms</div>
+        <div class="card-sub" data-i18n="platformsSub">Individual breakdown per store</div>
+      </div>
+      <span class="card-tag" id="platformsTag">6 Stores</span>
+    </div>
+    <div class="platforms-grid" id="platformsGrid"></div>
+  </div>
+</div>
+
+<!-- COUNTRIES -->
+<div class="grid-full">
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="card-title" data-i18n="countries">Countries</div>
+        <div class="card-sub" data-i18n="revenueByTerritory">Revenue by territory</div>
+      </div>
+      <div class="country-controls">
+        <button class="country-btn active" data-mode="top15" data-i18n="top15">Top 15</button>
+        <button class="country-btn" data-mode="earning" data-i18n="earning">Earning</button>
+        <button class="country-btn" data-mode="all" data-i18n="allCountries">All 86</button>
+      </div>
+    </div>
+    <div class="country-list" id="countryList"></div>
+  </div>
+</div>
+
+<!-- TRACKS -->
+<div class="grid-full">
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="card-title" data-i18n="trackPerformance">Track Performance</div>
+        <div class="card-sub" data-i18n="revenuePerTrack">Revenue per track</div>
+      </div>
+      <span class="card-tag" id="tracksCountTag">9 Tracks</span>
+    </div>
+    <table class="tracks-table">
+      <thead>
+        <tr>
+          <th data-i18n="track">Track</th>
+          <th class="right" data-i18n="netRevenue">Net Revenue</th>
+        </tr>
+      </thead>
+      <tbody id="tracksBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<footer data-i18n="footer">Deng Parez · Mar 2025 – Feb 2026 Royalty Report · 100% offline</footer>
+
+</div>
+
+<script>
+const DATA = {
+  types: [
+    { name: "Ad Supported Audio Streams from UGC", qty: 14406, rev: 5.86 },
+    { name: "Subscription Audio Streams from UGC", qty: 264, rev: 2.27 },
+    { name: "Subscription Audio Streams from Art Track Videos", qty: 104, rev: 1.07 },
+    { name: "Short-form Video User Generated Revenue", qty: 230031, rev: 0.60 },
+    { name: "Ad Supported Audio Streams from Art Track Videos", qty: 87, rev: 0.06 },
+    { name: "Subscription Audio Streams", qty: 12, rev: 0.05 },
+    { name: "Ad-Supported Audio Streams", qty: 6469, rev: 0.03 },
+    { name: "Unqualified Audio Streams", qty: 198, rev: 0.00 }
+  ],
+  countries: [
+    { name: "United Kingdom", rev: 2.49 }, { name: "Iraq", rev: 2.01 },
+    { name: "Sweden", rev: 1.21 }, { name: "Germany", rev: 1.13 },
+    { name: "United States", rev: 0.60 }, { name: "Switzerland", rev: 0.41 },
+    { name: "Canada", rev: 0.39 }, { name: "Denmark", rev: 0.30 },
+    { name: "New Zealand", rev: 0.25 }, { name: "Norway", rev: 0.23 },
+    { name: "Netherlands", rev: 0.16 }, { name: "Türkiye", rev: 0.14 },
+    { name: "Australia", rev: 0.13 }, { name: "Finland", rev: 0.12 },
+    { name: "Belgium", rev: 0.04 }, { name: "Ukraine", rev: 0.04 },
+    { name: "Italy", rev: 0.03 }, { name: "Poland", rev: 0.03 },
+    { name: "Japan", rev: 0.03 }, { name: "Saudi Arabia", rev: 0.03 },
+    { name: "Austria", rev: 0.03 }, { name: "United Arab Emirates", rev: 0.02 },
+    { name: "People's Republic of China", rev: 0.02 }, { name: "Israel", rev: 0.01 },
+    { name: "Morocco", rev: 0.01 }, { name: "France", rev: 0.01 },
+    { name: "Greece", rev: 0.01 }, { name: "Ireland", rev: 0.01 },
+    { name: "Romania", rev: 0.01 }, { name: "Malaysia", rev: 0 },
+    { name: "India", rev: 0 }, { name: "Qatar", rev: 0 }, { name: "Egypt", rev: 0 },
+    { name: "Pakistan", rev: 0 }, { name: "Cyprus", rev: 0 }, { name: "Nigeria", rev: 0 },
+    { name: "Brazil", rev: 0 }, { name: "Hungary", rev: 0 }, { name: "Algeria", rev: 0 },
+    { name: "Lebanon", rev: 0 }, { name: "Czech Republic", rev: 0 }, { name: "Kazakhstan", rev: 0 },
+    { name: "Bulgaria", rev: 0 }, { name: "Ghana", rev: 0 },
+    { name: "The Republic of North Macedonia", rev: 0 }, { name: "Montenegro, Serbia", rev: 0 },
+    { name: "Estonia", rev: 0 }, { name: "Georgia", rev: 0 }, { name: "Spain", rev: 0 },
+    { name: "Zimbabwe", rev: 0 }, { name: "Jordan", rev: 0 }, { name: "Singapore", rev: 0 },
+    { name: "Luxembourg", rev: 0 }, { name: "Portugal", rev: 0 }, { name: "South Korea", rev: 0 },
+    { name: "Belarus", rev: 0 }, { name: "Kuwait", rev: 0 }, { name: "Taiwan, Province of China", rev: 0 },
+    { name: "Thailand", rev: 0 }, { name: "Oman", rev: 0 }, { name: "Colombia", rev: 0 },
+    { name: "Bahrain", rev: 0 }, { name: "Philippines", rev: 0 }, { name: "Mexico", rev: 0 },
+    { name: "Latvia", rev: 0 }, { name: "Libya", rev: 0 }, { name: "Armenia", rev: 0 },
+    { name: "Slovenia", rev: 0 }, { name: "Tunisia", rev: 0 }, { name: "Azerbaijan", rev: 0 },
+    { name: "Mauritius", rev: 0 }, { name: "Afghanistan", rev: 0 }, { name: "Cambodia", rev: 0 },
+    { name: "Indonesia", rev: 0 }, { name: "Slovakia", rev: 0 }, { name: "Albania", rev: 0 },
+    { name: "Macao", rev: 0 }, { name: "Democratic Republic of the Congo", rev: 0 },
+    { name: "Bangladesh", rev: 0 }, { name: "Liberia", rev: 0 }, { name: "Madagascar", rev: 0 },
+    { name: "Croatia", rev: 0 }, { name: "Guinea", rev: 0 }, { name: "Lithuania", rev: 0 },
+    { name: "Moldova, Republic of", rev: 0 }, { name: "Tajikistan", rev: 0 }
+  ],
+  stores: [
+    { name: "YouTube Content ID", rev: 5.91 },
+    { name: "YouTube Art Tracks & Music Videos", rev: 3.34 },
+    { name: "TikTok (Audio Library)", rev: 0.63 },
+    { name: "iTunes/Apple", rev: 0.03 },
+    { name: "Tencent Music", rev: 0.02 },
+    { name: "Spotify", rev: 0 }
+  ],
+  tracks: [
+    { name: "Nishtiman Tom Labira", product: "Tom Labira", format: "Full Length", release: "1 Mar 2003", rev: 6.47 },
+    { name: "Shadm", product: "Tom Labira", format: "Full Length", release: "1 Mar 2003", rev: 2.48 },
+    { name: "Yar", product: "Tom Labira", format: "Full Length", release: "1 Mar 2003", rev: 0.46 },
+    { name: "Sanama", product: "Sanama", format: "Single", release: "14 Feb 2023", rev: 0.26 },
+    { name: "Xanday Kosaran", product: "Tom Labira", format: "Full Length", release: "1 Mar 2003", rev: 0.11 },
+    { name: "Asterai Dur", product: "Tom Labira", format: "Full Length", release: "1 Mar 2003", rev: 0.08 },
+    { name: "Xoshawistiman", product: "Tom Labira", format: "Full Length", release: "1 Mar 2003", rev: 0.05 },
+    { name: "Missing You", product: "Tom Labira", format: "Full Length", release: "1 Mar 2003", rev: 0.01 },
+    { name: "Nazhim", product: "Nazhim", format: "Single", release: "4 Nov 2019", rev: 0.01 }
+  ]
+};
+
+const COUNTRY_FLAGS = {
+  "United Kingdom":"🇬🇧","Iraq":"🇮🇶","Sweden":"🇸🇪","Germany":"🇩🇪","United States":"🇺🇸","Switzerland":"🇨🇭",
+  "Canada":"🇨🇦","Denmark":"🇩🇰","New Zealand":"🇳🇿","Norway":"🇳🇴","Netherlands":"🇳🇱","Türkiye":"🇹🇷",
+  "Australia":"🇦🇺","Finland":"🇫🇮","Belgium":"🇧🇪","Ukraine":"🇺🇦","Italy":"🇮🇹","Poland":"🇵🇱",
+  "Japan":"🇯🇵","Saudi Arabia":"🇸🇦","Austria":"🇦🇹","United Arab Emirates":"🇦🇪",
+  "People's Republic of China":"🇨🇳","Israel":"🇮🇱","Morocco":"🇲🇦","France":"🇫🇷","Greece":"🇬🇷",
+  "Ireland":"🇮🇪","Romania":"🇷🇴","Malaysia":"🇲🇾","India":"🇮🇳","Qatar":"🇶🇦","Egypt":"🇪🇬",
+  "Pakistan":"🇵🇰","Cyprus":"🇨🇾","Nigeria":"🇳🇬","Brazil":"🇧🇷","Hungary":"🇭🇺","Algeria":"🇩🇿",
+  "Lebanon":"🇱🇧","Czech Republic":"🇨🇿","Kazakhstan":"🇰🇿","Bulgaria":"🇧🇬","Ghana":"🇬🇭",
+  "The Republic of North Macedonia":"🇲🇰","Montenegro, Serbia":"🇷🇸","Estonia":"🇪🇪","Georgia":"🇬🇪",
+  "Spain":"🇪🇸","Zimbabwe":"🇿🇼","Jordan":"🇯🇴","Singapore":"🇸🇬","Luxembourg":"🇱🇺","Portugal":"🇵🇹",
+  "South Korea":"🇰🇷","Belarus":"🇧🇾","Kuwait":"🇰🇼","Taiwan, Province of China":"🇹🇼","Thailand":"🇹🇭",
+  "Oman":"🇴🇲","Colombia":"🇨🇴","Bahrain":"🇧🇭","Philippines":"🇵🇭","Mexico":"🇲🇽","Latvia":"🇱🇻",
+  "Libya":"🇱🇾","Armenia":"🇦🇲","Slovenia":"🇸🇮","Tunisia":"🇹🇳","Azerbaijan":"🇦🇿","Mauritius":"🇲🇺",
+  "Afghanistan":"🇦🇫","Cambodia":"🇰🇭","Indonesia":"🇮🇩","Slovakia":"🇸🇰","Albania":"🇦🇱","Macao":"🇲🇴",
+  "Democratic Republic of the Congo":"🇨🇩","Bangladesh":"🇧🇩","Liberia":"🇱🇷","Madagascar":"🇲🇬",
+  "Croatia":"🇭🇷","Guinea":"🇬🇳","Lithuania":"🇱🇹","Moldova, Republic of":"🇲🇩","Tajikistan":"🇹🇯"
+};
+
+const I18N = {
+  en: {
+    eyebrow: "Royalty Insights",
+    dateRangeStart: "March 2025 —",
+    dateRangeEnd: "February 2026",
+    subtitle: "Distribution revenue breakdown across platforms, territories & tracks",
+    artist: "Artist",
+    totalNetRevenue: "Total Net Revenue",
+    topTrackLabel: "Top track:",
+    transactions: "transactions",
+    countriesReached: "countries reached",
+    tracksEarning: "tracks earning",
+    platforms: "platforms",
+    brandTagline: "Digital Distribution & Royalty Management",
+    officialReport: "Official Artist Report",
+    platformsTitle: "Platforms",
+    platformsSub: "Individual breakdown per store",
+    topCountryRev: "Top Country Revenue",
+    topTrackRev: "Top Track Revenue",
+    mainPlatform: "Main Platform",
+    avgPerTransaction: "Avg per Transaction",
+    acrossAllTypes: "across all types",
+    platformRevenueShare: "Platform Revenue Share",
+    distributionByStore: "Distribution by store",
+    transactionTypes: "Transaction Types",
+    txCategoryRevenue: "Revenue & volume by stream category",
+    countries: "Countries",
+    revenueByTerritory: "Revenue by territory",
+    top15: "Top 15",
+    earning: "Earning",
+    allCountries: "All 86",
+    trackPerformance: "Track Performance",
+    revenuePerTrack: "Revenue per track",
+    track: "Track",
+    netRevenue: "Net Revenue",
+    footer: "Generated from Mar 2025 – Feb 2026 distribution exports · 100% offline",
+    txType: { qtyShort: "tx" },
+    trackFormat: { "Full Length": "Full Length", "Single": "Single" },
+    tracksCount: n => `${n} Tracks`,
+    txTypesCount: n => `${n} Types`,
+    pctOfTotal: p => `${p}% of total`
+  },
+  ku: {
+    eyebrow: "بینینی داهات",
+    dateRangeStart: "ئازاری ٢٠٢٥ —",
+    dateRangeEnd: "شوباتی ٢٠٢٦",
+    subtitle: "شیکاری داهاتی بڵاوکەرەوە لەسەر پلاتفۆرم، وڵات و گۆرانی",
+    artist: "هونەرمەند",
+    totalNetRevenue: "کۆی گشتی داهات",
+    topTrackLabel: "باشترین گۆرانی:",
+    transactions: "مامەڵە",
+    countriesReached: "وڵات",
+    tracksEarning: "گۆرانی داهاتدار",
+    platforms: "پلاتفۆرم",
+    brandTagline: "بڵاوکەرەوەی دیجیتاڵ و بەڕێوەبردنی داهات",
+    officialReport: "ڕاپۆرتی فەرمیی هونەرمەند",
+    platformsTitle: "پلاتفۆرمەکان",
+    platformsSub: "شیکاری جیاوازی هەر فرۆشگایەک",
+    topCountryRev: "زۆرترین داهاتی وڵات",
+    topTrackRev: "زۆرترین داهاتی گۆرانی",
+    mainPlatform: "پلاتفۆرمی سەرەکی",
+    avgPerTransaction: "تێکڕای هەر مامەڵەیەک",
+    acrossAllTypes: "لە هەموو جۆرەکاندا",
+    platformRevenueShare: "بەشی داهاتی پلاتفۆرمەکان",
+    distributionByStore: "دابەشکردن بەپێی فرۆشگا",
+    transactionTypes: "جۆرەکانی مامەڵە",
+    txCategoryRevenue: "داهات و ژمارە بەپێی جۆری گوێگرتن",
+    countries: "وڵاتان",
+    revenueByTerritory: "داهات بەپێی ناوچە",
+    top15: "باڵاترین ١٥",
+    earning: "داهاتدار",
+    allCountries: "هەموو ٨٦",
+    trackPerformance: "پەرفۆرمانسی گۆرانی",
+    revenuePerTrack: "داهاتی هەر گۆرانیەک",
+    track: "گۆرانی",
+    netRevenue: "کۆی داهات",
+    footer: "دروستکراو لە ئەکسپۆرتەکانی ئازاری ٢٠٢٥ – شوباتی ٢٠٢٦ · ١٠٠٪ ئۆفلاین",
+    txType: { qtyShort: "مامەڵە" },
+    trackFormat: { "Full Length": "ئەلبووم", "Single": "سینگڵ" },
+    tracksCount: n => `${n} گۆرانی`,
+    txTypesCount: n => `${n} جۆر`,
+    pctOfTotal: p => `${p}٪ لە گشتی`
+  }
+};
+
+const STORE_COLORS = ['#2dd4bf','#a78bfa','#fb7185','#fbbf24','#60a5fa','#34d399'];
+
+const PLATFORM_BRANDS = {
+  "YouTube Content ID":              { color: '#FF0033', icon: '▶', short: 'YT' },
+  "YouTube Art Tracks & Music Videos": { color: '#FF4466', icon: '♫', short: 'YT' },
+  "TikTok (Audio Library)":          { color: '#00F2EA', icon: '♬', short: 'TT' },
+  "iTunes/Apple":                    { color: '#A2AAAD', icon: '', short: 'AP' },
+  "Tencent Music":                   { color: '#FF6A00', icon: '♪', short: 'TX' },
+  "Spotify":                         { color: '#1ED760', icon: '♫', short: 'SP' }
+};
+
+// ─── DERIVED ────────────────────────────────────────────
+const totalRev = DATA.stores.reduce((s, x) => s + x.rev, 0);
+const totalQty = DATA.types.reduce((s, x) => s + x.qty, 0);
+const earningCountries = DATA.countries.filter(c => c.rev > 0).length;
+const maxCountryRev = Math.max(...DATA.countries.map(c => c.rev));
+const maxTrackRev = Math.max(...DATA.tracks.map(t => t.rev));
+const maxTypeRev = Math.max(...DATA.types.map(t => t.rev));
+const topCountry = [...DATA.countries].sort((a,b) => b.rev - a.rev)[0];
+const topStore = [...DATA.stores].sort((a,b) => b.rev - a.rev)[0];
+const topTrack = [...DATA.tracks].sort((a,b) => b.rev - a.rev)[0];
+const topStorePct = totalRev > 0 ? (topStore.rev / totalRev * 100).toFixed(0) : '0';
+
+// ─── LANG STATE ─────────────────────────────────────────
+let currentLang = 'en';
+
+function t(key) { return I18N[currentLang][key] || I18N.en[key] || key; }
+
+function applyLang(lang) {
+  currentLang = lang;
+  document.documentElement.setAttribute('lang', lang);
+  document.documentElement.setAttribute('dir', lang === 'ku' ? 'rtl' : 'ltr');
+
+  // Text nodes with data-i18n
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    el.textContent = t(key);
+  });
+
+  // Stat subs (track name etc.)
+  document.getElementById('stTopCountryName').textContent = topCountry.name;
+  document.getElementById('stTopTrackName').textContent = topTrack.name;
+  document.getElementById('stMainPlatformPct').textContent = `${topStorePct}% ` + (lang === 'ku' ? 'لە گشتی' : 'of total');
+
+  // Hero top track
+  document.getElementById('heroTopTrack').textContent = topTrack.name;
+
+  // Button active state
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+
+  // Re-render dynamic lists with new labels
+  renderTx();
+  renderTracks();
+  renderStoreLegend();
+  renderPlatforms();
+  // Country count in "All" button
+  const allBtn = document.querySelector('.country-btn[data-mode="all"]');
+  if (allBtn) allBtn.textContent = lang === 'ku' ? `هەموو ${DATA.countries.length}` : `All ${DATA.countries.length}`;
+  // Dynamic tags
+  document.getElementById('tracksCountTag').textContent = t('tracksCount')(DATA.tracks.length);
+  document.getElementById('txTypesTag').textContent = t('txTypesCount')(DATA.types.length);
+}
+
+document.querySelectorAll('.lang-btn').forEach(btn => {
+  btn.addEventListener('click', () => applyLang(btn.dataset.lang));
+});
+
+// ─── ANIMATION ──────────────────────────────────────────
+function animateNumber(el, target, { prefix = '', decimals = 0, duration = 1200 } = {}) {
+  const start = performance.now();
+  const startVal = 0;
+  function tick(now) {
+    const ts = Math.min(1, (now - start) / duration);
+    const eased = 1 - Math.pow(1 - ts, 3);
+    const val = startVal + (target - startVal) * eased;
+    el.textContent = prefix + (decimals > 0 ? val.toFixed(decimals) : Math.round(val).toLocaleString());
+    if (ts < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+// ─── HERO ───────────────────────────────────────────────
+animateNumber(document.getElementById('heroAmount'), totalRev, { prefix: '$', decimals: 2 });
+document.getElementById('heroStreams').textContent = totalQty.toLocaleString();
+document.getElementById('heroCountries').textContent = earningCountries;
+document.getElementById('heroTracks').textContent = DATA.tracks.filter(x => x.rev > 0).length;
+document.getElementById('heroStores').textContent = DATA.stores.filter(s => s.rev > 0).length;
+
+// ─── STATS NUMS ─────────────────────────────────────────
+document.getElementById('stTopCountryRev').textContent = '$' + topCountry.rev.toFixed(2);
+document.getElementById('stTopTrackRev').textContent = '$' + maxTrackRev.toFixed(2);
+document.getElementById('stMainPlatform').textContent = topStore.name.split(' ')[0];
+document.getElementById('stAvgPerStream').textContent = '$' + (totalRev / totalQty).toFixed(5);
+
+// ─── STORE DOUGHNUT ─────────────────────────────────────
+const activeStores = DATA.stores.filter(s => s.rev > 0);
+const storeCtx = document.getElementById('storeChart').getContext('2d');
+new Chart(storeCtx, {
+  type: 'doughnut',
+  data: {
+    labels: activeStores.map(s => s.name),
+    datasets: [{
+      data: activeStores.map(s => s.rev),
+      backgroundColor: STORE_COLORS.slice(0, activeStores.length),
+      borderColor: '#0e1018',
+      borderWidth: 3,
+      hoverOffset: 10
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '68%',
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#1a1e2a',
+        borderColor: '#2e3549',
+        borderWidth: 1,
+        titleColor: '#e6e8ef',
+        bodyColor: '#a3a9bc',
+        padding: 12,
+        callbacks: {
+          label: (ctx) => {
+            const pct = ((ctx.parsed / totalRev) * 100).toFixed(1);
+            return `$${ctx.parsed.toFixed(2)} · ${pct}%`;
+          }
+        }
+      }
+    }
+  }
+});
+
+function renderPlatforms() {
+  const grid = document.getElementById('platformsGrid');
+  grid.innerHTML = '';
+  const sortedStores = [...DATA.stores].sort((a, b) => b.rev - a.rev);
+  sortedStores.forEach(s => {
+    const brand = PLATFORM_BRANDS[s.name] || { color: '#6a7085', icon: '♪', short: '—' };
+    const pct = totalRev > 0 ? (s.rev / totalRev) * 100 : 0;
+    const card = document.createElement('div');
+    card.className = 'platform-card' + (s.rev === 0 ? ' inactive' : '');
+
+    const stripe = document.createElement('div');
+    stripe.className = 'accent-stripe';
+    stripe.style.background = brand.color;
+
+    const head = document.createElement('div');
+    head.className = 'platform-head';
+    const icon = document.createElement('div');
+    icon.className = 'platform-icon';
+    icon.style.background = brand.color;
+    icon.textContent = brand.icon || brand.short;
+    const name = document.createElement('div');
+    name.className = 'platform-name';
+    name.textContent = s.name;
+    head.append(icon, name);
+
+    const rev = document.createElement('div');
+    rev.className = 'platform-rev';
+    rev.textContent = '$' + s.rev.toFixed(2);
+
+    const pctLbl = document.createElement('div');
+    pctLbl.className = 'platform-pct-label';
+    pctLbl.textContent = pct.toFixed(1) + '% ' + (currentLang === 'ku' ? 'لە گشتی' : 'of total');
+
+    const bar = document.createElement('div');
+    bar.className = 'platform-bar';
+    const fill = document.createElement('div');
+    fill.className = 'platform-bar-fill';
+    fill.style.width = '0%';
+    fill.style.background = `linear-gradient(90deg, ${brand.color}aa 0%, ${brand.color} 100%)`;
+    bar.appendChild(fill);
+
+    card.append(stripe, head, rev, pctLbl, bar);
+    grid.appendChild(card);
+    requestAnimationFrame(() => { setTimeout(() => { fill.style.width = pct + '%'; }, 100); });
+  });
+  document.getElementById('platformsTag').textContent = currentLang === 'ku'
+    ? `${sortedStores.length} فرۆشگا`
+    : `${sortedStores.length} Stores`;
+}
+
+function renderStoreLegend() {
+  const legend = document.getElementById('storeLegend');
+  legend.innerHTML = '';
+  DATA.stores.forEach((s, i) => {
+    const row = document.createElement('div');
+    row.className = 'store-row' + (s.rev === 0 ? ' muted' : '');
+    const pct = totalRev > 0 ? ((s.rev / totalRev) * 100).toFixed(1) : '0';
+    const swatch = document.createElement('span');
+    swatch.className = 'swatch';
+    swatch.style.background = STORE_COLORS[i % STORE_COLORS.length];
+    const name = document.createElement('span'); name.className = 'name'; name.textContent = s.name;
+    const val = document.createElement('span'); val.className = 'val'; val.textContent = `$${s.rev.toFixed(2)} · ${pct}%`;
+    row.append(swatch, name, val);
+    legend.appendChild(row);
+  });
+}
+
+// ─── TX TYPES ───────────────────────────────────────────
+function renderTx() {
+  const txList = document.getElementById('txList');
+  txList.innerHTML = '';
+  DATA.types.forEach(tx => {
+    const pct = maxTypeRev > 0 ? (tx.rev / maxTypeRev) * 100 : 0;
+    const row = document.createElement('div'); row.className = 'tx-row';
+    const bar = document.createElement('div'); bar.className = 'tx-bar';
+    bar.style.clipPath = `inset(0 ${100 - pct}% 0 0)`;
+    const name = document.createElement('div'); name.className = 'tx-name'; name.textContent = tx.name;
+    const qty = document.createElement('div'); qty.className = 'tx-qty';
+    const n = document.createElement('span'); n.className = 'n'; n.textContent = tx.qty.toLocaleString();
+    qty.append(n, document.createTextNode(' ' + t('txType').qtyShort));
+    const rev = document.createElement('div'); rev.className = 'tx-rev'; rev.textContent = '$' + tx.rev.toFixed(2);
+    row.append(bar, name, qty, rev);
+    txList.appendChild(row);
+  });
+}
+
+// ─── COUNTRIES ──────────────────────────────────────────
+const countryList = document.getElementById('countryList');
+const sortedCountries = [...DATA.countries].sort((a, b) => b.rev - a.rev);
+
+function renderCountries(mode) {
+  let list;
+  if (mode === 'top15') list = sortedCountries.slice(0, 15);
+  else if (mode === 'earning') list = sortedCountries.filter(c => c.rev > 0);
+  else list = sortedCountries;
+
+  countryList.innerHTML = '';
+  list.forEach((c, idx) => {
+    const row = document.createElement('div');
+    row.className = 'country-row' + (c.rev === 0 ? ' zero' : '');
+    const pct = maxCountryRev > 0 ? (c.rev / maxCountryRev) * 100 : 0;
+    const bar = document.createElement('div'); bar.className = 'bar-bg'; bar.style.width = pct + '%';
+    const rank = document.createElement('div'); rank.className = 'rank'; rank.textContent = '#' + (idx + 1);
+    const labelWrap = document.createElement('div'); labelWrap.className = 'flag-label';
+    const flag = document.createElement('span'); flag.className = 'flag';
+    flag.textContent = COUNTRY_FLAGS[c.name] || '🌐';
+    const name = document.createElement('span'); name.className = 'name'; name.textContent = c.name;
+    labelWrap.append(flag, name);
+    const val = document.createElement('span'); val.className = 'val';
+    val.textContent = c.rev > 0 ? '$' + c.rev.toFixed(2) : '—';
+    row.append(bar, rank, labelWrap, val);
+    countryList.appendChild(row);
+  });
+}
+
+document.querySelectorAll('.country-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.country-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderCountries(btn.dataset.mode);
+  });
+});
+
+// ─── TRACKS ─────────────────────────────────────────────
+function renderTracks() {
+  const tracksBody = document.getElementById('tracksBody');
+  tracksBody.innerHTML = '';
+  DATA.tracks.forEach(tk => {
+    const tr = document.createElement('tr');
+    tr.className = 'trow';
+    const pct = maxTrackRev > 0 ? (tk.rev / maxTrackRev) * 100 : 0;
+    const pctOfTotal = totalRev > 0 ? ((tk.rev / totalRev) * 100).toFixed(1) : '0';
+    const fmtLabel = (I18N[currentLang].trackFormat && I18N[currentLang].trackFormat[tk.format]) || tk.format;
+
+    const td1 = document.createElement('td');
+    const title = document.createElement('div'); title.className = 'track-title'; title.textContent = tk.name;
+    const meta = document.createElement('div'); meta.className = 'track-meta';
+    const c1 = document.createElement('span'); c1.className = 'chip'; c1.textContent = '💿 ' + tk.product;
+    const c2 = document.createElement('span'); c2.className = 'chip'; c2.textContent = fmtLabel;
+    const c3 = document.createElement('span'); c3.className = 'chip'; c3.textContent = '📅 ' + tk.release;
+    meta.append(c1, c2, c3);
+    const barWrap = document.createElement('div'); barWrap.className = 'track-bar';
+    const barFill = document.createElement('div'); barFill.className = 'track-bar-fill'; barFill.style.width = '0%';
+    barWrap.appendChild(barFill);
+    td1.append(title, meta, barWrap);
+
+    const td2 = document.createElement('td');
+    const rev = document.createElement('div'); rev.className = 'track-rev'; rev.textContent = '$' + tk.rev.toFixed(2);
+    const p = document.createElement('div'); p.className = 'track-pct'; p.textContent = t('pctOfTotal')(pctOfTotal);
+    td2.append(rev, p);
+
+    tr.append(td1, td2);
+    tracksBody.appendChild(tr);
+    requestAnimationFrame(() => { setTimeout(() => { barFill.style.width = pct + '%'; }, 100); });
+  });
+}
+
+// ─── INIT ───────────────────────────────────────────────
+renderCountries('top15');
+applyLang('en');
+</script>
+</body>
+</html>
