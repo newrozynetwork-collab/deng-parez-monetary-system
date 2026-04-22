@@ -55,6 +55,7 @@ app.use('/api/youtube', require('./routes/youtube'));
 app.use('/api/reports', require('./routes/reports'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/import', require('./routes/import'));
+app.use('/api/shower', require('./routes/royaltyShower'));
 
 // SPA-like routing: serve pages
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'login.html')));
@@ -74,6 +75,12 @@ app.get('/additional-income', (req, res) => res.sendFile(path.join(__dirname, 'p
 app.get('/reports', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'reports.html')));
 app.get('/user-breakdown', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'user-breakdown.html')));
 app.get('/report-generator', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'report-generator.html')));
+// Report Shower: admin upload UI (login required)
+app.get('/shower/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'shower-admin.html')));
+// Report Shower: public artist index + per-artist pages (no login)
+app.get('/shower', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'shower-index.html')));
+app.get('/shower/:slug', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'shower-artist.html')));
+app.get('/shower/:slug/:period', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'shower-artist.html')));
 app.get('/settings', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'settings.html')));
 
 // Run migrations on startup, then start server

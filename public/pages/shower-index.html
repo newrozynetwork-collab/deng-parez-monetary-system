@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deng Parez · Artist Reports</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&family=Noto+Kufi+Arabic:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --bg-0: #07080d; --bg-2: #151823;
+  --surface: #1a1e2a; --surface-h: #202535;
+  --border: #242a3d; --border-l: #2e3549;
+  --text: #e6e8ef; --text-d: #a3a9bc; --muted: #6a7085;
+  --teal: #2dd4bf; --violet: #a78bfa; --gold: #fbbf24;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg-0); color: var(--text);
+  font-family: 'Inter', system-ui, sans-serif;
+  min-height: 100vh; padding: 40px 20px 80px;
+  background-image: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(45,212,191,0.08) 0%, transparent 50%);
+}
+.container { max-width: 1080px; margin: 0 auto; }
+.brand-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 14px; padding: 14px 20px;
+  background: linear-gradient(135deg, rgba(45,212,191,0.08) 0%, rgba(167,139,250,0.06) 100%);
+  border: 1px solid var(--border); border-radius: 14px; margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+.brand-logo { display: flex; align-items: center; gap: 12px; }
+.brand-mark {
+  width: 40px; height: 40px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--teal) 0%, var(--violet) 100%);
+  display: grid; place-items: center; font-weight: 800; color: #000;
+  font-family: 'JetBrains Mono', monospace;
+}
+.brand-name { font-size: 1.05rem; font-weight: 700; }
+.brand-tagline {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.68rem;
+  letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted);
+}
+.brand-meta { display: flex; flex-direction: column; gap: 2px; }
+.brand-tag {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.66rem;
+  letter-spacing: 1.5px; text-transform: uppercase; color: var(--teal);
+  background: rgba(45,212,191,0.1); padding: 5px 12px; border-radius: 100px;
+  border: 1px solid rgba(45,212,191,0.2);
+}
+
+header { margin-bottom: 40px; text-align: center; }
+.eyebrow {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+  letter-spacing: 3px; color: var(--teal);
+  text-transform: uppercase; margin-bottom: 10px;
+}
+h1 {
+  font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800;
+  letter-spacing: -1.5px; line-height: 1.05; margin-bottom: 8px;
+}
+h1 .accent {
+  background: linear-gradient(135deg, var(--teal) 0%, var(--violet) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.lede { color: var(--text-d); font-size: 1rem; }
+
+.totals-row {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px; margin-bottom: 32px;
+}
+.stat {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 18px; text-align: center;
+}
+.stat .n {
+  font-size: 1.8rem; font-weight: 700;
+  background: linear-gradient(135deg, #fff 0%, var(--teal) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+}
+.stat .l {
+  font-size: 0.7rem; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 1.5px;
+  margin-top: 4px; font-family: 'JetBrains Mono', monospace;
+}
+
+.search-wrap { margin-bottom: 20px; }
+.search {
+  width: 100%; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; color: var(--text); padding: 14px 18px;
+  font-size: 0.95rem; outline: none; transition: border-color 0.2s;
+  font-family: 'Inter', sans-serif;
+}
+.search:focus { border-color: var(--teal); }
+.search::placeholder { color: var(--muted); }
+
+.artists-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+.artist-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 20px; text-decoration: none; color: inherit;
+  transition: transform 0.2s, border-color 0.2s; display: block;
+  position: relative; overflow: hidden;
+}
+.artist-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--teal), var(--violet));
+  opacity: 0; transition: opacity 0.2s;
+}
+.artist-card:hover { transform: translateY(-3px); border-color: var(--border-l); }
+.artist-card:hover::before { opacity: 1; }
+
+.artist-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.artist-avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--teal) 0%, var(--violet) 100%);
+  display: grid; place-items: center; font-weight: 700; color: #000;
+  font-family: 'JetBrains Mono', monospace; font-size: 1rem; flex-shrink: 0;
+}
+.artist-info { flex: 1; min-width: 0; }
+.artist-name {
+  font-weight: 600; font-size: 1rem;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.artist-slug {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+  color: var(--muted); margin-top: 2px;
+}
+
+.artist-rev {
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 1.5rem; font-weight: 700; color: var(--teal);
+  margin-bottom: 2px;
+}
+.artist-meta {
+  font-size: 0.76rem; color: var(--text-d);
+  display: flex; gap: 12px; flex-wrap: wrap;
+}
+.artist-meta span { display: inline-flex; align-items: center; gap: 4px; }
+
+.empty-state {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 50px 20px; text-align: center;
+  color: var(--text-d);
+}
+.empty-state .big-icon { font-size: 3rem; margin-bottom: 14px; opacity: 0.3; }
+.empty-state h3 { margin-bottom: 8px; color: var(--text); }
+
+footer {
+  margin-top: 60px; padding-top: 24px;
+  border-top: 1px solid var(--border); text-align: center;
+  color: var(--muted); font-size: 0.75rem;
+  font-family: 'JetBrains Mono', monospace; letter-spacing: 1px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="brand-bar">
+  <div class="brand-logo">
+    <div class="brand-mark">DP</div>
+    <div class="brand-meta">
+      <span class="brand-name">Deng Parez</span>
+      <span class="brand-tagline">Artist Report Portal</span>
+    </div>
+  </div>
+  <span class="brand-tag">Public Directory</span>
+</div>
+
+<header>
+  <div class="eyebrow">Report Shower</div>
+  <h1>All <span class="accent">Artists</span></h1>
+  <p class="lede">Browse individual royalty reports — click an artist to view their breakdown</p>
+</header>
+
+<div class="totals-row" id="totalsRow"></div>
+
+<div class="search-wrap">
+  <input type="text" class="search" id="searchInput" placeholder="Search artists…">
+</div>
+
+<div id="content">
+  <div class="empty-state"><div class="big-icon">⏳</div><h3>Loading…</h3></div>
+</div>
+
+<footer>Deng Parez · Public Artist Report Portal</footer>
+</div>
+
+<script>
+let allArtists = [];
+
+function money(n) { return '$' + (n || 0).toFixed(2); }
+function initials(name) {
+  const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+  return ((parts[0] || '?')[0] + (parts[1] || '')[0] || '').toUpperCase();
+}
+function periodLabel(p) {
+  if (!p) return '—';
+  const [y, m] = p.split('-');
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${months[parseInt(m)-1]} ${y}`;
+}
+
+async function load() {
+  try {
+    const res = await fetch('/api/shower/public/artists');
+    if (!res.ok) throw new Error('Failed to load artists');
+    allArtists = await res.json();
+    render();
+  } catch (e) {
+    document.getElementById('content').innerHTML =
+      `<div class="empty-state"><div class="big-icon">⚠</div><h3>Could not load</h3><p>${e.message}</p></div>`;
+  }
+}
+
+function render() {
+  const filter = document.getElementById('searchInput').value.trim().toLowerCase();
+  const list = filter ? allArtists.filter(a => a.name.toLowerCase().includes(filter) || a.slug.includes(filter)) : allArtists;
+
+  // Totals
+  const totals = document.getElementById('totalsRow');
+  totals.innerHTML = '';
+  const total = allArtists.reduce((s, a) => s + a.totalRevenue, 0);
+  const stat = (n, l) => {
+    const d = document.createElement('div'); d.className = 'stat';
+    const num = document.createElement('div'); num.className = 'n'; num.textContent = n;
+    const lbl = document.createElement('div'); lbl.className = 'l'; lbl.textContent = l;
+    d.append(num, lbl); return d;
+  };
+  totals.append(
+    stat(allArtists.length, 'Artists'),
+    stat(money(total), 'Total Revenue'),
+    stat(allArtists.reduce((s, a) => s + a.rowCount, 0).toLocaleString(), 'Rows'),
+    stat(new Set(allArtists.map(a => a.latestPeriod).filter(Boolean)).size, 'Periods Covered')
+  );
+
+  // Grid
+  const content = document.getElementById('content');
+  if (list.length === 0) {
+    content.innerHTML = filter
+      ? `<div class="empty-state"><div class="big-icon">🔍</div><h3>No matches</h3><p>Try a different search term</p></div>`
+      : `<div class="empty-state"><div class="big-icon">🎵</div><h3>No artists yet</h3><p>Admin: upload a CSV to get started</p></div>`;
+    return;
+  }
+  content.innerHTML = '';
+  const grid = document.createElement('div'); grid.className = 'artists-grid';
+  list.forEach(a => {
+    const card = document.createElement('a');
+    card.className = 'artist-card';
+    card.href = `/shower/${a.slug}`;
+    card.innerHTML = `
+      <div class="artist-head">
+        <div class="artist-avatar"></div>
+        <div class="artist-info">
+          <div class="artist-name"></div>
+          <div class="artist-slug">/${a.slug}</div>
+        </div>
+      </div>
+      <div class="artist-rev"></div>
+      <div class="artist-meta">
+        <span>🗓 <span class="p"></span></span>
+        <span>📊 <span class="pc"></span></span>
+      </div>`;
+    card.querySelector('.artist-avatar').textContent = initials(a.name);
+    card.querySelector('.artist-name').textContent = a.name;
+    card.querySelector('.artist-rev').textContent = money(a.totalRevenue);
+    card.querySelector('.p').textContent = periodLabel(a.latestPeriod);
+    card.querySelector('.pc').textContent = a.periodCount + ' month' + (a.periodCount === 1 ? '' : 's');
+    grid.appendChild(card);
+  });
+  content.appendChild(grid);
+}
+
+document.getElementById('searchInput').addEventListener('input', render);
+load();
+</script>
+</body>
+</html>

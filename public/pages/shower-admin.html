@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/images/favicon.png">
+    <title>Report Shower Admin - Deng Parez</title>
+    <link href="/css/style.min.css" rel="stylesheet">
+    <link href="/css/custom-app.css" rel="stylesheet">
+    <script>
+        (function(){ try { var t = localStorage.getItem("dp-theme") || "light"; document.documentElement.setAttribute("data-theme", t); } catch(e){} })();
+    </script>
+    <style>
+        .sw-dropzone { border: 2px dashed #d5d5e0; border-radius: 12px; padding: 48px 24px; text-align: center; cursor: pointer; transition: all 0.2s; background: #fafafb; }
+        [data-theme="dark"] .sw-dropzone { border-color: #3a3a4a; background: #1a1a24; }
+        .sw-dropzone:hover, .sw-dropzone.drag { border-color: #f158d0; background: rgba(241,88,208,0.04); }
+        .sw-import-row { display: grid; grid-template-columns: 1fr auto auto auto; gap: 12px; align-items: center; padding: 12px 16px; background: #f7f7fb; border-radius: 8px; margin-bottom: 6px; font-size: 0.88rem; }
+        [data-theme="dark"] .sw-import-row { background: #1a1a24; }
+        .sw-import-row .meta { font-family: monospace; font-size: 0.78rem; color: #888; }
+        .sw-import-row .period { font-weight: 600; color: #f158d0; }
+        .sw-artist-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: #f7f7fb; border-radius: 8px; margin-bottom: 4px; font-size: 0.88rem; }
+        [data-theme="dark"] .sw-artist-row { background: #1a1a24; }
+        .sw-artist-row .name { flex: 1; font-weight: 500; }
+        .sw-artist-row .slug { font-family: monospace; font-size: 0.78rem; color: #888; }
+        .sw-artist-row .rev { font-family: monospace; color: #28a745; font-weight: 700; min-width: 80px; text-align: right; }
+        .sw-artist-row a.btn { min-width: auto; }
+    </style>
+</head>
+<body>
+    <div class="preloader"><div class="lds-ripple"><div class="lds-pos"></div><div class="lds-pos"></div></div></div>
+    <div id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full" data-sidebar-position="absolute" data-header-position="relative" data-boxed-layout="full">
+        <header class="topbar">
+            <nav class="navbar top-navbar navbar-expand-md navbar-dark">
+                <div class="navbar-header">
+                    <a class="nav-toggler waves-effect waves-light d-block d-md-none" href="javascript:void(0)"><i class="ti-menu ti-close"></i></a>
+                    <div class="navbar-brand"><a href="/dashboard" class="logo"><b class="logo-icon"><img src="/assets/images/logo-icon.png" alt="logo" class="dark-logo" /><img src="/assets/images/logo-light-icon.png" alt="logo" class="light-logo" /></b><span class="logo-text"><img src="/assets/images/logo-text.png" alt="logo" class="dark-logo" /><img src="/assets/images/logo-light-text.png" class="light-logo" alt="logo" /></span></a><a class="sidebartoggler d-none d-md-block" href="javascript:void(0)" data-sidebartype="mini-sidebar"><i class="mdi mdi-toggle-switch mdi-toggle-switch-off font-20"></i></a></div>
+                    <a class="topbartoggler d-block d-md-none waves-effect waves-light" href="javascript:void(0)" data-toggle="collapse" data-target="#navbarSupportedContent"><i class="ti-more"></i></a>
+                </div>
+                <div class="navbar-collapse collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav float-left mr-auto"></ul>
+                    <ul class="navbar-nav float-right"><li class="nav-item dropdown"><a class="nav-link dropdown-toggle waves-effect waves-dark pro-pic" href="#" data-toggle="dropdown"><img src="/assets/images/users/1.jpg" alt="user" class="rounded-circle" width="40"><span class="m-l-5 font-medium d-none d-sm-inline-block" id="user-name">User</span></a><div class="dropdown-menu dropdown-menu-right user-dd animated flipInY"><a class="dropdown-item" href="/settings"><i class="ti-settings m-r-5 m-l-5"></i> Settings</a><div class="dropdown-divider"></div><a class="dropdown-item" href="#" id="logout-btn"><i class="fa fa-power-off m-r-5 m-l-5"></i> Logout</a></div></li></ul>
+                </div>
+            </nav>
+        </header>
+        <aside class="left-sidebar">
+            <div class="scroll-sidebar"><nav class="sidebar-nav"><ul id="sidebarnav">
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/dashboard"><i data-feather="home" class="feather-icon"></i><span class="hide-menu">Dashboard</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/artists"><i data-feather="users" class="feather-icon"></i><span class="hide-menu">Artists</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/youtube"><i data-feather="youtube" class="feather-icon"></i><span class="hide-menu">YouTube</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/referrals"><i data-feather="git-branch" class="feather-icon"></i><span class="hide-menu">Referrals</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)"><i data-feather="dollar-sign" class="feather-icon"></i><span class="hide-menu">Revenue</span></a><ul class="collapse first-level"><li class="sidebar-item"><a href="/revenue/new" class="sidebar-link"><span class="hide-menu">New Entry</span></a></li><li class="sidebar-item"><a href="/revenue" class="sidebar-link"><span class="hide-menu">History</span></a></li></ul></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/expenses"><i data-feather="trending-down" class="feather-icon"></i><span class="hide-menu">Expenses</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/additional-income"><i data-feather="plus-circle" class="feather-icon"></i><span class="hide-menu">Additional Income</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/reports"><i data-feather="bar-chart-2" class="feather-icon"></i><span class="hide-menu">Reports</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/user-breakdown"><i data-feather="pie-chart" class="feather-icon"></i><span class="hide-menu">User Breakdown</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/report-generator"><i data-feather="file-text" class="feather-icon"></i><span class="hide-menu">Report Generator</span></a></li>
+                <li class="sidebar-item selected"><a class="sidebar-link waves-effect waves-dark" href="/shower/admin"><i data-feather="monitor" class="feather-icon"></i><span class="hide-menu">Report Shower</span></a></li>
+                <li class="sidebar-item admin-only"><a class="sidebar-link waves-effect waves-dark" href="/settings"><i data-feather="settings" class="feather-icon"></i><span class="hide-menu">Settings</span></a></li>
+            </ul></nav></div>
+        </aside>
+        <div class="page-wrapper">
+            <div class="page-breadcrumb">
+                <div class="row">
+                    <div class="col-12 align-self-center">
+                        <h3 class="page-title text-truncate text-dark font-weight-medium mb-1">Report Shower</h3>
+                        <div class="d-flex align-items-center">
+                            <nav aria-label="breadcrumb">
+                                <ol class="breadcrumb m-0 p-0">
+                                    <li class="breadcrumb-item"><a href="/dashboard">Home</a></li>
+                                    <li class="breadcrumb-item active" aria-current="page">Ingest &amp; Manage</li>
+                                </ol>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="container-fluid">
+
+                <div class="alert alert-info" style="font-size:0.85rem;">
+                    <i data-feather="info" style="width:16px;height:16px;"></i>
+                    <strong>Public URLs:</strong>
+                    <a href="/shower" target="_blank">/shower</a> (directory) &amp;
+                    <code>/shower/&lt;artist-slug&gt;</code> (per artist). No login required.
+                </div>
+
+                <!-- UPLOAD -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title"><i data-feather="upload-cloud" class="feather-icon"></i> Ingest a Distribution CSV</h5>
+                        <p class="text-muted" style="font-size:0.85rem;">Upload the raw CSV from the distributor (the same kind of file you'd feed into <a href="/report-generator">Report Generator</a>). It's parsed server-side and stored in Postgres — one row per (artist, track, store, country, month, type). UPCs, ISRCs, and label names are dropped.</p>
+                        <div class="sw-dropzone" id="swDz" onclick="document.getElementById('swFileInput').click()">
+                            <i data-feather="file-text" style="width:48px;height:48px;color:#f158d0;"></i>
+                            <h5 class="mt-3 mb-1">Drop CSV file here or click to browse</h5>
+                            <p class="text-muted mb-0" style="font-size:0.8rem;">Raw distribution CSV · Supports semicolon, comma, and tab delimiters</p>
+                        </div>
+                        <input type="file" id="swFileInput" accept=".csv,.tsv,.txt" style="display:none;">
+                        <div id="swIngestAlert" style="margin-top:12px;"></div>
+                        <div id="swIngestProgress" style="display:none; margin-top:12px;">
+                            <div class="progress" style="height:4px;">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" style="width:100%;"></div>
+                            </div>
+                            <div class="text-center small text-muted mt-1" id="swIngestProgressText">Uploading…</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ARTISTS -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h5 class="mb-0"><i data-feather="users" class="feather-icon"></i> Artists in Shower</h5>
+                                <p class="text-muted mb-0" style="font-size:0.82rem;">Click an artist to preview their public page</p>
+                            </div>
+                            <div>
+                                <a href="/shower" target="_blank" class="btn btn-outline-primary btn-sm"><i data-feather="external-link" style="width:14px;height:14px;"></i> Open Public Directory</a>
+                            </div>
+                        </div>
+                        <div id="swArtists"><div class="text-muted small">Loading…</div></div>
+                    </div>
+                </div>
+
+                <!-- IMPORTS -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title"><i data-feather="archive" class="feather-icon"></i> Import History</h5>
+                        <p class="text-muted" style="font-size:0.82rem;">Delete an import to remove its rows from Report Shower (artists stay; other imports' data is untouched).</p>
+                        <div id="swImports"><div class="text-muted small">Loading…</div></div>
+                    </div>
+                </div>
+
+            </div>
+
+            <footer class="footer text-center">All Rights Reserved by Deng Parez Monetary System. © <span id="curr-year"></span></footer>
+        </div>
+    </div>
+
+    <script src="/assets/libs/jquery/dist/jquery.min.js"></script>
+    <script src="/assets/libs/popper.js/dist/umd/popper.min.js"></script>
+    <script src="/assets/libs/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/app.init.js"></script>
+    <script src="/js/custom.js"></script>
+    <script src="/js/feather.min.js"></script>
+    <script src="/app/common.js"></script>
+
+    <script>
+    document.getElementById('curr-year').textContent = new Date().getFullYear();
+
+    $(function() {
+        App.init(function(user) {
+            feather.replace();
+            loadArtists();
+            loadImports();
+            wireUpload();
+        });
+    });
+
+    function money(n) { return '$' + (Number(n) || 0).toFixed(2); }
+    function esc(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+    function wireUpload() {
+        const dz = document.getElementById('swDz');
+        const input = document.getElementById('swFileInput');
+        dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
+        dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+        dz.addEventListener('drop', e => {
+            e.preventDefault();
+            dz.classList.remove('drag');
+            if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+        });
+        input.addEventListener('change', e => {
+            if (e.target.files[0]) handleFile(e.target.files[0]);
+        });
+    }
+
+    async function handleFile(file) {
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (!['csv','tsv','txt'].includes(ext)) {
+            showAlert('swIngestAlert', 'danger', 'Please upload a CSV file.');
+            return;
+        }
+
+        const form = new FormData();
+        form.append('file', file);
+
+        document.getElementById('swIngestProgress').style.display = 'block';
+        document.getElementById('swIngestProgressText').textContent = `Uploading ${file.name} (${(file.size/1024/1024).toFixed(1)} MB)…`;
+        document.getElementById('swIngestAlert').innerHTML = '';
+
+        try {
+            const res = await fetch('/api/shower/ingest', { method: 'POST', body: form });
+            const data = await res.json();
+            document.getElementById('swIngestProgress').style.display = 'none';
+
+            if (!res.ok) throw new Error(data.error || 'Ingest failed');
+
+            showAlert('swIngestAlert', 'success',
+                `✓ Imported <b>${data.rowCount.toLocaleString()}</b> rows · ` +
+                `<b>${data.artistCount}</b> artists · ` +
+                `<b>$${data.totalRevenue.toFixed(2)}</b> total · ` +
+                `period <b>${data.periodStart || '?'}</b> → <b>${data.periodEnd || '?'}</b>`);
+            loadArtists();
+            loadImports();
+        } catch (err) {
+            document.getElementById('swIngestProgress').style.display = 'none';
+            showAlert('swIngestAlert', 'danger', '✗ ' + err.message);
+        }
+    }
+
+    async function loadArtists() {
+        const res = await fetch('/api/shower/public/artists');
+        const artists = await res.json();
+        const el = document.getElementById('swArtists');
+        if (!artists.length) {
+            el.innerHTML = '<div class="text-muted small">No artists yet — upload a CSV above to get started.</div>';
+            return;
+        }
+        el.innerHTML = artists.map(a => `
+            <div class="sw-artist-row">
+                <span class="name">${esc(a.name)}</span>
+                <span class="slug">/${esc(a.slug)}</span>
+                <span class="rev">${money(a.totalRevenue)}</span>
+                <a href="/shower/${esc(a.slug)}" target="_blank" class="btn btn-outline-primary btn-sm" style="padding:4px 10px;font-size:0.72rem;">View</a>
+            </div>
+        `).join('');
+    }
+
+    async function loadImports() {
+        const res = await fetch('/api/shower/imports');
+        const imports = await res.json();
+        const el = document.getElementById('swImports');
+        if (!imports.length) {
+            el.innerHTML = '<div class="text-muted small">No imports yet.</div>';
+            return;
+        }
+        el.innerHTML = imports.map(imp => `
+            <div class="sw-import-row">
+                <div>
+                    <div style="font-weight:600;">${esc(imp.filename)}</div>
+                    <div class="meta">${new Date(imp.uploaded_at).toLocaleString()} · ${imp.row_count.toLocaleString()} rows · $${Number(imp.total_revenue).toFixed(2)}</div>
+                </div>
+                <span class="period">${esc(imp.period_start || '?')}</span>
+                <span class="period">→ ${esc(imp.period_end || '?')}</span>
+                <button class="btn btn-outline-danger btn-sm" onclick="deleteImport(${imp.id})" style="padding:4px 10px;font-size:0.72rem;">Delete</button>
+            </div>
+        `).join('');
+    }
+
+    async function deleteImport(id) {
+        if (!confirm('Delete this import and all its rows?')) return;
+        const res = await fetch('/api/shower/imports/' + id, { method: 'DELETE' });
+        if (res.ok) { loadArtists(); loadImports(); }
+        else App.showError('Delete failed');
+    }
+
+    function showAlert(id, type, html) {
+        const el = document.getElementById(id);
+        el.innerHTML = `<div class="alert alert-${type}" style="font-size:0.82rem;padding:10px 14px;margin-bottom:0;">${html}</div>`;
+    }
+    </script>
+</body>
+</html>
