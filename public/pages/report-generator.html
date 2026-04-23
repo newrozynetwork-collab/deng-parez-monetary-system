@@ -259,6 +259,7 @@
     <script src="/app/common.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
     <script>
     document.getElementById('curr-year').textContent = new Date().getFullYear();
@@ -368,12 +369,13 @@
             const ext = f.name.split('.').pop().toLowerCase();
             if (!['csv','xlsx','xls'].includes(ext)) continue;
             try {
-                const buf = await f.arrayBuffer();
                 let wb;
                 if (ext === 'csv') {
-                    const text = new TextDecoder('utf-8').decode(new Uint8Array(buf));
-                    wb = XLSX.read(text, { type: 'string', raw: true, cellDates: false });
+                    // Use PapaParse for CSVs — handles huge files without "Invalid array length"
+                    // and auto-handles double BOMs, various delimiters, etc.
+                    wb = await rgParseCsvWithPapa(f);
                 } else {
+                    const buf = await f.arrayBuffer();
                     wb = XLSX.read(new Uint8Array(buf), { type: 'array', cellDates: true });
                 }
                 rgFiles.push({
@@ -385,6 +387,36 @@
             }
         }
         rgRenderFileList();
+    }
+
+    // Parse a (potentially huge) CSV using PapaParse, then build a lightweight
+    // XLSX-compatible workbook so the rest of the pipeline works unchanged.
+    function rgParseCsvWithPapa(file){
+        return new Promise((resolve, reject) => {
+            const rows = [];
+            Papa.parse(file, {
+                skipEmptyLines: 'greedy',
+                worker: false,          // main thread so large arrays don't cross worker boundary
+                dynamicTyping: false,   // keep everything as strings (matches XLSX raw behaviour)
+                delimiter: '',          // auto-detect
+                step: function(results){
+                    rows.push(results.data);
+                },
+                complete: function(){
+                    try {
+                        // Strip any leading BOM from first header cell (handles double BOMs too)
+                        if (rows.length && rows[0].length) {
+                            rows[0][0] = String(rows[0][0]).replace(/^\uFEFF+/, '');
+                        }
+                        const ws = XLSX.utils.aoa_to_sheet(rows);
+                        const wb = XLSX.utils.book_new();
+                        XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+                        resolve(wb);
+                    } catch (e) { reject(e); }
+                },
+                error: function(err){ reject(err); }
+            });
+        });
     }
 
     function rgRenderFileList(){
