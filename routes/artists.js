@@ -51,6 +51,7 @@ router.post('/', requireAdmin, async (req, res) => {
       const refs = referrals.map((r, i) => ({
         artist_id: artistId,
         level: r.level || i + 1,
+        referrer_id: r.referrer_id || null,
         referrer_name: r.referrer_name,
         commission_pct: r.commission_pct
       }));
@@ -79,6 +80,7 @@ router.put('/:id', requireAdmin, async (req, res) => {
         const refs = referrals.map((r, i) => ({
           artist_id: parseInt(req.params.id),
           level: r.level || i + 1,
+          referrer_id: r.referrer_id || null,
           referrer_name: r.referrer_name,
           commission_pct: r.commission_pct
         }));

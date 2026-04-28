@@ -1,10 +1,36 @@
 var artistsData = [];
 var artistsTable = null;
+var referrersList = []; // cached registry for referral dropdowns
 
 App.init(function() {
     loadArtists();
+    loadReferrersForDropdown();
     initInstantSearch();
 });
+
+// Load the referrers registry once on page load so dropdowns are instant
+function loadReferrersForDropdown() {
+    return App.api('GET', '/api/referrers').done(function(rows) {
+        referrersList = rows || [];
+    });
+}
+
+function buildReferrerOptions(selectedId, selectedName) {
+    var opts = '<option value="">— select referrer —</option>';
+    referrersList.forEach(function(r) {
+        var sel = (selectedId && Number(selectedId) === r.id) ? ' selected' : '';
+        opts += '<option value="' + r.id + '" data-name="' + escapeHtml(r.name) + '"' + sel + '>' + escapeHtml(r.name) + '</option>';
+    });
+    // Legacy: if the artist has a referrer_name that doesn't match any registered referrer (or
+    // the row was saved before this feature), keep it as a placeholder option so the user sees it.
+    if (!selectedId && selectedName) {
+        var inList = referrersList.some(function(r) { return r.name === selectedName; });
+        if (!inList) {
+            opts += '<option value="" data-name="' + escapeHtml(selectedName) + '" selected>' + escapeHtml(selectedName) + ' (legacy)</option>';
+        }
+    }
+    return opts;
+}
 
 function escapeHtml(str) {
     if (str === null || str === undefined) return '';
@@ -223,15 +249,49 @@ function resetForm() {
     $('#referral-rows').empty();
 }
 
-function addReferralRow(name, pct) {
+function addReferralRow(referrerId, referrerName, pct) {
     var idx = $('#referral-rows .referral-row').length + 1;
+    var options = buildReferrerOptions(referrerId, referrerName);
     var html = '<div class="referral-row row mb-2">' +
         '<div class="col-1 d-flex align-items-center"><strong>L' + idx + '</strong></div>' +
-        '<div class="col-5"><input type="text" class="form-control ref-name" placeholder="Referrer name" value="' + (name || '') + '"></div>' +
+        '<div class="col-5">' +
+            '<div class="input-group">' +
+                '<select class="form-control ref-select">' + options + '</select>' +
+                '<div class="input-group-append">' +
+                    '<button type="button" class="btn btn-outline-primary btn-sm" title="Add new referrer" onclick="quickAddReferrer(this)"><i class="ti-plus"></i></button>' +
+                '</div>' +
+            '</div>' +
+        '</div>' +
         '<div class="col-4"><div class="input-group"><input type="number" class="form-control ref-pct" placeholder="%" value="' + (pct || '') + '" min="0" max="100" step="0.01"><div class="input-group-append"><span class="input-group-text">%</span></div></div></div>' +
         '<div class="col-2"><button type="button" class="btn btn-sm btn-outline-danger" onclick="$(this).closest(\'.referral-row\').remove()"><i class="ti-close"></i></button></div>' +
         '</div>';
     $('#referral-rows').append(html);
+}
+
+// Inline-add a new referrer from the artist edit modal: prompts for the name,
+// POSTs to /api/referrers, refreshes the cache, and selects the new entry in the row that triggered it.
+function quickAddReferrer(btn) {
+    var name = (window.prompt('New referrer name:') || '').trim();
+    if (!name) return;
+    var $row = $(btn).closest('.referral-row');
+    App.api('POST', '/api/referrers', { name: name })
+        .done(function(newRef) {
+            referrersList.push(newRef);
+            referrersList.sort(function(a, b) { return a.name.localeCompare(b.name); });
+            // Re-render every dropdown in the modal so the new entry appears, preserving each row's current value
+            $('#referral-rows .referral-row').each(function() {
+                var $sel = $(this).find('.ref-select');
+                var currentId = $sel.val();
+                var currentName = $sel.find('option:selected').data('name') || '';
+                $sel.html(buildReferrerOptions(currentId, currentName));
+            });
+            // For the row the user clicked +, select the new referrer
+            $row.find('.ref-select').val(newRef.id);
+            App.showSuccess('Referrer "' + newRef.name + '" added');
+        })
+        .fail(function(xhr) {
+            App.showError((xhr.responseJSON && xhr.responseJSON.error) || 'Could not add referrer');
+        });
 }
 
 function editArtist(id) {
@@ -249,7 +309,7 @@ function editArtist(id) {
     $('#referral-rows').empty();
     if (artist.referrals) {
         artist.referrals.forEach(function(r) {
-            addReferralRow(r.referrer_name, r.commission_pct);
+            addReferralRow(r.referrer_id || null, r.referrer_name || '', r.commission_pct);
         });
     }
     $('#artistModal').modal('show');
@@ -259,10 +319,24 @@ function saveArtist() {
     var id = $('#artist-id').val();
     var referrals = [];
     $('#referral-rows .referral-row').each(function(i) {
-        var name = $(this).find('.ref-name').val().trim();
+        var $sel = $(this).find('.ref-select');
+        var refId = parseInt($sel.val(), 10) || null;
+        // Resolve name: prefer the registry entry; fall back to the option's data-name (legacy free-text)
+        var name = '';
+        if (refId) {
+            var hit = referrersList.find(function(r) { return r.id === refId; });
+            name = hit ? hit.name : '';
+        } else {
+            name = $sel.find('option:selected').data('name') || '';
+        }
         var pct = parseFloat($(this).find('.ref-pct').val());
         if (name && pct) {
-            referrals.push({ level: i + 1, referrer_name: name, commission_pct: pct });
+            referrals.push({
+                level: i + 1,
+                referrer_id: refId,
+                referrer_name: name,
+                commission_pct: pct
+            });
         }
     });
 

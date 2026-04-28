@@ -47,6 +47,7 @@ app.use((req, res, next) => {
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/artists', require('./routes/artists'));
 app.use('/api/referrals', require('./routes/referrals'));
+app.use('/api/referrers', require('./routes/referrers'));
 app.use('/api/revenue', require('./routes/revenue'));
 app.use('/api/expenses', require('./routes/expenses'));
 app.use('/api/income', require('./routes/income'));
@@ -69,6 +70,7 @@ app.get('/youtube', (req, res) => res.sendFile(path.join(__dirname, 'public', 'p
 app.get('/connect', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'connect-universal.html')));
 app.get('/connect/:token', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'connect.html')));
 app.get('/referrals', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'referrals.html')));
+app.get('/referrers', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'referrers.html')));
 app.get('/revenue/new', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'revenue-entry.html')));
 app.get('/revenue', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'revenue-history.html')));
 app.get('/expenses', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'expenses.html')));
