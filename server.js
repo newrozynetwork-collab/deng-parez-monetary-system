@@ -56,6 +56,7 @@ app.use('/api/reports', require('./routes/reports'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/import', require('./routes/import'));
 app.use('/api/shower', require('./routes/royaltyShower'));
+app.use('/api/payments', require('./routes/payments'));
 
 // SPA-like routing: serve pages
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'login.html')));
@@ -75,6 +76,7 @@ app.get('/additional-income', (req, res) => res.sendFile(path.join(__dirname, 'p
 app.get('/reports', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'reports.html')));
 app.get('/user-breakdown', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'user-breakdown.html')));
 app.get('/report-generator', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'report-generator.html')));
+app.get('/payments', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'payments.html')));
 // Report Shower: admin upload UI (login required)
 app.get('/shower/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'shower-admin.html')));
 // Report Shower: public artist index + per-artist pages (no login)

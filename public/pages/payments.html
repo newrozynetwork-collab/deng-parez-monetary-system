@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/images/favicon.png">
+    <title>Payment History - Deng Parez</title>
+    <link href="/css/style.min.css" rel="stylesheet">
+    <link href="/css/custom-app.css" rel="stylesheet">
+    <link href="/assets/extra-libs/DataTables/DataTables-1.10.16/css/dataTables.bootstrap4.min.css" rel="stylesheet">
+    <script>
+        (function(){ try { var t = localStorage.getItem("dp-theme") || "light"; document.documentElement.setAttribute("data-theme", t); } catch(e){} })();
+    </script>
+    <style>
+        .pay-overdue-row td { background: rgba(231, 76, 60, 0.08) !important; }
+        .pay-recent-row td { background: rgba(40, 167, 69, 0.06) !important; }
+        .pay-type-badge { font-size: 0.72rem; font-weight: 600; padding: 3px 8px; border-radius: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .pay-type-artist { background: rgba(54, 162, 235, 0.15); color: #1e88e5; }
+        .pay-type-referral { background: rgba(255, 159, 64, 0.15); color: #fb8c00; }
+        .pay-type-additional { background: rgba(241, 88, 208, 0.15); color: #d500a0; }
+        .pay-days { font-weight: 600; }
+        .pay-days.warn { color: #fb8c00; }
+        .pay-days.danger { color: #e74c3c; }
+        .pay-days.ok { color: #28a745; }
+        .pay-history-row { display: grid; grid-template-columns: 110px 1fr auto auto; gap: 14px; align-items: center; padding: 10px 14px; background: #f7f7fb; border-radius: 8px; margin-bottom: 6px; font-size: 0.88rem; }
+        [data-theme="dark"] .pay-history-row { background: #1a1a24; }
+        .pay-history-row .date { font-family: monospace; color: #888; font-size: 0.82rem; }
+        .pay-history-row .ctx { color: #555; }
+        [data-theme="dark"] .pay-history-row .ctx { color: #bbb; }
+        .pay-history-row .amt { font-family: monospace; font-weight: 700; color: #28a745; min-width: 90px; text-align: right; }
+    </style>
+</head>
+<body>
+    <div class="preloader"><div class="lds-ripple"><div class="lds-pos"></div><div class="lds-pos"></div></div></div>
+    <div id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full" data-sidebar-position="absolute" data-header-position="relative" data-boxed-layout="full">
+        <header class="topbar">
+            <nav class="navbar top-navbar navbar-expand-md navbar-dark">
+                <div class="navbar-header">
+                    <a class="nav-toggler waves-effect waves-light d-block d-md-none" href="javascript:void(0)"><i class="ti-menu ti-close"></i></a>
+                    <div class="navbar-brand"><a href="/dashboard" class="logo"><b class="logo-icon"><img src="/assets/images/logo-icon.png" alt="logo" class="dark-logo" /><img src="/assets/images/logo-light-icon.png" alt="logo" class="light-logo" /></b><span class="logo-text"><img src="/assets/images/logo-text.png" alt="logo" class="dark-logo" /><img src="/assets/images/logo-light-text.png" class="light-logo" alt="logo" /></span></a><a class="sidebartoggler d-none d-md-block" href="javascript:void(0)" data-sidebartype="mini-sidebar"><i class="mdi mdi-toggle-switch mdi-toggle-switch-off font-20"></i></a></div>
+                    <a class="topbartoggler d-block d-md-none waves-effect waves-light" href="javascript:void(0)" data-toggle="collapse" data-target="#navbarSupportedContent"><i class="ti-more"></i></a>
+                </div>
+                <div class="navbar-collapse collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav float-left mr-auto"></ul>
+                    <ul class="navbar-nav float-right"><li class="nav-item dropdown"><a class="nav-link dropdown-toggle waves-effect waves-dark pro-pic" href="#" data-toggle="dropdown"><img src="/assets/images/users/1.jpg" alt="user" class="rounded-circle" width="40"><span class="m-l-5 font-medium d-none d-sm-inline-block" id="user-name">User</span></a><div class="dropdown-menu dropdown-menu-right user-dd animated flipInY"><a class="dropdown-item" href="/settings"><i class="ti-settings m-r-5 m-l-5"></i> Settings</a><div class="dropdown-divider"></div><a class="dropdown-item" href="#" id="logout-btn"><i class="fa fa-power-off m-r-5 m-l-5"></i> Logout</a></div></li></ul>
+                </div>
+            </nav>
+        </header>
+        <aside class="left-sidebar">
+            <div class="scroll-sidebar"><nav class="sidebar-nav"><ul id="sidebarnav">
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/dashboard"><i data-feather="home" class="feather-icon"></i><span class="hide-menu">Dashboard</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/artists"><i data-feather="users" class="feather-icon"></i><span class="hide-menu">Artists</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/youtube"><i data-feather="youtube" class="feather-icon"></i><span class="hide-menu">YouTube</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/referrals"><i data-feather="git-branch" class="feather-icon"></i><span class="hide-menu">Referrals</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)"><i data-feather="dollar-sign" class="feather-icon"></i><span class="hide-menu">Revenue</span></a><ul class="collapse first-level"><li class="sidebar-item"><a href="/revenue/new" class="sidebar-link"><span class="hide-menu">New Entry</span></a></li><li class="sidebar-item"><a href="/revenue" class="sidebar-link"><span class="hide-menu">History</span></a></li></ul></li>
+                <li class="sidebar-item selected"><a class="sidebar-link waves-effect waves-dark" href="/payments"><i data-feather="credit-card" class="feather-icon"></i><span class="hide-menu">Payment History</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/expenses"><i data-feather="trending-down" class="feather-icon"></i><span class="hide-menu">Expenses</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/additional-income"><i data-feather="plus-circle" class="feather-icon"></i><span class="hide-menu">Additional Income</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/reports"><i data-feather="bar-chart-2" class="feather-icon"></i><span class="hide-menu">Reports</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/user-breakdown"><i data-feather="pie-chart" class="feather-icon"></i><span class="hide-menu">User Breakdown</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/report-generator"><i data-feather="file-text" class="feather-icon"></i><span class="hide-menu">Report Generator</span></a></li>
+                <li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/shower/admin"><i data-feather="monitor" class="feather-icon"></i><span class="hide-menu">Report Shower</span></a></li>
+                <li class="sidebar-item admin-only"><a class="sidebar-link waves-effect waves-dark" href="/settings"><i data-feather="settings" class="feather-icon"></i><span class="hide-menu">Settings</span></a></li>
+            </ul></nav></div>
+        </aside>
+        <div class="page-wrapper">
+            <div class="page-breadcrumb">
+                <div class="row">
+                    <div class="col-md-6 align-self-center">
+                        <h3 class="page-title text-truncate text-dark font-weight-medium mb-1">Payment History</h3>
+                        <nav aria-label="breadcrumb"><ol class="breadcrumb m-0 p-0"><li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li><li class="breadcrumb-item active">Payments</li></ol></nav>
+                    </div>
+                    <div class="col-md-6 align-self-center">
+                        <div class="d-flex justify-content-end flex-wrap">
+                            <select class="form-control mr-2 mb-1" id="type-filter" style="max-width:170px;">
+                                <option value="">All recipients</option>
+                                <option value="artist">Artists only</option>
+                                <option value="referral">Referrals only</option>
+                                <option value="additional">Additional income</option>
+                            </select>
+                            <input type="text" class="form-control mr-2 mb-1" id="name-search" style="max-width:200px;" placeholder="Search name…">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="container-fluid">
+                <!-- Summary cards -->
+                <div class="row">
+                    <div class="col-md-3 col-sm-6">
+                        <div class="card"><div class="card-body">
+                            <div class="d-flex align-items-center"><div class="mr-3"><i data-feather="users" style="width:32px;height:32px;color:#1e88e5;"></i></div>
+                            <div><h6 class="text-muted mb-0">People</h6><h3 class="mb-0" id="stat-people">0</h3></div></div>
+                        </div></div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="card"><div class="card-body">
+                            <div class="d-flex align-items-center"><div class="mr-3"><i data-feather="dollar-sign" style="width:32px;height:32px;color:#28a745;"></i></div>
+                            <div><h6 class="text-muted mb-0">Total Paid</h6><h3 class="mb-0" id="stat-total">$0</h3></div></div>
+                        </div></div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="card"><div class="card-body">
+                            <div class="d-flex align-items-center"><div class="mr-3"><i data-feather="alert-circle" style="width:32px;height:32px;color:#e74c3c;"></i></div>
+                            <div><h6 class="text-muted mb-0">Overdue (90+ days)</h6><h3 class="mb-0" id="stat-overdue">0</h3></div></div>
+                        </div></div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="card"><div class="card-body">
+                            <div class="d-flex align-items-center"><div class="mr-3"><i data-feather="check-circle" style="width:32px;height:32px;color:#fb8c00;"></i></div>
+                            <div><h6 class="text-muted mb-0">Recent (≤30 days)</h6><h3 class="mb-0" id="stat-recent">0</h3></div></div>
+                        </div></div>
+                    </div>
+                </div>
+
+                <!-- Main table -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">All Recipients</h5>
+                        <p class="text-muted small">Click <strong>History</strong> on any row to see every payment for that person. Sort by clicking column headers.</p>
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="payments-table" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Type</th>
+                                        <th class="text-right">Total Paid</th>
+                                        <th class="text-center">Payments</th>
+                                        <th>Last Paid</th>
+                                        <th class="text-right">Days Since</th>
+                                        <th class="text-center" style="width:130px;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <footer class="footer text-center">All Rights Reserved by Deng Parez Monetary System. © <span id="curr-year"></span></footer>
+        </div>
+    </div>
+
+    <!-- History Modal -->
+    <div class="modal fade" id="historyModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i data-feather="clock" class="feather-icon mr-1"></i> Payment history — <span id="hist-name" class="text-primary"></span></h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4"><div class="text-muted small">Total received</div><h4 id="hist-total" class="text-success mb-0">$0.00</h4></div>
+                        <div class="col-md-4"><div class="text-muted small">Number of payments</div><h4 id="hist-count" class="mb-0">0</h4></div>
+                        <div class="col-md-4"><div class="text-muted small">Average payment</div><h4 id="hist-avg" class="mb-0">$0.00</h4></div>
+                    </div>
+                    <hr>
+                    <div id="hist-rows"><div class="text-muted small">Loading…</div></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/assets/libs/jquery/dist/jquery.min.js"></script>
+    <script src="/assets/libs/popper.js/dist/umd/popper.min.js"></script>
+    <script src="/assets/libs/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/app.init.js"></script>
+    <script src="/js/sidebarmenu.js"></script>
+    <script src="/js/custom.js"></script>
+    <script src="/js/feather.min.js"></script>
+    <script src="/assets/extra-libs/DataTables/DataTables-1.10.16/js/jquery.dataTables.min.js"></script>
+    <script src="/assets/extra-libs/DataTables/DataTables-1.10.16/js/dataTables.bootstrap4.min.js"></script>
+    <script src="/app/common.js"></script>
+    <script src="/app/payments.js"></script>
+</body>
+</html>
