@@ -4,6 +4,12 @@ var refsTable;
 App.init(function() {
     feather.replace();
     loadReferrers();
+    // Auto-open the Add modal when arriving via /referrers#add (Quick Action button)
+    if (window.location.hash === '#add') {
+        setTimeout(openAdd, 200);
+        // Clean the hash so a refresh doesn't keep popping it
+        history.replaceState(null, '', '/referrers');
+    }
 });
 
 function loadReferrers() {
