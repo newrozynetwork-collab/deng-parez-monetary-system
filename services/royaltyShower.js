@@ -88,7 +88,25 @@ async function ingestCsv({ db, filename, buffer, uploadedBy = null }) {
   const qtyCol     = findCol(headers, 'QUANTITY', 'UNITS', 'STREAMS');
 
   if (!artistCol || !revenueCol) {
-    throw new Error(`Required columns missing. Found: artist=${artistCol || '✗'}, revenue=${revenueCol || '✗'}`);
+    // Specifically detect aggregate-only Orchard breakdown reports so the
+    // user gets a clear message instead of a cryptic "columns missing".
+    const upper = headers.map(h => String(h || '').toUpperCase());
+    const has = (k) => upper.some(h => h.includes(k));
+    let kind = null;
+    if (!artistCol) {
+      if (has('COUNTRY') || has('TERRITORY') || has('REGION')) kind = 'Countries';
+      else if (has('STORE') || has('PLATFORM') || has('DSP')) kind = 'Stores';
+      else if (has('STATEMENT') && (has('PERIOD') || has('MONTH'))) kind = 'Statement Periods';
+    }
+    if (kind) {
+      throw new Error(
+        `This looks like an aggregate "${kind}" report — it has no per-artist breakdown ` +
+        `(no Primary Artist / Track Artist column). Report Shower needs per-artist data. ` +
+        `Upload the "Tracks" report or the raw "revenue details" CSV from your distributor instead.`
+      );
+    }
+    throw new Error(`Required columns missing. Found: artist=${artistCol || '✗'}, revenue=${revenueCol || '✗'}. ` +
+      `Headers in file: ${headers.join(', ')}`);
   }
 
   const normalized = [];
@@ -128,14 +146,23 @@ async function ingestCsv({ db, filename, buffer, uploadedBy = null }) {
   const periodStart = periods[0] || null;
   const periodEnd = periods[periods.length - 1] || null;
 
-  const [importId] = await db('royalty_imports').insert({
-    filename,
-    period_start: periodStart,
-    period_end: periodEnd,
-    row_count: normalized.length,
-    total_revenue: total,
-    uploaded_by: uploadedBy
-  });
+  // .returning('id') is required for PostgreSQL — without it knex returns
+  // undefined for INSERT and the destructure below fails with
+  // "(intermediate value) is not iterable". SQLite ignores it cleanly.
+  const insertedRows = await db('royalty_imports')
+    .insert({
+      filename,
+      period_start: periodStart,
+      period_end: periodEnd,
+      row_count: normalized.length,
+      total_revenue: total,
+      uploaded_by: uploadedBy
+    })
+    .returning('id');
+
+  const importId = Array.isArray(insertedRows)
+    ? (typeof insertedRows[0] === 'object' ? insertedRows[0].id : insertedRows[0])
+    : insertedRows;
 
   // Ensure artist_slugs entries exist
   for (const artistName of artistsSeen) {
