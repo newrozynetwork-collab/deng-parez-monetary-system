@@ -227,6 +227,155 @@ async function resolveReferrer(db, idOrName) {
   return { referrer: rows[0] };
 }
 
+defineTool({
+  name: 'add_referrer',
+  description: 'Create a referrer in the registry. If an inactive referrer with the same name exists, reactivate it. If an active one exists, return the existing record (idempotent).',
+  safety: 'safe_write',
+  parameters: {
+    type: 'object',
+    required: ['name'],
+    properties: {
+      name: { type: 'string' },
+      phone: { type: 'string' },
+      email: { type: 'string' },
+      social: { type: 'string' },
+      notes: { type: 'string' }
+    }
+  },
+  async execute({ db }, args) {
+    const name = String(args.name || '').trim();
+    if (!name) return { error: 'validation', field: 'name', message: 'name is required' };
+
+    const existing = await db('referrers').where({ name }).first();
+    if (existing) {
+      if (existing.is_active) {
+        return { id: existing.id, name: existing.name, reactivated: false, already_existed: true };
+      }
+      await db('referrers').where({ id: existing.id }).update({
+        is_active: true,
+        phone: args.phone || existing.phone,
+        email: args.email || existing.email,
+        social: args.social || existing.social,
+        notes: args.notes || existing.notes,
+        updated_at: db.fn.now()
+      });
+      return { id: existing.id, name: existing.name, reactivated: true, already_existed: false };
+    }
+
+    const inserted = await db('referrers').insert({
+      name,
+      phone: args.phone || null,
+      email: args.email || null,
+      social: args.social || null,
+      notes: args.notes || null
+    }).returning('id');
+    const id = Array.isArray(inserted)
+      ? (typeof inserted[0] === 'object' ? inserted[0].id : inserted[0])
+      : inserted;
+    return { id, name, reactivated: false, already_existed: false };
+  }
+});
+
+defineTool({
+  name: 'add_artist',
+  description: 'Create a new artist record, optionally with a referral chain. If any referral.referrer_name is not yet in the registry, this tool creates the referrer first and reports it via referrers_auto_created. The assistant MUST disclose any auto-created referrers in its reply.',
+  safety: 'safe_write',
+  parameters: {
+    type: 'object',
+    required: ['name'],
+    properties: {
+      name: { type: 'string' },
+      nickname: { type: 'string' },
+      revenue_type: { type: 'string', enum: ['youtube', 'platform', 'both'] },
+      artist_split_pct: { type: 'number' },
+      company_split_pct: { type: 'number' },
+      bank_fee_pct: { type: 'number' },
+      phone: { type: 'string' },
+      phone2: { type: 'string' },
+      beneficiary: { type: 'string' },
+      contract_start: { type: 'string', description: 'ISO date YYYY-MM-DD' },
+      contract_end: { type: 'string', description: 'ISO date YYYY-MM-DD' },
+      contract_years: { type: 'number' },
+      notes: { type: 'string' },
+      referrals: {
+        type: 'array',
+        description: 'Ordered referral chain. Each item gets a level (1, 2, 3...) automatically if not provided.',
+        items: {
+          type: 'object',
+          required: ['referrer_name', 'commission_pct'],
+          properties: {
+            level: { type: 'integer' },
+            referrer_name: { type: 'string' },
+            commission_pct: { type: 'number' }
+          }
+        }
+      }
+    }
+  },
+  async execute({ db }, args) {
+    const name = String(args.name || '').trim();
+    if (!name) return { error: 'validation', field: 'name', message: 'name is required' };
+
+    const inserted = await db('artists').insert({
+      name,
+      nickname: args.nickname || null,
+      revenue_type: args.revenue_type || 'both',
+      artist_split_pct: (args.artist_split_pct !== undefined) ? args.artist_split_pct : 60,
+      company_split_pct: (args.company_split_pct !== undefined) ? args.company_split_pct : 40,
+      bank_fee_pct: (args.bank_fee_pct !== undefined) ? args.bank_fee_pct : 2.5,
+      phone: args.phone || null,
+      phone2: args.phone2 || null,
+      beneficiary: args.beneficiary || null,
+      contract_start: args.contract_start || null,
+      contract_end: args.contract_end || null,
+      contract_years: args.contract_years || null,
+      notes: args.notes || null
+    }).returning('id');
+    const artistId = Array.isArray(inserted)
+      ? (typeof inserted[0] === 'object' ? inserted[0].id : inserted[0])
+      : inserted;
+
+    const autoCreated = [];
+    const referralsToInsert = [];
+    const referrals = Array.isArray(args.referrals) ? args.referrals : [];
+
+    for (let i = 0; i < referrals.length; i++) {
+      const ref = referrals[i];
+      const refName = String(ref.referrer_name || '').trim();
+      if (!refName) continue;
+
+      let row = await db('referrers').where({ name: refName }).first();
+      if (!row) {
+        const ins = await db('referrers').insert({ name: refName }).returning('id');
+        const newId = Array.isArray(ins) ? (typeof ins[0] === 'object' ? ins[0].id : ins[0]) : ins;
+        row = { id: newId, name: refName };
+        autoCreated.push(refName);
+      } else if (!row.is_active) {
+        await db('referrers').where({ id: row.id }).update({ is_active: true, updated_at: db.fn.now() });
+      }
+
+      referralsToInsert.push({
+        artist_id: artistId,
+        level: ref.level || i + 1,
+        referrer_id: row.id,
+        referrer_name: refName,
+        commission_pct: ref.commission_pct
+      });
+    }
+
+    if (referralsToInsert.length > 0) {
+      await db('referral_levels').insert(referralsToInsert);
+    }
+
+    return {
+      id: artistId,
+      name,
+      referrals_created: referralsToInsert.length,
+      referrers_auto_created: autoCreated
+    };
+  }
+});
+
 function getTool(name) { return tools[name]; }
 function listTools() {
   return Object.values(tools).map(t => ({

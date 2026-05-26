@@ -148,3 +148,82 @@ test('list_recent_revenue: returns entries sorted desc by created_at, respects l
   assert.equal(res.entries.length, 1);
   await db.destroy();
 });
+
+test('add_referrer: creates new active referrer', async () => {
+  const db = await makeTestDb();
+  const res = await tools.getTool('add_referrer').execute({ db }, { name: 'Sarah', phone: '555-1234' });
+  assert.ok(res.id);
+  assert.equal(res.name, 'Sarah');
+  assert.equal(res.reactivated, false);
+  assert.equal(res.already_existed, false);
+  const row = await db('referrers').where({ id: res.id }).first();
+  assert.equal(row.name, 'Sarah');
+  assert.equal(row.phone, '555-1234');
+  await db.destroy();
+});
+
+test('add_referrer: reactivates soft-deleted referrer with same name', async () => {
+  const db = await makeTestDb();
+  await db('referrers').insert({ name: 'Sarah', is_active: false });
+  const res = await tools.getTool('add_referrer').execute({ db }, { name: 'Sarah' });
+  assert.equal(res.reactivated, true);
+  const row = await db('referrers').where({ id: res.id }).first();
+  assert.equal(!!row.is_active, true);
+  await db.destroy();
+});
+
+test('add_referrer: returns existing record if active duplicate exists (idempotent)', async () => {
+  const db = await makeTestDb();
+  await db('referrers').insert({ name: 'Sarah', is_active: true });
+  const res = await tools.getTool('add_referrer').execute({ db }, { name: 'Sarah' });
+  assert.equal(res.already_existed, true);
+  assert.equal(res.reactivated, false);
+  await db.destroy();
+});
+
+test('add_referrer: validation error on empty name', async () => {
+  const db = await makeTestDb();
+  const res = await tools.getTool('add_referrer').execute({ db }, { name: '   ' });
+  assert.equal(res.error, 'validation');
+  await db.destroy();
+});
+
+test('add_artist: creates artist with defaults', async () => {
+  const db = await makeTestDb();
+  const res = await tools.getTool('add_artist').execute({ db }, { name: 'Hozan' });
+  assert.ok(res.id);
+  assert.equal(res.referrals_created, 0);
+  assert.equal(res.referrers_auto_created.length, 0);
+  const row = await db('artists').where({ id: res.id }).first();
+  assert.equal(parseFloat(row.artist_split_pct), 60);
+  assert.equal(parseFloat(row.company_split_pct), 40);
+  await db.destroy();
+});
+
+test('add_artist: with new referral creates the referrer and reports it in referrers_auto_created', async () => {
+  const db = await makeTestDb();
+  const res = await tools.getTool('add_artist').execute({ db }, {
+    name: 'Hozan',
+    referrals: [{ referrer_name: 'Sarah', commission_pct: 5 }]
+  });
+  assert.equal(res.referrals_created, 1);
+  assert.deepEqual(res.referrers_auto_created, ['Sarah']);
+  const refRow = await db('referrers').where({ name: 'Sarah' }).first();
+  assert.ok(refRow);
+  const levelRow = await db('referral_levels').where({ artist_id: res.id }).first();
+  assert.equal(levelRow.referrer_id, refRow.id);
+  assert.equal(parseFloat(levelRow.commission_pct), 5);
+  await db.destroy();
+});
+
+test('add_artist: with existing referrer reuses it and does NOT report it as auto-created', async () => {
+  const db = await makeTestDb();
+  await db('referrers').insert({ name: 'Sarah' });
+  const res = await tools.getTool('add_artist').execute({ db }, {
+    name: 'Hozan',
+    referrals: [{ referrer_name: 'Sarah', commission_pct: 5 }]
+  });
+  assert.equal(res.referrers_auto_created.length, 0);
+  assert.equal(res.referrals_created, 1);
+  await db.destroy();
+});
