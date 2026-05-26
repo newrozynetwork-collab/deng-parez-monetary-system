@@ -376,6 +376,74 @@ defineTool({
   }
 });
 
+defineTool({
+  name: 'record_revenue',
+  description: 'Record a revenue entry for an artist. ALWAYS confirms (money in). The confirmation card shows the full calculator preview.',
+  safety: 'needs_confirmation',
+  confirmationLabel: 'Save this revenue entry?',
+  parameters: {
+    type: 'object',
+    required: ['artist', 'amount', 'period_start', 'period_end'],
+    properties: {
+      artist: { type: 'string' },
+      amount: { type: 'number' },
+      period_start: { type: 'string', description: 'ISO date YYYY-MM-DD' },
+      period_end: { type: 'string', description: 'ISO date YYYY-MM-DD' },
+      source: { type: 'string', enum: ['youtube', 'platform', 'both'] },
+      notes: { type: 'string' }
+    }
+  },
+  async buildPreview({ db }, args) {
+    const r = await resolveArtist(db, args.artist);
+    if (r.error) return { error: r };
+    const refs = await db('referral_levels').where({ artist_id: r.artist.id }).orderBy('level');
+    const calc = calculate({
+      grossRevenue: parseFloat(args.amount),
+      bankFeePct: parseFloat(r.artist.bank_fee_pct),
+      artistSplitPct: parseFloat(r.artist.artist_split_pct),
+      companySplitPct: parseFloat(r.artist.company_split_pct),
+      referralLevels: refs.map(rl => ({ level: rl.level, referrerName: rl.referrer_name, commissionPct: parseFloat(rl.commission_pct) }))
+    });
+    return { artist_name: r.artist.name, ...calc, period_start: args.period_start, period_end: args.period_end, source: args.source || r.artist.revenue_type || 'both' };
+  },
+  async execute({ db, session }, args) {
+    const r = await resolveArtist(db, args.artist);
+    if (r.error) return r;
+    const refs = await db('referral_levels').where({ artist_id: r.artist.id }).orderBy('level');
+    const calc = calculate({
+      grossRevenue: parseFloat(args.amount),
+      bankFeePct: parseFloat(r.artist.bank_fee_pct),
+      artistSplitPct: parseFloat(r.artist.artist_split_pct),
+      companySplitPct: parseFloat(r.artist.company_split_pct),
+      referralLevels: refs.map(rl => ({ level: rl.level, referrerName: rl.referrer_name, commissionPct: parseFloat(rl.commission_pct) }))
+    });
+
+    const inserted = await db('revenue_entries').insert({
+      artist_id: r.artist.id,
+      amount: parseFloat(args.amount),
+      source: args.source || r.artist.revenue_type || 'both',
+      period_start: args.period_start,
+      period_end: args.period_end,
+      notes: args.notes || null,
+      created_by: session && session.userId
+    }).returning('id');
+    const id = Array.isArray(inserted) ? (typeof inserted[0] === 'object' ? inserted[0].id : inserted[0]) : inserted;
+
+    const distributions = [
+      { revenue_entry_id: id, recipient_type: 'artist', recipient_name: r.artist.name, amount: calc.artistShare },
+      { revenue_entry_id: id, recipient_type: 'company', recipient_name: 'Company', amount: calc.companyNet }
+    ];
+    calc.referralBreakdown.forEach(rl => {
+      distributions.push({ revenue_entry_id: id, recipient_type: 'referral', recipient_name: rl.referrerName, amount: rl.amount });
+    });
+    distributions.push({ revenue_entry_id: id, recipient_type: 'bank_fee', recipient_name: 'Bank Fee', amount: calc.bankFee });
+
+    await db('revenue_distributions').insert(distributions);
+
+    return { revenue_entry_id: id, artist_name: r.artist.name, calculation: calc };
+  }
+});
+
 function getTool(name) { return tools[name]; }
 function listTools() {
   return Object.values(tools).map(t => ({

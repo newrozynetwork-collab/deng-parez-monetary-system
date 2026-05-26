@@ -227,3 +227,34 @@ test('add_artist: with existing referrer reuses it and does NOT report it as aut
   assert.equal(res.referrals_created, 1);
   await db.destroy();
 });
+
+test('record_revenue.buildPreview: returns full calculator output', async () => {
+  const db = await makeTestDb();
+  const aid = await seedArtist(db, 'Hozan');
+  await db('referral_levels').insert({ artist_id: aid, level: 1, referrer_name: 'Sarah', commission_pct: 5 });
+  const preview = await tools.getTool('record_revenue').buildPreview({ db }, {
+    artist: 'hozan', amount: 5000, period_start: '2026-05-01', period_end: '2026-05-31'
+  });
+  assert.equal(preview.artist_name, 'Hozan');
+  assert.equal(preview.bankFee, 125);
+  assert.equal(preview.artistShare, 2925);
+  assert.equal(preview.referralBreakdown[0].amount, 97.5);
+  await db.destroy();
+});
+
+test('record_revenue.execute: writes one revenue_entries row and N distributions', async () => {
+  const db = await makeTestDb();
+  const aid = await seedArtist(db, 'Hozan');
+  await db('referral_levels').insert({ artist_id: aid, level: 1, referrer_name: 'Sarah', commission_pct: 5 });
+  const session = { userId: 1 };
+  const res = await tools.getTool('record_revenue').execute({ db, session }, {
+    artist: 'hozan', amount: 5000, period_start: '2026-05-01', period_end: '2026-05-31', source: 'platform'
+  });
+  assert.ok(res.revenue_entry_id);
+  const entry = await db('revenue_entries').where({ id: res.revenue_entry_id }).first();
+  assert.equal(parseFloat(entry.amount), 5000);
+  const dists = await db('revenue_distributions').where({ revenue_entry_id: res.revenue_entry_id });
+  // artist + company + 1 referral + bank_fee = 4
+  assert.equal(dists.length, 4);
+  await db.destroy();
+});
