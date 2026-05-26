@@ -167,3 +167,37 @@ test('POST /api/chat: when tool throws, status is "failed" in chat_messages', as
   gemini._resetClientFactory();
   await db.destroy();
 });
+
+test('POST /api/chat: add_artist tool call executes and persists', async () => {
+  const { app, db } = await makeApp();
+
+  let callCount = 0;
+  gemini._setClientFactory(() => ({
+    getGenerativeModel() {
+      return {
+        async generateContent() {
+          callCount++;
+          if (callCount === 1) {
+            return { response: { candidates: [{ content: { role: 'model', parts: [{
+              functionCall: { name: 'add_artist', args: { name: 'Hozan', artist_split_pct: 60, referrals: [{ referrer_name: 'Sarah', commission_pct: 5 }] } }
+            }] } }] } };
+          }
+          return { response: { candidates: [{ content: { role: 'model', parts: [{ text: 'Added Hozan with Sarah at 5%.' }] } }] } };
+        }
+      };
+    }
+  }));
+
+  const res = await request(app).post('/api/chat').send({ messages: [{ role: 'user', content: 'add hozan' }] });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.actions[0].safety, 'safe_write');
+  assert.equal(res.body.actions[0].result.referrers_auto_created[0], 'Sarah');
+
+  const artist = await db('artists').where({ name: 'Hozan' }).first();
+  assert.ok(artist);
+  const refRow = await db('referrers').where({ name: 'Sarah' }).first();
+  assert.ok(refRow);
+
+  gemini._resetClientFactory();
+  await db.destroy();
+});

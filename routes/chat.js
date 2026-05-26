@@ -109,7 +109,13 @@ router.post('/', requireAdmin, async (req, res) => {
 
     return res.json({
       reply: replyText,
-      actions: [{ type: 'executed', tool: first.toolName, args: first.toolArgs, result: toolResult }]
+      actions: [{
+        type: 'executed',
+        tool: first.toolName,
+        safety: tool.safety,
+        args: first.toolArgs,
+        result: toolResult
+      }]
     });
   } catch (err) {
     console.error('Chat route error:', err);
