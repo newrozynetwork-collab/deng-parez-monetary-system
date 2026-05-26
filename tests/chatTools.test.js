@@ -297,3 +297,48 @@ test('update_referrer: rename cascades to referral_levels.referrer_name', async 
   assert.equal(level.referrer_name, 'NewName');
   await db.destroy();
 });
+
+test('delete_artist: removes the row', async () => {
+  const db = await makeTestDb();
+  const aid = await seedArtist(db, 'Hozan');
+  await tools.getTool('delete_artist').execute({ db }, { id_or_name: 'hozan' });
+  const row = await db('artists').where({ id: aid }).first();
+  assert.equal(row, undefined);
+  await db.destroy();
+});
+
+test('delete_artist.buildPreview: returns cascade counts', async () => {
+  const db = await makeTestDb();
+  const aid = await seedArtist(db, 'Hozan');
+  await db('referral_levels').insert({ artist_id: aid, level: 1, referrer_name: 'X', commission_pct: 1 });
+  await db('revenue_entries').insert({ artist_id: aid, amount: 100, source: 'both', period_start: '2026-01-01', period_end: '2026-01-31' });
+  const preview = await tools.getTool('delete_artist').buildPreview({ db }, { id_or_name: 'hozan' });
+  assert.equal(preview.cascade.referral_levels, 1);
+  assert.equal(preview.cascade.revenue_entries, 1);
+  await db.destroy();
+});
+
+test('delete_referrer: soft-deletes when in use', async () => {
+  const db = await makeTestDb();
+  const inserted = await db('referrers').insert({ name: 'Sarah' }).returning('id');
+  const rid = Array.isArray(inserted) ? (typeof inserted[0] === 'object' ? inserted[0].id : inserted[0]) : inserted;
+  const aid = await seedArtist(db, 'Hozan');
+  await db('referral_levels').insert({ artist_id: aid, level: 1, referrer_id: rid, referrer_name: 'Sarah', commission_pct: 5 });
+
+  const res = await tools.getTool('delete_referrer').execute({ db }, { id_or_name: rid });
+  assert.equal(res.soft, true);
+  const row = await db('referrers').where({ id: rid }).first();
+  assert.equal(!!row.is_active, false);
+  await db.destroy();
+});
+
+test('delete_referrer: hard-deletes when not in use', async () => {
+  const db = await makeTestDb();
+  const inserted = await db('referrers').insert({ name: 'Sarah' }).returning('id');
+  const rid = Array.isArray(inserted) ? (typeof inserted[0] === 'object' ? inserted[0].id : inserted[0]) : inserted;
+  const res = await tools.getTool('delete_referrer').execute({ db }, { id_or_name: rid });
+  assert.equal(res.soft, false);
+  const row = await db('referrers').where({ id: rid }).first();
+  assert.equal(row, undefined);
+  await db.destroy();
+});

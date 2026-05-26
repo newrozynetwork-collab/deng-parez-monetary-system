@@ -574,6 +574,67 @@ defineTool({
   }
 });
 
+defineTool({
+  name: 'delete_artist',
+  description: 'Delete an artist. Cascades to referral_levels and revenue_entries. Confirmation required.',
+  safety: 'needs_confirmation',
+  confirmationLabel: 'Delete this artist and ALL related revenue and referrals?',
+  parameters: {
+    type: 'object',
+    required: ['id_or_name'],
+    properties: { id_or_name: { type: 'string' } }
+  },
+  async buildPreview({ db }, args) {
+    const r = await resolveArtist(db, args.id_or_name);
+    if (r.error) return { error: r };
+    const revs = await db('revenue_entries').where({ artist_id: r.artist.id }).count('* as c').first();
+    const lvls = await db('referral_levels').where({ artist_id: r.artist.id }).count('* as c').first();
+    return {
+      artist: { id: r.artist.id, name: r.artist.name },
+      cascade: {
+        revenue_entries: parseInt(revs.c, 10),
+        referral_levels: parseInt(lvls.c, 10)
+      }
+    };
+  },
+  async execute({ db }, args) {
+    const r = await resolveArtist(db, args.id_or_name);
+    if (r.error) return r;
+    await db('artists').where({ id: r.artist.id }).del();
+    return { id: r.artist.id, deleted: true };
+  }
+});
+
+defineTool({
+  name: 'delete_referrer',
+  description: 'Delete a referrer. Soft-deletes (is_active=false) if any referral_levels reference them; hard-deletes otherwise. Confirmation required.',
+  safety: 'needs_confirmation',
+  confirmationLabel: 'Delete this referrer?',
+  parameters: {
+    type: 'object',
+    required: ['id_or_name'],
+    properties: { id_or_name: { type: 'string' } }
+  },
+  async buildPreview({ db }, args) {
+    const r = await resolveReferrer(db, args.id_or_name);
+    if (r.error) return { error: r };
+    const c = await db('referral_levels').where({ referrer_id: r.referrer.id }).count('* as c').first();
+    const inUse = parseInt(c.c, 10);
+    return { referrer: r.referrer, in_use_on_artists: inUse, mode: inUse > 0 ? 'soft' : 'hard' };
+  },
+  async execute({ db }, args) {
+    const r = await resolveReferrer(db, args.id_or_name);
+    if (r.error) return r;
+    const c = await db('referral_levels').where({ referrer_id: r.referrer.id }).count('* as c').first();
+    if (parseInt(c.c, 10) > 0) {
+      await db('referrers').where({ id: r.referrer.id }).update({ is_active: false, updated_at: db.fn.now() });
+      return { id: r.referrer.id, deleted: true, soft: true, artists_affected: parseInt(c.c, 10) };
+    }
+    await db('referrers').where({ id: r.referrer.id }).del();
+    return { id: r.referrer.id, deleted: true, soft: false };
+  }
+});
+
 function getTool(name) { return tools[name]; }
 function listTools() {
   return Object.values(tools).map(t => ({
