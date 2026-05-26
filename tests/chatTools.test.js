@@ -258,3 +258,42 @@ test('record_revenue.execute: writes one revenue_entries row and N distributions
   assert.equal(dists.length, 4);
   await db.destroy();
 });
+
+test('update_artist: changes top-level fields', async () => {
+  const db = await makeTestDb();
+  const aid = await seedArtist(db, 'Hozan');
+  await tools.getTool('update_artist').execute({ db }, { id_or_name: 'hozan', changes: { nickname: 'H', artist_split_pct: 70, company_split_pct: 30 } });
+  const row = await db('artists').where({ id: aid }).first();
+  assert.equal(row.nickname, 'H');
+  assert.equal(parseFloat(row.artist_split_pct), 70);
+  await db.destroy();
+});
+
+test('update_artist: with referrals replaces the chain and reports auto-created referrers', async () => {
+  const db = await makeTestDb();
+  const aid = await seedArtist(db, 'Hozan');
+  await db('referral_levels').insert({ artist_id: aid, level: 1, referrer_name: 'Old', commission_pct: 1 });
+  const res = await tools.getTool('update_artist').execute({ db }, {
+    id_or_name: 'hozan',
+    changes: { referrals: [{ referrer_name: 'NewPerson', commission_pct: 4 }] }
+  });
+  assert.equal(res.referrals_replaced, 1);
+  assert.deepEqual(res.referrers_auto_created, ['NewPerson']);
+  const levels = await db('referral_levels').where({ artist_id: aid });
+  assert.equal(levels.length, 1);
+  assert.equal(levels[0].referrer_name, 'NewPerson');
+  await db.destroy();
+});
+
+test('update_referrer: rename cascades to referral_levels.referrer_name', async () => {
+  const db = await makeTestDb();
+  const inserted = await db('referrers').insert({ name: 'OldName' }).returning('id');
+  const rid = Array.isArray(inserted) ? (typeof inserted[0] === 'object' ? inserted[0].id : inserted[0]) : inserted;
+  const aid = await seedArtist(db, 'Hozan');
+  await db('referral_levels').insert({ artist_id: aid, level: 1, referrer_id: rid, referrer_name: 'OldName', commission_pct: 5 });
+
+  await tools.getTool('update_referrer').execute({ db }, { id_or_name: rid, changes: { name: 'NewName' } });
+  const level = await db('referral_levels').where({ artist_id: aid }).first();
+  assert.equal(level.referrer_name, 'NewName');
+  await db.destroy();
+});

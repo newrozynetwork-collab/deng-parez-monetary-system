@@ -444,6 +444,136 @@ defineTool({
   }
 });
 
+defineTool({
+  name: 'update_artist',
+  description: 'Update fields on an existing artist. Confirmation required because splits/fees affect future revenue. If changes include `referrals`, replaces the entire referral chain (matches existing route semantics).',
+  safety: 'needs_confirmation',
+  confirmationLabel: 'Save these artist changes?',
+  parameters: {
+    type: 'object',
+    required: ['id_or_name', 'changes'],
+    properties: {
+      id_or_name: { type: 'string' },
+      changes: {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          nickname: { type: 'string' },
+          revenue_type: { type: 'string', enum: ['youtube', 'platform', 'both'] },
+          artist_split_pct: { type: 'number' },
+          company_split_pct: { type: 'number' },
+          bank_fee_pct: { type: 'number' },
+          phone: { type: 'string' },
+          phone2: { type: 'string' },
+          beneficiary: { type: 'string' },
+          contract_start: { type: 'string' },
+          contract_end: { type: 'string' },
+          contract_years: { type: 'number' },
+          notes: { type: 'string' },
+          referrals: {
+            type: 'array',
+            items: {
+              type: 'object',
+              required: ['referrer_name', 'commission_pct'],
+              properties: {
+                level: { type: 'integer' },
+                referrer_name: { type: 'string' },
+                commission_pct: { type: 'number' }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  async buildPreview({ db }, args) {
+    const r = await resolveArtist(db, args.id_or_name);
+    if (r.error) return { error: r };
+    return { current: r.artist, changes: args.changes };
+  },
+  async execute({ db }, args) {
+    const r = await resolveArtist(db, args.id_or_name);
+    if (r.error) return r;
+    const changes = args.changes || {};
+    const { referrals, ...fieldChanges } = changes;
+    if (Object.keys(fieldChanges).length > 0) {
+      await db('artists').where({ id: r.artist.id }).update(fieldChanges);
+    }
+    if (Array.isArray(referrals)) {
+      await db('referral_levels').where({ artist_id: r.artist.id }).del();
+      const inserts = [];
+      const autoCreated = [];
+      for (let i = 0; i < referrals.length; i++) {
+        const ref = referrals[i];
+        const refName = String(ref.referrer_name || '').trim();
+        if (!refName) continue;
+        let row = await db('referrers').where({ name: refName }).first();
+        if (!row) {
+          const ins = await db('referrers').insert({ name: refName }).returning('id');
+          const newId = Array.isArray(ins) ? (typeof ins[0] === 'object' ? ins[0].id : ins[0]) : ins;
+          row = { id: newId, name: refName };
+          autoCreated.push(refName);
+        } else if (!row.is_active) {
+          await db('referrers').where({ id: row.id }).update({ is_active: true, updated_at: db.fn.now() });
+        }
+        inserts.push({
+          artist_id: r.artist.id,
+          level: ref.level || i + 1,
+          referrer_id: row.id,
+          referrer_name: refName,
+          commission_pct: ref.commission_pct
+        });
+      }
+      if (inserts.length > 0) await db('referral_levels').insert(inserts);
+      return { id: r.artist.id, updated: true, referrals_replaced: inserts.length, referrers_auto_created: autoCreated };
+    }
+    return { id: r.artist.id, updated: true };
+  }
+});
+
+defineTool({
+  name: 'update_referrer',
+  description: 'Update a referrer record. A name change cascades to referral_levels.referrer_name for future payouts; historical revenue_distributions rows are NOT rewritten (matches existing route semantics).',
+  safety: 'needs_confirmation',
+  confirmationLabel: 'Save these referrer changes?',
+  parameters: {
+    type: 'object',
+    required: ['id_or_name', 'changes'],
+    properties: {
+      id_or_name: { type: 'string' },
+      changes: {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          phone: { type: 'string' },
+          email: { type: 'string' },
+          social: { type: 'string' },
+          notes: { type: 'string' }
+        }
+      }
+    }
+  },
+  async buildPreview({ db }, args) {
+    const r = await resolveReferrer(db, args.id_or_name);
+    if (r.error) return { error: r };
+    const c = await db('referral_levels').where({ referrer_id: r.referrer.id }).count('* as count').first();
+    return { current: r.referrer, changes: args.changes, cascade_rows: parseInt(c.count, 10) };
+  },
+  async execute({ db }, args) {
+    const r = await resolveReferrer(db, args.id_or_name);
+    if (r.error) return r;
+    const changes = args.changes || {};
+    if (Object.keys(changes).length === 0) return { id: r.referrer.id, updated: false };
+
+    await db('referrers').where({ id: r.referrer.id }).update({ ...changes, updated_at: db.fn.now() });
+
+    if (changes.name && changes.name !== r.referrer.name) {
+      await db('referral_levels').where({ referrer_id: r.referrer.id }).update({ referrer_name: changes.name });
+    }
+    return { id: r.referrer.id, updated: true };
+  }
+});
+
 function getTool(name) { return tools[name]; }
 function listTools() {
   return Object.values(tools).map(t => ({
