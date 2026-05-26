@@ -65,6 +65,45 @@ router.post('/', requireAdmin, async (req, res) => {
       return res.json({ reply: msg, actions: [] });
     }
 
+    if (tool.safety === 'needs_confirmation') {
+      let preview = null;
+      if (typeof tool.buildPreview === 'function') {
+        try { preview = await tool.buildPreview({ db: req.db }, first.toolArgs); } catch (_) { /* preview optional */ }
+      }
+
+      const insertedPending = await req.db('chat_messages').insert({
+        user_id: req.session.userId,
+        session_key: sessionKey,
+        role: 'tool',
+        tool_name: first.toolName,
+        tool_args: JSON.stringify(first.toolArgs),
+        status: 'pending_confirm'
+      }).returning('id');
+      const pendingId = Array.isArray(insertedPending)
+        ? (typeof insertedPending[0] === 'object' ? insertedPending[0].id : insertedPending[0])
+        : insertedPending;
+
+      const replyText = `Please confirm: ${tool.confirmationLabel || first.toolName}`;
+      await logMessage(req.db, {
+        user_id: req.session.userId,
+        session_key: sessionKey,
+        role: 'assistant',
+        content: replyText
+      });
+
+      return res.json({
+        reply: replyText,
+        actions: [{
+          type: 'confirm',
+          pending_id: pendingId,
+          tool: first.toolName,
+          safety: tool.safety,
+          args: first.toolArgs,
+          preview
+        }]
+      });
+    }
+
     let toolResult;
     try {
       toolResult = await tool.execute({ db: req.db, session: req.session }, first.toolArgs);
@@ -100,6 +139,7 @@ router.post('/', requireAdmin, async (req, res) => {
         ? `Tool ran into a problem: ${toolResult.message || toolResult.error}`
         : `Done. (Narration unavailable: ${narrationErr.message})`;
     }
+
     await logMessage(req.db, {
       user_id: req.session.userId,
       session_key: sessionKey,
@@ -119,6 +159,66 @@ router.post('/', requireAdmin, async (req, res) => {
     });
   } catch (err) {
     console.error('Chat route error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/execute', requireAdmin, async (req, res) => {
+  try {
+    const { pending_id, decision } = req.body;
+    if (!pending_id || !['confirm', 'cancel'].includes(decision)) {
+      return res.status(400).json({ error: 'pending_id and decision (confirm|cancel) required' });
+    }
+
+    const row = await req.db('chat_messages').where({ id: pending_id }).first();
+    if (!row) return res.status(404).json({ error: 'pending row not found' });
+    if (row.user_id !== req.session.userId) return res.status(403).json({ error: 'not your pending action' });
+    if (row.status !== 'pending_confirm') return res.status(400).json({ error: 'pending action no longer valid', status: row.status });
+
+    if (decision === 'cancel') {
+      await req.db('chat_messages').where({ id: pending_id }).update({ status: 'cancelled' });
+      const msg = 'Cancelled.';
+      await logMessage(req.db, {
+        user_id: req.session.userId,
+        session_key: row.session_key,
+        role: 'assistant',
+        content: msg
+      });
+      return res.json({ reply: msg, actions: [{ type: 'cancelled', pending_id }] });
+    }
+
+    const tool = chatTools.getTool(row.tool_name);
+    if (!tool) return res.status(500).json({ error: 'tool no longer registered' });
+
+    const args = row.tool_args ? JSON.parse(row.tool_args) : {};
+    let toolResult;
+    try {
+      toolResult = await tool.execute({ db: req.db, session: req.session }, args);
+    } catch (err) {
+      toolResult = { error: 'execution_failed', message: err.message };
+    }
+
+    await req.db('chat_messages').where({ id: pending_id }).update({
+      tool_result: JSON.stringify(toolResult),
+      status: (toolResult && toolResult.error) ? 'failed' : 'executed'
+    });
+
+    const msg = toolResult && toolResult.error
+      ? `Tried but ran into a problem: ${toolResult.message || toolResult.error}`
+      : 'Done.';
+    await logMessage(req.db, {
+      user_id: req.session.userId,
+      session_key: row.session_key,
+      role: 'assistant',
+      content: msg
+    });
+
+    return res.json({
+      reply: msg,
+      actions: [{ type: 'executed', tool: row.tool_name, safety: tool.safety, args, result: toolResult }]
+    });
+  } catch (err) {
+    console.error('Chat execute error:', err);
     res.status(500).json({ error: err.message });
   }
 });

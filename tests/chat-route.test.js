@@ -168,6 +168,113 @@ test('POST /api/chat: when tool throws, status is "failed" in chat_messages', as
   await db.destroy();
 });
 
+const chatTools = require('../services/chatTools');
+
+test('POST /api/chat: needs_confirmation tool returns pending_id and does NOT execute', async () => {
+  // Register a temporary tool for this test
+  chatTools._tools.stub_confirm = {
+    name: 'stub_confirm',
+    description: 'test',
+    safety: 'needs_confirmation',
+    parameters: { type: 'object', properties: {} },
+    confirmationLabel: 'Stub confirm action',
+    buildPreview: async () => ({ preview_note: 'about to happen' }),
+    execute: async () => ({ executed: true })
+  };
+
+  const { app, db } = await makeApp();
+  gemini._setClientFactory(() => ({
+    getGenerativeModel() {
+      return { async generateContent() { return { response: { candidates: [{ content: { role: 'model', parts: [{ functionCall: { name: 'stub_confirm', args: {} } }] } }] } }; } };
+    }
+  }));
+
+  const res = await request(app).post('/api/chat').send({ messages: [{ role: 'user', content: 'do stub' }] });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.actions[0].type, 'confirm');
+  assert.ok(res.body.actions[0].pending_id);
+  assert.deepEqual(res.body.actions[0].preview, { preview_note: 'about to happen' });
+
+  const pendingRow = await db('chat_messages').where({ id: res.body.actions[0].pending_id }).first();
+  assert.equal(pendingRow.status, 'pending_confirm');
+  assert.equal(pendingRow.tool_result, null);
+
+  delete chatTools._tools.stub_confirm;
+  gemini._resetClientFactory();
+  await db.destroy();
+});
+
+test('POST /api/chat/execute confirm: executes pending tool and marks executed', async () => {
+  chatTools._tools.stub_confirm = {
+    name: 'stub_confirm', description: 'test', safety: 'needs_confirmation',
+    parameters: { type: 'object', properties: {} },
+    execute: async () => ({ executed: true })
+  };
+  const { app, db } = await makeApp();
+  gemini._setClientFactory(() => ({
+    getGenerativeModel() {
+      return { async generateContent() { return { response: { candidates: [{ content: { role: 'model', parts: [{ functionCall: { name: 'stub_confirm', args: {} } }] } }] } }; } };
+    }
+  }));
+
+  const first = await request(app).post('/api/chat').send({ messages: [{ role: 'user', content: 'do stub' }] });
+  const pendingId = first.body.actions[0].pending_id;
+
+  const second = await request(app).post('/api/chat/execute').send({ pending_id: pendingId, decision: 'confirm' });
+  assert.equal(second.status, 200);
+  assert.equal(second.body.actions[0].type, 'executed');
+  assert.deepEqual(second.body.actions[0].result, { executed: true });
+
+  const row = await db('chat_messages').where({ id: pendingId }).first();
+  assert.equal(row.status, 'executed');
+
+  delete chatTools._tools.stub_confirm;
+  gemini._resetClientFactory();
+  await db.destroy();
+});
+
+test('POST /api/chat/execute cancel: marks cancelled, does NOT execute', async () => {
+  let executed = false;
+  chatTools._tools.stub_confirm = {
+    name: 'stub_confirm', description: 'test', safety: 'needs_confirmation',
+    parameters: { type: 'object', properties: {} },
+    execute: async () => { executed = true; return {}; }
+  };
+  const { app, db } = await makeApp();
+  gemini._setClientFactory(() => ({
+    getGenerativeModel() {
+      return { async generateContent() { return { response: { candidates: [{ content: { role: 'model', parts: [{ functionCall: { name: 'stub_confirm', args: {} } }] } }] } }; } };
+    }
+  }));
+
+  const first = await request(app).post('/api/chat').send({ messages: [{ role: 'user', content: 'do stub' }] });
+  const pendingId = first.body.actions[0].pending_id;
+
+  const second = await request(app).post('/api/chat/execute').send({ pending_id: pendingId, decision: 'cancel' });
+  assert.equal(second.status, 200);
+  assert.equal(executed, false);
+  const row = await db('chat_messages').where({ id: pendingId }).first();
+  assert.equal(row.status, 'cancelled');
+
+  delete chatTools._tools.stub_confirm;
+  gemini._resetClientFactory();
+  await db.destroy();
+});
+
+test('POST /api/chat/execute: 400 when pending action status is not pending_confirm', async () => {
+  const { app, db } = await makeApp();
+  const insertedRow = await db('chat_messages').insert({
+    user_id: 1, session_key: 'x', role: 'tool', tool_name: 'stub_confirm',
+    tool_args: '{}', status: 'executed'
+  }).returning('id');
+  const id = Array.isArray(insertedRow)
+    ? (typeof insertedRow[0] === 'object' ? insertedRow[0].id : insertedRow[0])
+    : insertedRow;
+  const res = await request(app).post('/api/chat/execute').send({ pending_id: id, decision: 'confirm' });
+  assert.equal(res.status, 400);
+  await db.destroy();
+});
+
 test('POST /api/chat: add_artist tool call executes and persists', async () => {
   const { app, db } = await makeApp();
 
