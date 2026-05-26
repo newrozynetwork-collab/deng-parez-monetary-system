@@ -203,7 +203,7 @@
     $tbl.append(row('Artist (' + (c.artistSplitPct || 0) + '%)', App.formatCurrency(c.artistShare)));
     $tbl.append(row('Company gross (' + (c.companySplitPct || 0) + '%)', App.formatCurrency(c.companyGross)));
     (c.referralBreakdown || []).forEach(r => {
-      $tbl.append(row('→ ' + r.referrerName + ' L' + r.level + ' (' + r.commissionPct + '%)', App.formatCurrency(r.amount)));
+      $tbl.append(row('→ ' + esc(r.referrerName) + ' L' + esc(r.level) + ' (' + esc(r.commissionPct) + '%)', App.formatCurrency(r.amount)));
     });
     $tbl.append(row('<strong>Company net</strong>', '<strong>' + App.formatCurrency(c.companyNet) + '</strong>'));
     return $tbl;
