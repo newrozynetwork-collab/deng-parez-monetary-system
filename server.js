@@ -80,6 +80,7 @@ app.get('/reports', (req, res) => res.sendFile(path.join(__dirname, 'public', 'p
 app.get('/user-breakdown', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'user-breakdown.html')));
 app.get('/report-generator', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'report-generator.html')));
 app.get('/payments', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'payments.html')));
+app.get('/chat', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'chat.html')));
 // Report Shower: admin upload UI (login required)
 app.get('/shower/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'shower-admin.html')));
 // Report Shower: public artist index + per-artist pages (no login)
