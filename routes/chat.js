@@ -79,20 +79,27 @@ router.post('/', requireAdmin, async (req, res) => {
       tool_name: first.toolName,
       tool_args: JSON.stringify(first.toolArgs),
       tool_result: JSON.stringify(toolResult),
-      status: 'executed'
+      status: (toolResult && toolResult.error) ? 'failed' : 'executed'
     });
 
-    const second = await gemini.callModel({
-      systemPrompt: SYSTEM_PROMPT,
-      tools: toolDefs,
-      messages: [
-        ...truncated,
-        { role: 'assistant', parts: [{ functionCall: { name: first.toolName, args: first.toolArgs } }] },
-        { role: 'tool', parts: [{ functionResponse: { name: first.toolName, response: toolResult } }] }
-      ]
-    });
-
-    const replyText = second.kind === 'text' ? second.text : '(unexpected tool call — stopping for this turn)';
+    let replyText;
+    try {
+      const second = await gemini.callModel({
+        systemPrompt: SYSTEM_PROMPT,
+        tools: toolDefs,
+        messages: [
+          ...truncated,
+          { role: 'assistant', parts: [{ functionCall: { name: first.toolName, args: first.toolArgs } }] },
+          { role: 'tool', parts: [{ functionResponse: { name: first.toolName, response: toolResult } }] }
+        ]
+      });
+      replyText = second.kind === 'text' ? second.text : '(unexpected tool call — stopping for this turn)';
+    } catch (narrationErr) {
+      console.error('Chat narration call failed:', narrationErr);
+      replyText = (toolResult && toolResult.error)
+        ? `Tool ran into a problem: ${toolResult.message || toolResult.error}`
+        : `Done. (Narration unavailable: ${narrationErr.message})`;
+    }
     await logMessage(req.db, {
       user_id: req.session.userId,
       session_key: sessionKey,

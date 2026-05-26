@@ -92,3 +92,78 @@ test('POST /api/chat: rejects requests with no messages', async () => {
   assert.equal(res.status, 400);
   await db.destroy();
 });
+
+test('POST /api/chat: when first Gemini call throws, returns 500 and logs nothing about tools', async () => {
+  const { app, db } = await makeApp();
+  gemini._setClientFactory(() => ({
+    getGenerativeModel() {
+      return { async generateContent() { throw new Error('network blew up'); } };
+    }
+  }));
+  const res = await request(app).post('/api/chat').send({ messages: [{ role: 'user', content: 'list artists' }] });
+  assert.equal(res.status, 500);
+  const toolRows = await db('chat_messages').where({ role: 'tool' });
+  assert.equal(toolRows.length, 0);
+  gemini._resetClientFactory();
+  await db.destroy();
+});
+
+test('POST /api/chat: when second Gemini call throws, tool already executed, route still returns 200 with fallback reply', async () => {
+  const { app, db } = await makeApp();
+  await db('artists').insert({ name: 'Hozan', artist_split_pct: 60, company_split_pct: 40, bank_fee_pct: 2.5 });
+  let callCount = 0;
+  gemini._setClientFactory(() => ({
+    getGenerativeModel() {
+      return {
+        async generateContent() {
+          callCount++;
+          if (callCount === 1) {
+            return { response: { candidates: [{ content: { role: 'model', parts: [{ functionCall: { name: 'list_artists', args: {} } }] } }] } };
+          }
+          throw new Error('narration died');
+        }
+      };
+    }
+  }));
+  const res = await request(app).post('/api/chat').send({ messages: [{ role: 'user', content: 'list artists' }] });
+  assert.equal(res.status, 200);
+  assert.ok(res.body.reply.includes('Narration unavailable') || res.body.reply.includes('Done'));
+  const toolRow = await db('chat_messages').where({ role: 'tool' }).first();
+  assert.ok(toolRow);
+  assert.equal(toolRow.status, 'executed');
+  gemini._resetClientFactory();
+  await db.destroy();
+});
+
+test('POST /api/chat: when tool throws, status is "failed" in chat_messages', async () => {
+  const { app, db } = await makeApp();
+  // Inject a tool that always throws
+  const chatTools = require('../services/chatTools');
+  const original = chatTools._tools.list_artists;
+  chatTools._tools.list_artists = {
+    ...original,
+    execute: async () => { throw new Error('boom'); }
+  };
+  let callCount = 0;
+  gemini._setClientFactory(() => ({
+    getGenerativeModel() {
+      return {
+        async generateContent() {
+          callCount++;
+          if (callCount === 1) {
+            return { response: { candidates: [{ content: { role: 'model', parts: [{ functionCall: { name: 'list_artists', args: {} } }] } }] } };
+          }
+          return { response: { candidates: [{ content: { role: 'model', parts: [{ text: 'Reported it.' }] } }] } };
+        }
+      };
+    }
+  }));
+  const res = await request(app).post('/api/chat').send({ messages: [{ role: 'user', content: 'list' }] });
+  assert.equal(res.status, 200);
+  const toolRow = await db('chat_messages').where({ role: 'tool' }).first();
+  assert.equal(toolRow.status, 'failed');
+  // Restore original tool
+  chatTools._tools.list_artists = original;
+  gemini._resetClientFactory();
+  await db.destroy();
+});
