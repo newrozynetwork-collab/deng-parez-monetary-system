@@ -495,7 +495,12 @@ defineTool({
     const r = await resolveArtist(db, args.id_or_name);
     if (r.error) return r;
     const changes = args.changes || {};
-    const { referrals, ...fieldChanges } = changes;
+    const { referrals, ...rawFieldChanges } = changes;
+    const ARTIST_FIELDS = ['name', 'nickname', 'revenue_type', 'artist_split_pct', 'company_split_pct', 'bank_fee_pct', 'phone', 'phone2', 'beneficiary', 'contract_start', 'contract_end', 'contract_years', 'notes'];
+    const fieldChanges = {};
+    for (const k of ARTIST_FIELDS) {
+      if (rawFieldChanges[k] !== undefined) fieldChanges[k] = rawFieldChanges[k];
+    }
     if (Object.keys(fieldChanges).length > 0) {
       await db('artists').where({ id: r.artist.id }).update(fieldChanges);
     }
@@ -562,7 +567,12 @@ defineTool({
   async execute({ db }, args) {
     const r = await resolveReferrer(db, args.id_or_name);
     if (r.error) return r;
-    const changes = args.changes || {};
+    const REFERRER_FIELDS = ['name', 'phone', 'email', 'social', 'notes'];
+    const rawChanges = args.changes || {};
+    const changes = {};
+    for (const k of REFERRER_FIELDS) {
+      if (rawChanges[k] !== undefined) changes[k] = rawChanges[k];
+    }
     if (Object.keys(changes).length === 0) return { id: r.referrer.id, updated: false };
 
     await db('referrers').where({ id: r.referrer.id }).update({ ...changes, updated_at: db.fn.now() });

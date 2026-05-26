@@ -308,3 +308,12 @@ test('POST /api/chat: add_artist tool call executes and persists', async () => {
   gemini._resetClientFactory();
   await db.destroy();
 });
+
+test('parsePendingArgs: handles both string and object', () => {
+  // The defensive parse logic from routes/chat.js
+  const parse = (v) => v ? (typeof v === 'string' ? JSON.parse(v) : v) : {};
+  assert.deepEqual(parse('{"a":1}'), { a: 1 });
+  assert.deepEqual(parse({ a: 1 }), { a: 1 });
+  assert.deepEqual(parse(null), {});
+  assert.deepEqual(parse(undefined), {});
+});

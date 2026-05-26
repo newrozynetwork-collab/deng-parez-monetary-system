@@ -190,7 +190,9 @@ router.post('/execute', requireAdmin, async (req, res) => {
     const tool = chatTools.getTool(row.tool_name);
     if (!tool) return res.status(500).json({ error: 'tool no longer registered' });
 
-    const args = row.tool_args ? JSON.parse(row.tool_args) : {};
+    const args = row.tool_args
+      ? (typeof row.tool_args === 'string' ? JSON.parse(row.tool_args) : row.tool_args)
+      : {};
     let toolResult;
     try {
       toolResult = await tool.execute({ db: req.db, session: req.session }, args);

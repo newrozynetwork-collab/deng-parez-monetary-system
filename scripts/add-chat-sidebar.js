@@ -28,7 +28,7 @@ const SKIP_FILES = new Set([
 
 // The Chat <li> to inject — compact one-liner to match the existing style
 const CHAT_LI =
-  `<li class="sidebar-item"><a class="sidebar-link waves-effect waves-dark" href="/chat"><i data-feather="message-circle" class="feather-icon"></i><span class="hide-menu">Chat</span></a></li>`;
+  `<li class="sidebar-item admin-only"><a class="sidebar-link waves-effect waves-dark" href="/chat"><i data-feather="message-circle" class="feather-icon"></i><span class="hide-menu">Chat</span></a></li>`;
 
 /**
  * Build a regex that matches the entire <li>…</li> block containing the
