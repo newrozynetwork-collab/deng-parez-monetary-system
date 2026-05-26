@@ -24,7 +24,7 @@ defineTool({
       )
       .leftJoin('referral_levels', 'referral_levels.artist_id', 'artists.id')
       .count('referral_levels.id as referrals_count')
-      .groupBy('artists.id')
+      .groupBy('artists.id', 'artists.name', 'artists.nickname', 'artists.artist_split_pct', 'artists.company_split_pct', 'artists.bank_fee_pct', 'artists.contract_status')
       .orderBy('artists.name');
 
     if (q) {
