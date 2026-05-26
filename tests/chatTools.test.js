@@ -70,3 +70,81 @@ test('tool catalog: listTools returns array of {name, description, parameters, s
   assert.equal(typeof la.description, 'string');
   assert.equal(la.parameters.type, 'object');
 });
+
+test('get_artist: returns artist with referrals', async () => {
+  const db = await makeTestDb();
+  const aid = await seedArtist(db, 'Hozan');
+  await db('referral_levels').insert({ artist_id: aid, level: 1, referrer_name: 'Sarah', commission_pct: 5 });
+  const res = await tools.getTool('get_artist').execute({ db }, { id_or_name: 'hozan' });
+  assert.equal(res.name, 'Hozan');
+  assert.equal(res.referrals.length, 1);
+  assert.equal(res.referrals[0].referrer_name, 'Sarah');
+  await db.destroy();
+});
+
+test('get_artist: returns not_found error for missing name', async () => {
+  const db = await makeTestDb();
+  const res = await tools.getTool('get_artist').execute({ db }, { id_or_name: 'NoOne' });
+  assert.equal(res.error, 'not_found');
+  await db.destroy();
+});
+
+test('get_artist: returns ambiguous error with candidates for fuzzy match', async () => {
+  const db = await makeTestDb();
+  await seedArtist(db, 'Sarah Smith');
+  await seedArtist(db, 'Sarah Khalid');
+  const res = await tools.getTool('get_artist').execute({ db }, { id_or_name: 'sarah' });
+  assert.equal(res.error, 'ambiguous');
+  assert.equal(res.candidates.length, 2);
+  await db.destroy();
+});
+
+test('list_referrers: filters by query and excludes inactive by default', async () => {
+  const db = await makeTestDb();
+  await db('referrers').insert([
+    { name: 'Sarah', is_active: true },
+    { name: 'Ali', is_active: true },
+    { name: 'Old Person', is_active: false }
+  ]);
+  const all = await tools.getTool('list_referrers').execute({ db }, {});
+  assert.equal(all.matches.length, 2);
+  const filtered = await tools.getTool('list_referrers').execute({ db }, { query: 'sa' });
+  assert.equal(filtered.matches.length, 1);
+  assert.equal(filtered.matches[0].name, 'Sarah');
+  const incInactive = await tools.getTool('list_referrers').execute({ db }, { include_inactive: true });
+  assert.equal(incInactive.matches.length, 3);
+  await db.destroy();
+});
+
+test('preview_revenue_split: returns calculator output for resolved artist', async () => {
+  const db = await makeTestDb();
+  const aid = await seedArtist(db, 'Hozan');
+  await db('referral_levels').insert({ artist_id: aid, level: 1, referrer_name: 'Sarah', commission_pct: 5 });
+
+  const res = await tools.getTool('preview_revenue_split').execute({ db }, { artist: 'hozan', amount: 5000 });
+  assert.equal(res.artist_name, 'Hozan');
+  assert.equal(res.bankFee, 125);
+  assert.equal(res.artistShare, 2925);
+  assert.equal(res.referralBreakdown[0].amount, 97.5);
+  await db.destroy();
+});
+
+test('preview_revenue_split: validation error on negative amount', async () => {
+  const db = await makeTestDb();
+  await seedArtist(db, 'Hozan');
+  const res = await tools.getTool('preview_revenue_split').execute({ db }, { artist: 'hozan', amount: -5 });
+  assert.equal(res.error, 'validation');
+  await db.destroy();
+});
+
+test('list_recent_revenue: returns entries sorted desc by created_at, respects limit', async () => {
+  const db = await makeTestDb();
+  const aid = await seedArtist(db, 'Hozan');
+  await db('revenue_entries').insert([
+    { artist_id: aid, amount: 100, source: 'platform', period_start: '2026-01-01', period_end: '2026-01-31' },
+    { artist_id: aid, amount: 200, source: 'platform', period_start: '2026-02-01', period_end: '2026-02-28' }
+  ]);
+  const res = await tools.getTool('list_recent_revenue').execute({ db }, { limit: 1 });
+  assert.equal(res.entries.length, 1);
+  await db.destroy();
+});
