@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/png" sizes="16x16" href="/assets/images/favicon.png">
-    <title>Dashboard - Deng Parez</title>
+    <title>Chat — Deng Parez</title>
     <link href="/css/style.min.css" rel="stylesheet">
     <link href="/css/custom-app.css" rel="stylesheet">
     <link href="/assets/libs/daterangepicker/daterangepicker.css" rel="stylesheet">
@@ -13,9 +13,17 @@
         (function(){ try { var t = localStorage.getItem('dp-theme') || 'light'; document.documentElement.setAttribute('data-theme', t); } catch(e){} })();
     </script>
     <style>
-        .stat-card { transition: transform 0.2s; cursor: pointer; }
-        .stat-card:hover { transform: translateY(-3px); }
-        .chart-container { position: relative; height: 300px; }
+        .chat-msg { margin: 8px 0; padding: 8px 12px; border-radius: 12px; max-width: 80%; word-wrap: break-word; }
+        .chat-msg-user { background: #f158d0; color: #fff; margin-left: auto; }
+        .chat-msg-assistant { background: #f4f4f8; color: #333; margin-right: auto; }
+        [data-theme="dark"] .chat-msg-assistant { background: #2a2a36; color: #e8e8e8; }
+        .chat-msg-error { background: #fde2e2; color: #a02525; margin-right: auto; }
+        .chat-card { border: 1px solid #ddd; border-radius: 8px; padding: 12px; margin: 6px 0; background: #fff; }
+        [data-theme="dark"] .chat-card { background: #1f1f29; border-color: #3a3a48; color: #e8e8e8; }
+        .chat-card table { width: 100%; }
+        .chat-card td { padding: 2px 6px; }
+        .chat-confirm-actions { display: flex; gap: 8px; margin-top: 10px; }
+        .chat-tool-name { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
     </style>
 </head>
 <body>
@@ -165,160 +173,27 @@
         <div class="page-wrapper">
             <div class="page-breadcrumb">
                 <div class="row">
-                    <div class="col-7 align-self-center">
-                        <h3 class="page-title text-truncate text-dark font-weight-medium mb-1">Dashboard</h3>
-                        <div class="d-flex align-items-center">
-                            <nav aria-label="breadcrumb">
-                                <ol class="breadcrumb m-0 p-0">
-                                    <li class="breadcrumb-item active" aria-current="page">Overview</li>
-                                </ol>
-                            </nav>
-                        </div>
-                    </div>
-                    <div class="col-5 align-self-center">
-                        <div class="d-flex justify-content-end">
-                            <input type="text" class="form-control" id="date-range" style="max-width:250px;" placeholder="Filter by date range">
+                    <div class="col-12 d-flex align-items-center">
+                        <h4 class="page-title">Chat</h4>
+                        <div class="ml-auto">
+                            <button id="chat-clear" class="btn btn-sm btn-outline-secondary">Clear conversation</button>
                         </div>
                     </div>
                 </div>
             </div>
+
             <div class="container-fluid">
-                <!-- Stats Row -->
-                <div class="row">
-                    <div class="col-lg-3 col-md-6">
-                        <div class="card stat-card" style="background: linear-gradient(135deg, #3b82f6, #60a5fa);">
-                            <div class="card-body">
-                                <div class="d-flex">
-                                    <div>
-                                        <i class="text-white op-7" data-feather="trending-up"></i>
-                                        <span class="text-white op-7 d-block my-3">Total Revenue</span>
-                                        <h3 class="text-white mb-0" id="stat-revenue">$0.00</h3>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-md-6">
-                        <div class="card stat-card" style="background: linear-gradient(135deg, #f59e0b, #fbbf24);">
-                            <div class="card-body">
-                                <div class="d-flex">
-                                    <div>
-                                        <i class="text-white op-7" data-feather="send"></i>
-                                        <span class="text-white op-7 d-block my-3">Total Payouts</span>
-                                        <h3 class="text-white mb-0" id="stat-payouts">$0.00</h3>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-md-6">
-                        <div class="card stat-card" style="background: linear-gradient(135deg, #10b981, #34d399);">
-                            <div class="card-body">
-                                <div class="d-flex">
-                                    <div>
-                                        <i class="text-white op-7" data-feather="shield"></i>
-                                        <span class="text-white op-7 d-block my-3">Net Profit</span>
-                                        <h3 class="text-white mb-0" id="stat-profit">$0.00</h3>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-md-6">
-                        <div class="card stat-card" style="background: linear-gradient(135deg, #14b8a6, #2dd4bf);">
-                            <div class="card-body">
-                                <div class="d-flex">
-                                    <div>
-                                        <i class="text-white op-7" data-feather="users"></i>
-                                        <span class="text-white op-7 d-block my-3">Active Artists</span>
-                                        <h3 class="text-white mb-0" id="stat-artists">0</h3>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Charts Row -->
-                <div class="row">
-                    <div class="col-lg-8">
-                        <div class="card">
-                            <div class="card-body">
-                                <h4 class="card-title">Revenue Trend</h4>
-                                <div class="chart-container">
-                                    <canvas id="revenue-trend-chart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-4">
-                        <div class="card">
-                            <div class="card-body">
-                                <h4 class="card-title">Revenue by Source</h4>
-                                <div class="chart-container">
-                                    <canvas id="revenue-source-chart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Financial Breakdown -->
-                <div class="row">
-                    <div class="col-lg-4 col-md-6">
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title">Artist Payouts</h5>
-                                <h3 class="text-primary" id="stat-artist-payouts">$0.00</h3>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-4 col-md-6">
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title">Referral Payouts</h5>
-                                <h3 class="text-warning" id="stat-referral-payouts">$0.00</h3>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-4 col-md-6">
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title">Bank Fees</h5>
-                                <h3 class="text-danger" id="stat-bank-fees">$0.00</h3>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Quick Actions -->
-                <div class="row">
-                    <div class="col-12">
-                        <div class="card">
-                            <div class="card-body">
-                                <div class="d-flex align-items-center mb-4">
-                                    <h4 class="card-title mb-0">Quick Actions</h4>
-                                </div>
-                                <div class="row">
-                                    <div class="col-lg col-md-4 col-6 mb-2">
-                                        <a href="/revenue/new" class="btn btn-block btn-outline-primary"><i data-feather="plus" class="feather-icon mr-1"></i> New Revenue</a>
-                                    </div>
-                                    <div class="col-lg col-md-4 col-6 mb-2">
-                                        <a href="/artists" class="btn btn-block btn-outline-info"><i data-feather="user-plus" class="feather-icon mr-1"></i> Add Artist</a>
-                                    </div>
-                                    <div class="col-lg col-md-4 col-6 mb-2">
-                                        <a href="/referrers#add" class="btn btn-block btn-outline-warning"><i data-feather="user-check" class="feather-icon mr-1"></i> Add Referrer</a>
-                                    </div>
-                                    <div class="col-lg col-md-4 col-6 mb-2">
-                                        <a href="/expenses" class="btn btn-block btn-outline-danger"><i data-feather="minus-circle" class="feather-icon mr-1"></i> Add Expense</a>
-                                    </div>
-                                    <div class="col-lg col-md-4 col-6 mb-2">
-                                        <a href="/reports" class="btn btn-block btn-outline-success"><i data-feather="download" class="feather-icon mr-1"></i> Export Report</a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                <div class="card">
+                    <div class="card-body" style="display:flex; flex-direction:column; height:calc(100vh - 220px);">
+                        <div id="chat-thread" style="flex:1; overflow-y:auto; padding:8px;"></div>
+                        <form id="chat-form" style="display:flex; gap:8px; align-items:flex-end; margin-top:8px;">
+                            <button type="button" id="chat-mic" class="btn btn-outline-secondary" title="Speak"><i data-feather="mic"></i></button>
+                            <textarea id="chat-input" class="form-control" rows="2" placeholder="Type a command..." style="flex:1; resize:vertical;"></textarea>
+                            <button type="submit" id="chat-send" class="btn btn-primary"><i data-feather="send"></i></button>
+                        </form>
                     </div>
                 </div>
             </div>
-            <footer class="footer text-center">Deng Parez Monetary System &copy; 2024</footer>
         </div>
     </div>
     <script src="/assets/libs/jquery/dist/jquery.min.js"></script>
@@ -331,8 +206,7 @@
     <script src="/js/feather.min.js"></script>
     <script src="/assets/libs/moment/moment.js"></script>
     <script src="/assets/libs/daterangepicker/daterangepicker.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="/app/common.js"></script>
-    <script src="/app/dashboard.js"></script>
+    <script src="/app/chat.js"></script>
 </body>
 </html>
