@@ -30,7 +30,14 @@ async function callModel({ systemPrompt, tools, messages, modelName = 'gemini-2.
   const model = client.getGenerativeModel({
     model: modelName,
     systemInstruction: { role: 'system', parts: [{ text: systemPrompt }] },
-    tools: toGeminiTools(tools)
+    tools: toGeminiTools(tools),
+    // Disable extended thinking: with a long directive system prompt and many
+    // tools, 2.5 Flash sometimes consumes its full thinking budget and stops
+    // before producing any output (empty `parts`, finishReason STOP). For
+    // command→tool routing we don't need deep reasoning anyway.
+    generationConfig: {
+      thinkingConfig: { thinkingBudget: 0 }
+    }
   });
 
   const result = await model.generateContent({ contents: toGeminiContents(messages) });

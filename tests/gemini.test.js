@@ -6,10 +6,10 @@ const gemini = require('../services/gemini');
 test('gemini.callModel: builds request with system prompt, tools, and messages', async () => {
   const calls = [];
   gemini._setClientFactory(() => ({
-    getGenerativeModel({ model, systemInstruction, tools }) {
+    getGenerativeModel({ model, systemInstruction, tools, generationConfig }) {
       return {
         async generateContent({ contents }) {
-          calls.push({ model, systemInstruction, tools, contents });
+          calls.push({ model, systemInstruction, tools, generationConfig, contents });
           return {
             response: {
               candidates: [{
@@ -34,6 +34,10 @@ test('gemini.callModel: builds request with system prompt, tools, and messages',
   assert.equal(calls[0].tools[0].functionDeclarations[0].name, 'list_artists');
   assert.equal(calls[0].contents[0].role, 'user');
   assert.equal(calls[0].contents[0].parts[0].text, 'Hi');
+  // Regression guard: thinking must be disabled — otherwise 2.5 Flash
+  // sometimes consumes its full thinking budget and produces empty output
+  // when paired with a directive system prompt + many tools.
+  assert.deepEqual(calls[0].generationConfig, { thinkingConfig: { thinkingBudget: 0 } });
 
   assert.equal(result.kind, 'text');
   assert.equal(result.text, 'Hello back');
