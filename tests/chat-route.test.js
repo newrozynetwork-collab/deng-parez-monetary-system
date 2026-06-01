@@ -317,3 +317,43 @@ test('parsePendingArgs: handles both string and object', () => {
   assert.deepEqual(parse(null), {});
   assert.deepEqual(parse(undefined), {});
 });
+
+test('POST /api/chat: needs_confirmation tool whose buildPreview surfaces an error short-circuits — no pending row, no confirm card', async () => {
+  // Stub a confirmation tool whose buildPreview returns an error wrapper,
+  // simulating record_revenue with a non-existent artist.
+  const chatTools = require('../services/chatTools');
+  chatTools._tools.stub_preview_err = {
+    name: 'stub_preview_err',
+    description: 'test',
+    safety: 'needs_confirmation',
+    parameters: { type: 'object', properties: {} },
+    confirmationLabel: 'Would never reach this',
+    buildPreview: async () => ({ error: { error: 'not_found', query: 'Mahmud Mhamad' } }),
+    execute: async () => { throw new Error('should not execute'); }
+  };
+  const { app, db } = await makeApp();
+  gemini._setClientFactory(() => ({
+    getGenerativeModel() {
+      return { async generateContent() { return { response: { candidates: [{ content: { role: 'model', parts: [{ functionCall: { name: 'stub_preview_err', args: {} } }] } }] } }; } };
+    }
+  }));
+
+  const res = await request(app).post('/api/chat').send({ messages: [{ role: 'user', content: 'try a doomed action' }] });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.actions[0].type, 'preview_failed');
+  assert.equal(res.body.actions[0].error.error, 'not_found');
+  assert.equal(res.body.actions[0].error.query, 'Mahmud Mhamad');
+  assert.ok(res.body.reply.includes('Mahmud Mhamad'));
+
+  // No pending_confirm row should exist.
+  const pending = await db('chat_messages').where({ status: 'pending_confirm' });
+  assert.equal(pending.length, 0);
+
+  // A failed tool row IS logged for audit, with status 'failed'.
+  const failedRows = await db('chat_messages').where({ tool_name: 'stub_preview_err', status: 'failed' });
+  assert.equal(failedRows.length, 1);
+
+  delete chatTools._tools.stub_preview_err;
+  gemini._resetClientFactory();
+  await db.destroy();
+});
