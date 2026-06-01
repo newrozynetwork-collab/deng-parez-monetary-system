@@ -342,3 +342,32 @@ test('delete_referrer: hard-deletes when not in use', async () => {
   assert.equal(row, undefined);
   await db.destroy();
 });
+
+test('resolveArtist token fallback: finds "Mahmood Mhamad" when user types "Mahmud Mhamad"', async () => {
+  const db = await makeTestDb();
+  await seedArtist(db, 'Mahmood Mhamad');
+  // get_artist exercises resolveArtist
+  const res = await tools.getTool('get_artist').execute({ db }, { id_or_name: 'Mahmud Mhamad' });
+  // Mhamad is the matching token between query and stored name
+  assert.equal(res.name, 'Mahmood Mhamad');
+  await db.destroy();
+});
+
+test('resolveArtist token fallback: reversed word order still matches', async () => {
+  const db = await makeTestDb();
+  await seedArtist(db, 'John Smith');
+  const res = await tools.getTool('get_artist').execute({ db }, { id_or_name: 'Smith John' });
+  assert.equal(res.name, 'John Smith');
+  await db.destroy();
+});
+
+test('resolveArtist token fallback: still returns ambiguous when multiple tokens match different artists', async () => {
+  const db = await makeTestDb();
+  await seedArtist(db, 'John Adams');
+  await seedArtist(db, 'Will Smith');
+  // Query "John Smith" matches Adams via "John" and Will via "Smith"
+  const res = await tools.getTool('get_artist').execute({ db }, { id_or_name: 'John Smith' });
+  assert.equal(res.error, 'ambiguous');
+  assert.equal(res.candidates.length, 2);
+  await db.destroy();
+});

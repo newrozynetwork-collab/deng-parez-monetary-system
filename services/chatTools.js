@@ -192,6 +192,11 @@ defineTool({
   }
 });
 
+// Tokens 2+ chars long. Avoids matching every row on "a", "of", etc.
+function _tokenize(s) {
+  return String(s).toLowerCase().split(/[\s,;.\-_/]+/).filter(t => t.length >= 2);
+}
+
 async function resolveArtist(db, idOrName) {
   if (idOrName === undefined || idOrName === null || idOrName === '') {
     return { error: 'not_found', query: '' };
@@ -201,10 +206,30 @@ async function resolveArtist(db, idOrName) {
     return a ? { artist: a } : { error: 'not_found', query: String(idOrName) };
   }
   const q = String(idOrName).trim();
-  const rows = await db('artists')
-    .whereRaw('LOWER(name) LIKE ?', [`%${q.toLowerCase()}%`])
-    .orWhereRaw('LOWER(COALESCE(nickname, \'\')) LIKE ?', [`%${q.toLowerCase()}%`])
+  const qLower = q.toLowerCase();
+
+  // Pass 1: full string substring match.
+  let rows = await db('artists')
+    .whereRaw('LOWER(name) LIKE ?', [`%${qLower}%`])
+    .orWhereRaw('LOWER(COALESCE(nickname, \'\')) LIKE ?', [`%${qLower}%`])
     .orderBy('name');
+
+  // Pass 2: token fallback — split query into words, match if ANY token is in
+  // the name or nickname. Catches spelling/transliteration variants (Mahmud /
+  // Mahmood), reversed word order, and trailing whitespace cases.
+  if (rows.length === 0) {
+    const tokens = _tokenize(q);
+    if (tokens.length > 0) {
+      rows = await db('artists').where(function () {
+        const self = this;
+        tokens.forEach(t => {
+          self.orWhereRaw('LOWER(name) LIKE ?', [`%${t}%`])
+              .orWhereRaw('LOWER(COALESCE(nickname, \'\')) LIKE ?', [`%${t}%`]);
+        });
+      }).orderBy('name');
+    }
+  }
+
   if (rows.length === 0) return { error: 'not_found', query: q };
   if (rows.length > 1) return { error: 'ambiguous', candidates: rows.map(r => ({ id: r.id, name: r.name })) };
   return { artist: rows[0] };
@@ -219,9 +244,24 @@ async function resolveReferrer(db, idOrName) {
     return r ? { referrer: r } : { error: 'not_found', query: String(idOrName) };
   }
   const q = String(idOrName).trim();
-  const rows = await db('referrers')
-    .whereRaw('LOWER(name) LIKE ?', [`%${q.toLowerCase()}%`])
+  const qLower = q.toLowerCase();
+
+  let rows = await db('referrers')
+    .whereRaw('LOWER(name) LIKE ?', [`%${qLower}%`])
     .orderBy('name');
+
+  if (rows.length === 0) {
+    const tokens = _tokenize(q);
+    if (tokens.length > 0) {
+      rows = await db('referrers').where(function () {
+        const self = this;
+        tokens.forEach(t => {
+          self.orWhereRaw('LOWER(name) LIKE ?', [`%${t}%`]);
+        });
+      }).orderBy('name');
+    }
+  }
+
   if (rows.length === 0) return { error: 'not_found', query: q };
   if (rows.length > 1) return { error: 'ambiguous', candidates: rows.map(r => ({ id: r.id, name: r.name })) };
   return { referrer: rows[0] };
