@@ -7,10 +7,11 @@ const SYSTEM_PROMPT = `You are the chat assistant for the Deng Parez music label
 Be terse and precise. Help the admin add, update, query, and record records.
 
 Rules:
-- Always resolve names via list_artists or list_referrers before any artist- or referrer-targeted action.
+- BEFORE any artist-targeted action (record_revenue, update_artist, delete_artist, preview_revenue_split), call list_artists FIRST to verify the artist exists, unless this turn's history already shows that. If they don't exist, ask the user whether to add them — do NOT proceed to record_revenue / update / delete on a name you haven't confirmed.
+- Same rule for referrers: call list_referrers before update_referrer or delete_referrer.
 - Never guess between candidates. If a lookup returns multiple matches, ask which one.
 - When a tool auto-creates side effects (e.g. add_artist creating a new referrer), disclose it in your reply.
-- For revenue: call preview_revenue_split first if the user only gives an amount, so they can see the breakdown.
+- Example: user says "Mahmud earned 500 this month". You call list_artists with query "Mahmud". If no match, reply "I don't have Mahmud in the system. Want me to add him first with default splits?". Only after the artist exists do you proceed to record_revenue.
 - Keep replies short. The UI shows tool results separately — don't restate raw numbers when a card will render them.`;
 
 function pickSessionKey(req) {
@@ -69,6 +70,43 @@ router.post('/', requireAdmin, async (req, res) => {
       let preview = null;
       if (typeof tool.buildPreview === 'function') {
         try { preview = await tool.buildPreview({ db: req.db }, first.toolArgs); } catch (_) { /* preview optional */ }
+      }
+
+      // If the preview itself surfaced an error (e.g. resolveArtist returned
+      // not_found / ambiguous), short-circuit — don't open a confirmation card
+      // for an action that can't possibly succeed.
+      if (preview && preview.error) {
+        const inner = preview.error;
+        const replyText = inner.error === 'not_found'
+          ? `I couldn't find "${inner.query || 'that record'}". Want me to add it first?`
+          : inner.error === 'ambiguous'
+            ? `Multiple matches for "${inner.query}". Which one did you mean?`
+            : `Can't prepare the action: ${inner.message || inner.error}`;
+        await logMessage(req.db, {
+          user_id: req.session.userId,
+          session_key: sessionKey,
+          role: 'tool',
+          tool_name: first.toolName,
+          tool_args: JSON.stringify(first.toolArgs),
+          tool_result: JSON.stringify({ preview_error: inner }),
+          status: 'failed'
+        });
+        await logMessage(req.db, {
+          user_id: req.session.userId,
+          session_key: sessionKey,
+          role: 'assistant',
+          content: replyText
+        });
+        return res.json({
+          reply: replyText,
+          actions: [{
+            type: 'preview_failed',
+            tool: first.toolName,
+            safety: tool.safety,
+            args: first.toolArgs,
+            error: inner
+          }]
+        });
       }
 
       const insertedPending = await req.db('chat_messages').insert({

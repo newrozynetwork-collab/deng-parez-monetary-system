@@ -117,7 +117,26 @@
     if (a.type === 'executed') return renderExecuted(a);
     if (a.type === 'confirm') return renderConfirm(a);
     if (a.type === 'cancelled') return $('<div class="chat-card"><span class="chat-tool-name">' + esc(a.tool || 'cancelled') + '</span><div>Cancelled.</div></div>');
+    if (a.type === 'preview_failed') return renderPreviewFailed(a);
     return $('<div class="chat-card"><span class="chat-tool-name">' + esc(a.type) + '</span></div>');
+  }
+
+  function renderPreviewFailed(a) {
+    const $card = $('<div class="chat-card"></div>');
+    $card.append('<div class="chat-tool-name">' + esc(a.tool) + ' — couldn\'t prepare</div>');
+    const err = a.error || {};
+    const label = err.error === 'not_found'
+      ? 'No record matches "' + esc(err.query || '') + '".'
+      : err.error === 'ambiguous'
+        ? 'Multiple matches for "' + esc(err.query || '') + '". Reply with the one you mean.'
+        : esc(err.message || err.error || 'Preview failed');
+    $card.append('<div style="color:#a02525">' + label + '</div>');
+    if (Array.isArray(err.candidates) && err.candidates.length) {
+      const $ul = $('<ul></ul>');
+      err.candidates.forEach(c => $ul.append('<li>' + esc(c.name) + ' (id ' + c.id + ')</li>'));
+      $card.append($ul);
+    }
+    return $card;
   }
 
   function renderExecuted(a) {
@@ -161,13 +180,17 @@
   function renderConfirm(a) {
     const $card = $('<div class="chat-card"></div>');
     $card.append('<div class="chat-tool-name">Confirm: ' + esc(a.tool) + '</div>');
+    // Defense in depth: server should short-circuit preview errors before
+    // ever sending a confirm action, but if one slips through, show the
+    // error instead of a meaningless all-zero table.
+    if (a.preview && a.preview.error) {
+      const e = a.preview.error;
+      $card.append('<div style="color:#a02525">' + esc(e.message || e.error || 'Preview failed') + '</div>');
+      return $card;
+    }
     if (a.preview) {
       if (a.tool === 'record_revenue') {
         $card.append(buildSplitTable(a.preview));
-      } else if (a.tool === 'delete_artist' || a.tool === 'delete_referrer') {
-        $card.append('<pre style="font-size:11px; white-space:pre-wrap;">' + esc(JSON.stringify(a.preview, null, 2)) + '</pre>');
-      } else if (a.tool === 'update_artist' || a.tool === 'update_referrer') {
-        $card.append('<pre style="font-size:11px; white-space:pre-wrap;">' + esc(JSON.stringify(a.preview, null, 2)) + '</pre>');
       } else {
         $card.append('<pre style="font-size:11px; white-space:pre-wrap;">' + esc(JSON.stringify(a.preview, null, 2)) + '</pre>');
       }
