@@ -29,7 +29,9 @@ test('gemini.callModel: builds request with system prompt, tools, and messages',
   });
 
   assert.equal(calls.length, 1);
-  assert.equal(calls[0].model, 'gemini-2.5-flash');
+  // Default model: gemini-2.0-flash has a higher free-tier quota (1500/day)
+  // than gemini-2.5-flash (20/day). The user can override via GEMINI_MODEL env.
+  assert.equal(calls[0].model, 'gemini-2.0-flash');
   assert.deepEqual(calls[0].systemInstruction, { role: 'system', parts: [{ text: 'You are a test bot.' }] });
   assert.equal(calls[0].tools[0].functionDeclarations[0].name, 'list_artists');
   assert.equal(calls[0].contents[0].role, 'user');

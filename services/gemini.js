@@ -25,7 +25,9 @@ function toGeminiContents(messages) {
   }));
 }
 
-async function callModel({ systemPrompt, tools, messages, modelName = 'gemini-2.5-flash' }) {
+const DEFAULT_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+
+async function callModel({ systemPrompt, tools, messages, modelName = DEFAULT_MODEL }) {
   const client = getClient();
   const model = client.getGenerativeModel({
     model: modelName,
