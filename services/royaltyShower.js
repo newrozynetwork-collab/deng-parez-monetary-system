@@ -53,9 +53,20 @@ function detectDelimiter(text) {
 }
 
 function findCol(headers, ...candidates) {
+  const norm = headers.map(h => ({ raw: h, up: String(h || '').toUpperCase().trim() }));
+  // Prefer an EXACT header match (in candidate priority order) so that, e.g.,
+  // "TRACK" wins over "TRACK ARTIST" — Orchard lists TRACK ARTIST before the
+  // real TRACK (song title) column, and a substring match grabbed the wrong one.
   for (const c of candidates) {
-    const hit = headers.find(h => String(h || '').toUpperCase().includes(c.toUpperCase()));
-    if (hit) return hit;
+    const cu = c.toUpperCase().trim();
+    const hit = norm.find(h => h.up === cu);
+    if (hit) return hit.raw;
+  }
+  // Fall back to substring matching for distributors with longer header names.
+  for (const c of candidates) {
+    const cu = c.toUpperCase().trim();
+    const hit = norm.find(h => h.up.includes(cu));
+    if (hit) return hit.raw;
   }
   return null;
 }
@@ -279,4 +290,4 @@ async function buildReport(db, slug, period = null) {
   };
 }
 
-module.exports = { ingestCsv, listArtists, listPeriodsForArtist, buildReport, slugify };
+module.exports = { ingestCsv, listArtists, listPeriodsForArtist, buildReport, slugify, findCol };
