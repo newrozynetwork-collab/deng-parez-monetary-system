@@ -150,6 +150,7 @@
     <script src="/js/feather.min.js"></script>
     <script src="/app/common.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="/app/styled-report.js"></script>
 
     <script>
     document.getElementById('curr-year').textContent = new Date().getFullYear();
@@ -244,8 +245,26 @@
         if (['xlsx','xls'].includes(ext)) {
             const buf = await file.arrayBuffer();
             const wb = XLSX.read(new Uint8Array(buf), { type: 'array', cellDates: false });
-            const ws = wb.Sheets[wb.SheetNames[0]];
-            const csv = XLSX.utils.sheet_to_csv(ws);
+
+            // Model every sheet as an array-of-arrays so we can tell a styled
+            // Report Generator report (one sheet per artist) from a raw distributor file.
+            const sheets = wb.SheetNames.map(name => ({
+                name,
+                aoa: XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, defval: '' })
+            }));
+
+            let csv;
+            if (window.StyledReport && StyledReport.isStyledReport(sheets)) {
+                // Styled per-artist report → normalize every sheet's detail table into
+                // artist/track/store/revenue rows the server's CSV importer already understands.
+                const rows = StyledReport.styledReportToRows(sheets);
+                if (!rows.length) throw new Error('Recognized a Report Generator report but found no track rows to import.');
+                csv = StyledReport.rowsToCsv(rows);
+            } else {
+                // Raw distributor .xlsx → first sheet straight to CSV (original behavior).
+                csv = XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]]);
+            }
+
             const csvName = file.name.replace(/\.(xlsx|xls)$/i, '.csv');
             uploadFile = new File([csv], csvName, { type: 'text/csv' });
             displayName = csvName;
