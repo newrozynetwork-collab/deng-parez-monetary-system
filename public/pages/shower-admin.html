@@ -298,8 +298,30 @@
                 <span class="slug">/${esc(a.slug)}</span>
                 <span class="rev">${money(a.totalRevenue)}</span>
                 <a href="/shower/${esc(a.slug)}" target="_blank" class="btn btn-outline-primary btn-sm" style="padding:4px 10px;font-size:0.72rem;">View</a>
+                <button class="btn btn-outline-secondary btn-sm" onclick="swCopyLink(this)" data-url="${location.origin}/shower/${esc(a.slug)}" title="Copy public link" style="padding:4px 10px;font-size:0.72rem;">📋 Copy link</button>
             </div>
         `).join('');
+    }
+
+    // One-click copy of an artist's public Shower URL.
+    function swCopyLink(btn) {
+        const url = btn.getAttribute('data-url');
+        const ok = () => {
+            const orig = btn.innerHTML;
+            btn.innerHTML = '✓ Copied';
+            btn.classList.remove('btn-outline-secondary'); btn.classList.add('btn-success');
+            setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('btn-success'); btn.classList.add('btn-outline-secondary'); }, 1400);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(url).then(ok).catch(() => swFallbackCopy(url, ok));
+        } else { swFallbackCopy(url, ok); }
+    }
+    function swFallbackCopy(url, ok) {
+        const ta = document.createElement('textarea');
+        ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.focus(); ta.select();
+        try { document.execCommand('copy'); ok(); } catch (e) { prompt('Copy this link:', url); }
+        document.body.removeChild(ta);
     }
 
     async function loadImports() {
