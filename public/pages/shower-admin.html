@@ -99,6 +99,10 @@
                             <p class="text-muted mb-0" style="font-size:0.8rem;">Raw distribution CSV or Report Generator output (.xlsx) · Multi-file supported</p>
                         </div>
                         <input type="file" id="swFileInput" accept=".csv,.tsv,.txt,.xlsx,.xls" multiple style="display:none;">
+                        <div class="custom-control custom-checkbox mt-3">
+                            <input type="checkbox" class="custom-control-input" id="swAggregate">
+                            <label class="custom-control-label" for="swAggregate" style="font-size:0.83rem;"><b>Aggregate</b> — add to months already imported. Leave OFF normally (re-uploading a month is skipped, so no double-counting). Only tick it for a <i>second source</i> for the same month (e.g. Believe on top of Orchard).</label>
+                        </div>
                         <div id="swIngestAlert" style="margin-top:12px;"></div>
                         <div id="swIngestProgress" style="display:none; margin-top:12px;">
                             <div class="progress" style="height:4px;">
@@ -217,7 +221,8 @@
             html += `<div class="alert alert-success mb-2">✓ Imported <b>${okResults.length}</b> file(s) · <b>${totalRows.toLocaleString()}</b> total rows · <b>$${totalRev.toFixed(2)}</b> total revenue</div>`;
             html += '<ul class="mb-0" style="font-size:0.85rem;">';
             for (const r of okResults) {
-                html += `<li><b>${esc(r.name)}</b>: ${r.data.rowCount.toLocaleString()} rows · ${r.data.artistCount} artists · $${r.data.totalRevenue.toFixed(2)}</li>`;
+                const sk = r.data.skipped ? ` · <span class="text-muted">${r.data.skipped.toLocaleString()} skipped (month already imported)</span>` : '';
+                html += `<li><b>${esc(r.name)}</b>: ${r.data.rowCount.toLocaleString()} rows · ${r.data.artistCount} artists · $${r.data.totalRevenue.toFixed(2)}${sk}</li>`;
             }
             html += '</ul>';
         }
@@ -274,6 +279,7 @@
 
         const form = new FormData();
         form.append('file', uploadFile);
+        form.append('aggregate', (document.getElementById('swAggregate') || {}).checked ? 'true' : 'false');
         const res = await fetch('/api/shower/ingest', { method: 'POST', body: form });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Ingest failed');

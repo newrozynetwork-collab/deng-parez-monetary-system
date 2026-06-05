@@ -13,11 +13,13 @@ router.post('/ingest', requireAdmin, upload.single('file'), async (req, res) => 
     if (!['csv', 'tsv', 'txt'].includes(ext)) {
       return res.status(400).json({ error: 'Please upload a CSV file (raw distribution data)' });
     }
+    const aggregate = ['true', '1', 'on', 'yes'].includes(String(req.body.aggregate || '').toLowerCase());
     const result = await service.ingestCsv({
       db: req.db,
       filename: req.file.originalname,
       buffer: req.file.buffer,
-      uploadedBy: req.session.userId
+      uploadedBy: req.session.userId,
+      aggregate
     });
     res.json({ ok: true, ...result });
   } catch (err) {

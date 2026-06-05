@@ -84,7 +84,7 @@ function parseCsvBuffer(buffer) {
   return rows;
 }
 
-async function ingestCsv({ db, filename, buffer, uploadedBy = null }) {
+async function ingestCsv({ db, filename, buffer, uploadedBy = null, aggregate = false }) {
   const rows = parseCsvBuffer(buffer);
   if (rows.length === 0) throw new Error('CSV is empty');
 
@@ -121,12 +121,9 @@ async function ingestCsv({ db, filename, buffer, uploadedBy = null }) {
   }
 
   const normalized = [];
-  const artistsSeen = new Set();
-  const periodsSeen = new Set();
-  let total = 0;
-
   for (const row of rows) {
-    const artistName = String(row[artistCol] || '').trim();
+    // Collab credits like "Miran Ali, Aziz Waisi" collapse to the primary (first) artist.
+    const artistName = String(row[artistCol] || '').split(',')[0].trim();
     const rev = parseFloat(row[revenueCol]) || 0;
     if (!artistName || rev === 0) continue;
 
@@ -136,10 +133,6 @@ async function ingestCsv({ db, filename, buffer, uploadedBy = null }) {
     const period = monthCol ? parsePeriod(row[monthCol]) : null;
     const type = String((typeCol && row[typeCol]) || '').trim() || null;
     const qty = qtyCol ? parseInt(row[qtyCol]) || 0 : 0;
-
-    artistsSeen.add(artistName);
-    if (period) periodsSeen.add(period);
-    total += rev;
 
     normalized.push({
       artist_name: artistName,
@@ -153,19 +146,32 @@ async function ingestCsv({ db, filename, buffer, uploadedBy = null }) {
 
   if (normalized.length === 0) throw new Error('No valid rows to import (all zero revenue or missing artist).');
 
-  const periods = [...periodsSeen].sort();
+  // De-dup by (artist, month): skip rows whose artist already has that month in the
+  // Shower — unless the caller asked to aggregate (e.g. Believe + Orchard, same month).
+  // This stops re-uploads of the same file from double-counting.
+  let toInsert = normalized;
+  let skipped = 0;
+  if (!aggregate) {
+    const slugs = [...new Set(normalized.map(r => r.artist_slug))];
+    const existingCombos = await db('royalty_rows').whereIn('artist_slug', slugs).distinct('artist_slug', 'period');
+    const seen = new Set(existingCombos.map(r => r.artist_slug + '|' + (r.period || '')));
+    toInsert = normalized.filter(r => !seen.has(r.artist_slug + '|' + (r.period || '')));
+    skipped = normalized.length - toInsert.length;
+  }
+
+  const total = toInsert.reduce((s, r) => s + (r.net_revenue || 0), 0);
+  const periods = [...new Set(toInsert.map(r => r.period).filter(Boolean))].sort();
   const periodStart = periods[0] || null;
   const periodEnd = periods[periods.length - 1] || null;
+  const insertedArtists = new Set(toInsert.map(r => r.artist_name));
 
-  // .returning('id') is required for PostgreSQL — without it knex returns
-  // undefined for INSERT and the destructure below fails with
-  // "(intermediate value) is not iterable". SQLite ignores it cleanly.
+  // .returning('id') is required for PostgreSQL (SQLite ignores it cleanly).
   const insertedRows = await db('royalty_imports')
     .insert({
       filename,
       period_start: periodStart,
       period_end: periodEnd,
-      row_count: normalized.length,
+      row_count: toInsert.length,
       total_revenue: total,
       uploaded_by: uploadedBy
     })
@@ -175,29 +181,30 @@ async function ingestCsv({ db, filename, buffer, uploadedBy = null }) {
     ? (typeof insertedRows[0] === 'object' ? insertedRows[0].id : insertedRows[0])
     : insertedRows;
 
-  // Ensure artist_slugs entries exist
-  for (const artistName of artistsSeen) {
-    const slug = slugify(artistName);
-    const existing = await db('artist_slugs').where({ slug }).first();
-    if (!existing) {
+  // Ensure artist_slugs entries exist for everything we're inserting
+  for (const name of insertedArtists) {
+    const slug = slugify(name);
+    const existsSlug = await db('artist_slugs').where({ slug }).first();
+    if (!existsSlug) {
       try {
-        await db('artist_slugs').insert({ slug, artist_name: artistName });
+        await db('artist_slugs').insert({ slug, artist_name: name });
       } catch (_) { /* unique collision — ignore */ }
     }
   }
 
-  // Batch insert rows
+  // Batch insert the (de-duped) rows
   const batchSize = 500;
-  for (let i = 0; i < normalized.length; i += batchSize) {
-    const batch = normalized.slice(i, i + batchSize).map(r => ({ ...r, import_id: importId }));
+  for (let i = 0; i < toInsert.length; i += batchSize) {
+    const batch = toInsert.slice(i, i + batchSize).map(r => ({ ...r, import_id: importId }));
     await db('royalty_rows').insert(batch);
   }
 
   return {
     importId,
-    rowCount: normalized.length,
+    rowCount: toInsert.length,
+    skipped,
     totalRevenue: total,
-    artistCount: artistsSeen.size,
+    artistCount: insertedArtists.size,
     periodStart,
     periodEnd
   };
@@ -243,18 +250,31 @@ async function buildReport(db, slug, period = null) {
   if (!slugRow) return null;
 
   const periods = await listPeriodsForArtist(db, slug);
-  const activePeriod = period && periods.includes(period) ? period : periods[0] || null;
+  // No (or unknown) period in the URL → All-time view. A valid period → just that month.
+  const isAllTime = !period || period === 'all' || !periods.includes(period);
+  const activePeriod = isAllTime ? null : period;
 
   const q = db('royalty_rows').where({ artist_slug: slug });
   if (activePeriod) q.andWhere({ period: activePeriod });
-
   const rows = await q.select('*');
+
+  // Monthly summary across ALL of the artist's rows (shown regardless of active scope).
+  const allRows = isAllTime ? rows : await db('royalty_rows').where({ artist_slug: slug }).select('period', 'net_revenue', 'quantity');
+  const monthMap = {};
+  for (const r of allRows) {
+    const k = r.period || '—';
+    if (!monthMap[k]) monthMap[k] = { period: r.period || null, total: 0, quantity: 0 };
+    monthMap[k].total += parseFloat(r.net_revenue) || 0;
+    monthMap[k].quantity += parseInt(r.quantity) || 0;
+  }
+  const byMonth = Object.values(monthMap).sort((a, b) => String(b.period || '').localeCompare(String(a.period || '')));
 
   if (rows.length === 0) {
     return {
       artist: { name: slugRow.artist_name, slug: slugRow.slug },
       period: activePeriod,
       periods,
+      byMonth,
       totalRevenue: 0,
       totalQuantity: 0,
       stores: [], countries: [], tracks: [], types: []
@@ -284,6 +304,7 @@ async function buildReport(db, slug, period = null) {
     artist: { name: slugRow.artist_name, slug: slugRow.slug },
     period: activePeriod,
     periods,
+    byMonth,
     totalRevenue,
     totalQuantity,
     stores, countries, tracks, types

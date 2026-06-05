@@ -232,6 +232,17 @@ html[dir="rtl"] .platform-card .accent-stripe { left: auto; right: 0; }
 .platform-bar { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
 .platform-bar-fill { height: 100%; border-radius: 3px; transition: width 0.8s ease; }
 
+/* MONTHLY SUMMARY */
+#periodChips { flex-wrap: wrap; }
+.ms-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.ms-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.ms-table th, .ms-table td { padding: 11px 12px; border-bottom: 1px solid var(--border); text-align: left; }
+.ms-table th { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); font-weight: 600; }
+.ms-table td.num, .ms-table th.num { text-align: right; font-family: 'JetBrains Mono', monospace; color: var(--teal); direction: ltr; white-space: nowrap; }
+.ms-table tbody tr:last-child td { border-bottom: none; }
+.ms-table a.month-link { color: inherit; text-decoration: none; }
+.ms-table a.month-link:hover { color: var(--teal); text-decoration: underline; }
+
 /* STORE LEGEND */
 .store-legend { margin-top: 16px; display: flex; flex-direction: column; gap: 6px; }
 .store-row {
@@ -613,17 +624,23 @@ async function load() {
 
 function render() {
   if (!currentData) return;
-  const { artist, period, periods, totalRevenue, totalQuantity, stores, countries, tracks, types } = currentData;
+  const { artist, period, periods, byMonth = [], totalRevenue, totalQuantity, stores, countries, tracks, types } = currentData;
 
   document.title = `${artist.name} · Deng Parez`;
   document.getElementById('artistNameText').textContent = artist.name;
 
-  // Period chips
+  // Period chips: "All time" + one per month
   const bar = document.getElementById('periodBar');
   const chips = document.getElementById('periodChips');
+  const allTimeLabel = currentLang === 'ku' ? 'هەموو کات' : 'All time';
   chips.innerHTML = '';
-  if (periods && periods.length > 1) {
-    bar.style.display = 'flex';
+  bar.style.display = (periods && periods.length) ? 'flex' : 'none';
+  if (periods && periods.length) {
+    const allChip = document.createElement('a');
+    allChip.className = 'period-chip' + (!period ? ' active' : '');
+    allChip.href = `/shower/${artist.slug}`;
+    allChip.textContent = allTimeLabel;
+    chips.appendChild(allChip);
     periods.forEach(p => {
       const chip = document.createElement('a');
       chip.className = 'period-chip' + (p === period ? ' active' : '');
@@ -631,14 +648,6 @@ function render() {
       chip.textContent = periodLabel(p);
       chips.appendChild(chip);
     });
-  } else {
-    bar.style.display = periods && periods.length === 1 ? 'flex' : 'none';
-    if (periods && periods.length === 1) {
-      const chip = document.createElement('span');
-      chip.className = 'period-chip active';
-      chip.textContent = periodLabel(periods[0]);
-      chips.appendChild(chip);
-    }
   }
 
   if (!totalRevenue || totalRevenue <= 0) {
@@ -661,13 +670,29 @@ function render() {
   const hero = document.createElement('div');
   hero.className = 'hero-metric';
   hero.innerHTML = `
-    <div class="label">${t('totalNetRevenue')} · ${periodLabel(period)}</div>
+    <div class="label">${t('totalNetRevenue')} · ${period ? periodLabel(period) : (currentLang === 'ku' ? 'هەموو کات' : 'All time')}</div>
     <div class="hero-amount">
       <span class="big">${money(totalRevenue)}</span>
       <span class="currency">USD</span>
     </div>
     <div class="hero-caption" id="heroCap"></div>`;
   container.appendChild(hero);
+
+  // MONTHLY SUMMARY (all-time view, when there's more than one month)
+  if (!period && byMonth && byMonth.length > 1) {
+    const msCard = document.createElement('div'); msCard.className = 'card grid-full';
+    const body = byMonth.map(m => {
+      const lbl = m.period ? periodLabel(m.period) : '—';
+      const href = m.period ? `/shower/${artist.slug}/${m.period}` : '#';
+      return `<tr><td><a class="month-link" href="${href}">${lbl}</a></td><td class="num">${money(m.total)}</td></tr>`;
+    }).join('');
+    msCard.innerHTML = `
+      <div class="card-head"><div class="card-title">${currentLang === 'ku' ? 'پوختەی مانگانە' : 'Monthly Summary'}</div></div>
+      <div class="ms-wrap"><table class="ms-table">
+        <thead><tr><th>${currentLang === 'ku' ? 'مانگ' : 'Month'}</th><th class="num">${currentLang === 'ku' ? 'کۆی داهات ($)' : 'Total ($)'}</th></tr></thead>
+        <tbody>${body}</tbody></table></div>`;
+    container.appendChild(msCard);
+  }
 
   const cap = hero.querySelector('#heroCap');
   const pill = (cls, emoji, bHtml, label) => {
