@@ -64,7 +64,8 @@
         const store = String(cell(aoa[i], 1)).trim();
         const revenue = parseFloat(cell(aoa[i], 2));
         if (!isFinite(revenue)) continue;
-        out.push({ artist: artist, track: track, store: store, revenue: revenue });
+        const period = String(cell(aoa[i], 3)).trim(); // 4th detail column = Month / مانگ (blank in older reports)
+        out.push({ artist: artist, track: track, store: store, period: period, revenue: revenue });
       }
     }
     return out;
@@ -75,9 +76,9 @@
       const s = String(v == null ? '' : v);
       return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
     };
-    const lines = ['artist,track,store,revenue'];
+    const lines = ['artist,track,store,period,revenue'];
     for (const r of rows || []) {
-      lines.push([esc(r.artist), esc(r.track), esc(r.store), esc(r.revenue)].join(','));
+      lines.push([esc(r.artist), esc(r.track), esc(r.store), esc(r.period), esc(r.revenue)].join(','));
     }
     return lines.join('\n');
   }

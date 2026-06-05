@@ -13,10 +13,10 @@ function aramSheet() {
     aoa: [
       ['🎵 Aram Sardar — گزارشی داهات'],
       [],
-      ['Track / گۆرانی', 'Store / پلاتفۆرم', 'Revenue / داهات ($)'],
-      ['Yara', 'Spotify', 1.5],
-      ['Yara', 'Apple Music', 0.75],
-      ['Bahar', 'Spotify', 2.0],
+      ['Track / گۆرانی', 'Store / پلاتفۆرم', 'Revenue / داهات ($)', 'Month / مانگ'],
+      ['Yara', 'Spotify', 1.5, 'Jan 2026'],
+      ['Yara', 'Apple Music', 0.75, 'Jan 2026'],
+      ['Bahar', 'Spotify', 2.0, 'Feb 2026'],
       ['', 'کۆی گشتی داهات ↓', 4.25],
       [],
       [],
@@ -51,12 +51,12 @@ test('does not flag a raw distributor sheet as styled', () => {
   assert.equal(isStyledReport([raw]), false);
 });
 
-test('extracts only the detail rows with artist/track/store/revenue', () => {
+test('extracts the detail rows with artist/track/store/period/revenue', () => {
   const rows = styledReportToRows([aramSheet()]);
   assert.deepEqual(rows, [
-    { artist: 'Aram Sardar', track: 'Yara', store: 'Spotify', revenue: 1.5 },
-    { artist: 'Aram Sardar', track: 'Yara', store: 'Apple Music', revenue: 0.75 },
-    { artist: 'Aram Sardar', track: 'Bahar', store: 'Spotify', revenue: 2.0 },
+    { artist: 'Aram Sardar', track: 'Yara', store: 'Spotify', period: 'Jan 2026', revenue: 1.5 },
+    { artist: 'Aram Sardar', track: 'Yara', store: 'Apple Music', period: 'Jan 2026', revenue: 0.75 },
+    { artist: 'Aram Sardar', track: 'Bahar', store: 'Spotify', period: 'Feb 2026', revenue: 2.0 },
   ]);
 });
 
@@ -82,9 +82,9 @@ test('handles a multi-artist report (one sheet per artist)', () => {
   assert.equal(rows.length, 4);
 });
 
-test('rowsToCsv emits a header the server parser recognizes, with CSV escaping', () => {
-  const csv = rowsToCsv([{ artist: 'A, B', track: 'x"y', store: 'Spotify', revenue: 1.5 }]);
+test('rowsToCsv emits a header the server parser recognizes (incl. period), with CSV escaping', () => {
+  const csv = rowsToCsv([{ artist: 'A, B', track: 'x"y', store: 'Spotify', period: 'Jan 2026', revenue: 1.5 }]);
   const lines = csv.split('\n');
-  assert.equal(lines[0], 'artist,track,store,revenue');
-  assert.equal(lines[1], '"A, B","x""y",Spotify,1.5');
+  assert.equal(lines[0], 'artist,track,store,period,revenue');
+  assert.equal(lines[1], '"A, B","x""y",Spotify,Jan 2026,1.5');
 });
