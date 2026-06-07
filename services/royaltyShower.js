@@ -146,63 +146,82 @@ async function ingestCsv({ db, filename, buffer, uploadedBy = null, aggregate = 
 
   if (normalized.length === 0) throw new Error('No valid rows to import (all zero revenue or missing artist).');
 
-  // De-dup by (artist, month): skip rows whose artist already has that month in the
-  // Shower — unless the caller asked to aggregate (e.g. Believe + Orchard, same month).
-  // This stops re-uploads of the same file from double-counting.
-  let toInsert = normalized;
-  let skipped = 0;
-  if (!aggregate) {
-    const slugs = [...new Set(normalized.map(r => r.artist_slug))];
-    const existingCombos = await db('royalty_rows').whereIn('artist_slug', slugs).distinct('artist_slug', 'period');
-    const seen = new Set(existingCombos.map(r => r.artist_slug + '|' + (r.period || '')));
-    toInsert = normalized.filter(r => !seen.has(r.artist_slug + '|' + (r.period || '')));
-    skipped = normalized.length - toInsert.length;
-  }
-
-  const total = toInsert.reduce((s, r) => s + (r.net_revenue || 0), 0);
-  const periods = [...new Set(toInsert.map(r => r.period).filter(Boolean))].sort();
+  // Replace-on-upload: the file is the source of truth for the (artist, month)
+  // combinations it contains. For each of those combos we delete what's stored and
+  // insert the file's rows — so re-uploading a file refreshes those months instead
+  // of duplicating them. With `aggregate`, we skip the delete and simply add on top
+  // (for a legitimate second source, e.g. Believe + Orchard for the same month).
+  const total = normalized.reduce((s, r) => s + (r.net_revenue || 0), 0);
+  const periods = [...new Set(normalized.map(r => r.period).filter(Boolean))].sort();
   const periodStart = periods[0] || null;
   const periodEnd = periods[periods.length - 1] || null;
-  const insertedArtists = new Set(toInsert.map(r => r.artist_name));
+  const insertedArtists = new Set(normalized.map(r => r.artist_name));
 
-  // .returning('id') is required for PostgreSQL (SQLite ignores it cleanly).
-  const insertedRows = await db('royalty_imports')
-    .insert({
-      filename,
-      period_start: periodStart,
-      period_end: periodEnd,
-      row_count: toInsert.length,
-      total_revenue: total,
-      uploaded_by: uploadedBy
-    })
-    .returning('id');
-
-  const importId = Array.isArray(insertedRows)
-    ? (typeof insertedRows[0] === 'object' ? insertedRows[0].id : insertedRows[0])
-    : insertedRows;
-
-  // Ensure artist_slugs entries exist for everything we're inserting
-  for (const name of insertedArtists) {
-    const slug = slugify(name);
-    const existsSlug = await db('artist_slugs').where({ slug }).first();
-    if (!existsSlug) {
-      try {
-        await db('artist_slugs').insert({ slug, artist_name: name });
-      } catch (_) { /* unique collision — ignore */ }
+  let replaced = 0;
+  const importId = await db.transaction(async (trx) => {
+    if (!aggregate) {
+      // Group the file's months per artist, then delete those exact combos.
+      const bySlug = new Map();
+      for (const r of normalized) {
+        if (!bySlug.has(r.artist_slug)) bySlug.set(r.artist_slug, new Set());
+        bySlug.get(r.artist_slug).add(r.period || null);
+      }
+      for (const [slug, periodSet] of bySlug) {
+        const ps = [...periodSet];
+        const nonNull = ps.filter((p) => p !== null);
+        const hasNull = nonNull.length !== ps.length;
+        replaced += await trx('royalty_rows').where('artist_slug', slug).andWhere(function () {
+          if (nonNull.length) this.whereIn('period', nonNull);
+          if (hasNull) this.orWhereNull('period');
+        }).del();
+      }
     }
-  }
 
-  // Batch insert the (de-duped) rows
-  const batchSize = 500;
-  for (let i = 0; i < toInsert.length; i += batchSize) {
-    const batch = toInsert.slice(i, i + batchSize).map(r => ({ ...r, import_id: importId }));
-    await db('royalty_rows').insert(batch);
-  }
+    // .returning('id') is required for PostgreSQL (SQLite ignores it cleanly).
+    const insertedRows = await trx('royalty_imports')
+      .insert({
+        filename,
+        period_start: periodStart,
+        period_end: periodEnd,
+        row_count: normalized.length,
+        total_revenue: total,
+        uploaded_by: uploadedBy
+      })
+      .returning('id');
+    const id = Array.isArray(insertedRows)
+      ? (typeof insertedRows[0] === 'object' ? insertedRows[0].id : insertedRows[0])
+      : insertedRows;
+
+    // Ensure artist_slugs entries exist for everything we're inserting.
+    for (const name of insertedArtists) {
+      const slug = slugify(name);
+      const existsSlug = await trx('artist_slugs').where({ slug }).first();
+      if (!existsSlug) {
+        try { await trx('artist_slugs').insert({ slug, artist_name: name }); }
+        catch (_) { /* unique collision — ignore */ }
+      }
+    }
+
+    // Batch insert the file's rows.
+    const batchSize = 500;
+    for (let i = 0; i < normalized.length; i += batchSize) {
+      const batch = normalized.slice(i, i + batchSize).map((r) => ({ ...r, import_id: id }));
+      await trx('royalty_rows').insert(batch);
+    }
+
+    // Drop any imports the replace left empty, so the admin list stays honest.
+    const liveIds = (await trx('royalty_rows').whereNotNull('import_id').distinct('import_id').pluck('import_id'))
+      .filter((x) => x !== null && x !== undefined);
+    if (liveIds.length) await trx('royalty_imports').whereNotIn('id', liveIds).del();
+
+    return id;
+  });
 
   return {
     importId,
-    rowCount: toInsert.length,
-    skipped,
+    rowCount: normalized.length,
+    replaced,
+    skipped: 0, // kept for backward-compat with the admin UI
     totalRevenue: total,
     artistCount: insertedArtists.size,
     periodStart,
@@ -269,6 +288,9 @@ async function buildReport(db, slug, period = null) {
   }
   const byMonth = Object.values(monthMap).sort((a, b) => String(b.period || '').localeCompare(String(a.period || '')));
 
+  // No data anywhere for this artist → treat as not found (404), not a blank page.
+  if (allRows.length === 0) return null;
+
   if (rows.length === 0) {
     return {
       artist: { name: slugRow.artist_name, slug: slugRow.slug },
@@ -311,4 +333,58 @@ async function buildReport(db, slug, period = null) {
   };
 }
 
-module.exports = { ingestCsv, listArtists, listPeriodsForArtist, buildReport, slugify, findCol };
+// Wipe one artist completely: their rows + registry entry, then prune now-empty imports.
+async function deleteArtist(db, slug) {
+  return db.transaction(async (trx) => {
+    const deletedRows = await trx('royalty_rows').where({ artist_slug: slug }).del();
+    await trx('artist_slugs').where({ slug }).del();
+    const liveIds = (await trx('royalty_rows').whereNotNull('import_id').distinct('import_id').pluck('import_id'))
+      .filter((x) => x !== null && x !== undefined);
+    if (liveIds.length) await trx('royalty_imports').whereNotIn('id', liveIds).del();
+    else await trx('royalty_imports').del();
+    return { ok: true, deletedRows };
+  });
+}
+
+// Delete an import and its rows, then drop any artist left with no rows from the registry.
+async function deleteImport(db, id) {
+  return db.transaction(async (trx) => {
+    const slugs = await trx('royalty_rows').where({ import_id: id }).distinct('artist_slug').pluck('artist_slug');
+    await trx('royalty_rows').where({ import_id: id }).del(); // explicit — don't rely on FK cascade
+    await trx('royalty_imports').where({ id }).del();
+    for (const slug of slugs) {
+      const remaining = await trx('royalty_rows').where({ artist_slug: slug }).count('id as c').first();
+      if (Number(remaining.c) === 0) await trx('artist_slugs').where({ slug }).del();
+    }
+    return { ok: true };
+  });
+}
+
+// Grouped detail + summaries for the styled .xlsx export. Null when the artist has no data.
+async function getArtistExport(db, slug) {
+  const detail = await db('royalty_rows').where({ artist_slug: slug })
+    .select('track', 'store', 'period')
+    .sum({ revenue: 'net_revenue' })
+    .groupBy('track', 'store', 'period')
+    .orderBy('period', 'desc');
+  if (!detail.length) return null;
+  const first = await db('royalty_rows').where({ artist_slug: slug }).first();
+  const artist = first ? first.artist_name : slug;
+  const num = (v) => parseFloat(v) || 0;
+  const total = detail.reduce((s, r) => s + num(r.revenue), 0);
+  const mMap = {};
+  for (const r of detail) {
+    const k = r.period || '—';
+    (mMap[k] = mMap[k] || { period: r.period || null, total: 0 }).total += num(r.revenue);
+  }
+  const byMonth = Object.values(mMap).sort((a, b) => String(b.period || '').localeCompare(String(a.period || '')));
+  const pMap = {};
+  for (const r of detail) {
+    const k = r.store || '—';
+    (pMap[k] = pMap[k] || { name: r.store || '—', rev: 0 }).rev += num(r.revenue);
+  }
+  const byPlatform = Object.values(pMap).sort((a, b) => b.rev - a.rev);
+  return { artist, slug, total, detail, byMonth, byPlatform };
+}
+
+module.exports = { ingestCsv, listArtists, listPeriodsForArtist, buildReport, slugify, findCol, deleteArtist, deleteImport, getArtistExport };

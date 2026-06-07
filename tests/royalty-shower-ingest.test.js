@@ -34,12 +34,12 @@ test('primary-artist: a collab credit collapses to the first name', async () => 
   assert.equal(combo.length, 0, 'no combined entry should exist');
 });
 
-test('duplicate month is skipped by default, but aggregate adds it', async () => {
+test('re-uploading a month replaces by default (no double count), aggregate adds it', async () => {
   const file = [['Kamal Fadawi', 'S1', 'YouTube', 'May 2026', '5'], ['Kamal Fadawi', 'S2', 'YouTube', 'May 2026', '3']];
   await ingest(file);
-  const second = await ingest(file); // same month again, default → skip
-  assert.equal(second.rowCount, 0, 'all rows skipped');
-  assert.ok(second.skipped >= 2, 'reports skipped rows');
+  const second = await ingest(file); // same month again, default → replace
+  assert.equal(second.rowCount, 2, 're-inserts the file rows');
+  assert.ok(second.replaced >= 2, 'reports the rows it replaced');
   assert.equal((await service.buildReport(db, 'kamal-fadawi')).totalRevenue, 8, 'no double count');
   await ingest(file, { aggregate: true }); // explicit aggregate → add (Believe + Orchard same month)
   assert.equal((await service.buildReport(db, 'kamal-fadawi')).totalRevenue, 16, 'aggregate adds on top');

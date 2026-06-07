@@ -221,8 +221,8 @@
             html += `<div class="alert alert-success mb-2">✓ Imported <b>${okResults.length}</b> file(s) · <b>${totalRows.toLocaleString()}</b> total rows · <b>$${totalRev.toFixed(2)}</b> total revenue</div>`;
             html += '<ul class="mb-0" style="font-size:0.85rem;">';
             for (const r of okResults) {
-                const sk = r.data.skipped ? ` · <span class="text-muted">${r.data.skipped.toLocaleString()} skipped (month already imported)</span>` : '';
-                html += `<li><b>${esc(r.name)}</b>: ${r.data.rowCount.toLocaleString()} rows · ${r.data.artistCount} artists · $${r.data.totalRevenue.toFixed(2)}${sk}</li>`;
+                const rep = r.data.replaced ? ` · <span class="text-muted">${r.data.replaced.toLocaleString()} replaced (months refreshed)</span>` : '';
+                html += `<li><b>${esc(r.name)}</b>: ${r.data.rowCount.toLocaleString()} rows · ${r.data.artistCount} artists · $${r.data.totalRevenue.toFixed(2)}${rep}</li>`;
             }
             html += '</ul>';
         }
@@ -305,6 +305,7 @@
                 <span class="rev">${money(a.totalRevenue)}</span>
                 <a href="/shower/${esc(a.slug)}" target="_blank" class="btn btn-outline-primary btn-sm" style="padding:4px 10px;font-size:0.72rem;">View</a>
                 <button class="btn btn-outline-secondary btn-sm" onclick="swCopyLink(this)" data-url="${location.origin}/shower/${esc(a.slug)}" title="Copy public link" style="padding:4px 10px;font-size:0.72rem;">📋 Copy link</button>
+                <button class="btn btn-outline-danger btn-sm" onclick="swDeleteArtist(this)" data-slug="${esc(a.slug)}" data-name="${esc(a.name)}" title="Delete all data for this artist" style="padding:4px 10px;font-size:0.72rem;">🗑 Delete</button>
             </div>
         `).join('');
     }
@@ -328,6 +329,22 @@
         document.body.appendChild(ta); ta.focus(); ta.select();
         try { document.execCommand('copy'); ok(); } catch (e) { prompt('Copy this link:', url); }
         document.body.removeChild(ta);
+    }
+
+    // Wipe one artist completely (rows + public page). Used to start an artist fresh.
+    async function swDeleteArtist(btn) {
+        const slug = btn.getAttribute('data-slug');
+        const name = btn.getAttribute('data-name') || slug;
+        if (!confirm(`Delete ALL data for "${name}"?\n\nThis removes every row and their public page. It cannot be undone.`)) return;
+        btn.disabled = true; const orig = btn.innerHTML; btn.innerHTML = '…';
+        try {
+            const res = await fetch('/api/shower/artist/' + encodeURIComponent(slug), { method: 'DELETE' });
+            if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || 'Delete failed'); }
+            loadArtists(); loadImports();
+        } catch (e) {
+            btn.disabled = false; btn.innerHTML = orig;
+            (window.App && App.showError) ? App.showError(e.message) : alert(e.message);
+        }
     }
 
     async function loadImports() {

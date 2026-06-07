@@ -234,6 +234,9 @@ html[dir="rtl"] .platform-card .accent-stripe { left: auto; right: 0; }
 
 /* MONTHLY SUMMARY */
 #periodChips { flex-wrap: wrap; }
+.dl-btn { margin-inline-start: auto; display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; background: var(--teal, #14b8a6); color: #fff; font-size: 0.8rem; font-weight: 600; text-decoration: none; white-space: nowrap; border: none; cursor: pointer; }
+.dl-btn:hover { filter: brightness(1.08); }
+@media (max-width: 560px) { .dl-btn { margin-inline-start: 0; width: 100%; justify-content: center; } }
 .ms-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .ms-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
 .ms-table th, .ms-table td { padding: 11px 12px; border-bottom: 1px solid var(--border); text-align: left; }
@@ -458,6 +461,7 @@ footer {
 <div class="period-bar" id="periodBar" style="display:none;">
   <span class="label" data-i18n="periodLabel">Period:</span>
   <div class="period-chips" id="periodChips"></div>
+  <a id="downloadBtn" class="dl-btn" href="#" download>⬇ Download .xlsx</a>
 </div>
 
 <div id="mainContent">
@@ -648,6 +652,13 @@ function render() {
       chip.textContent = periodLabel(p);
       chips.appendChild(chip);
     });
+  }
+
+  // Download (styled .xlsx of the artist's full history)
+  const dl = document.getElementById('downloadBtn');
+  if (dl) {
+    dl.href = `/api/shower/public/${artist.slug}/export`;
+    dl.textContent = currentLang === 'ku' ? '⬇ داگرتنی ڕاپۆرت' : '⬇ Download .xlsx';
   }
 
   if (!totalRevenue || totalRevenue <= 0) {
