@@ -108,6 +108,28 @@ test('POST /api/chat: when first Gemini call throws, returns 500 and logs nothin
   await db.destroy();
 });
 
+test('POST /api/chat: quota-dead Gemini (both models 429) → friendly 503, no raw API dump', async () => {
+  const { app, db } = await makeApp();
+  gemini._setClientFactory(() => ({
+    getGenerativeModel() {
+      return {
+        async generateContent() {
+          throw new Error('[GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/x:generateContent: [429 Too Many Requests] You exceeded your current quota. * Quota exceeded for metric: generate_content_free_tier_requests, limit: 0 [{"@type":"type.googleapis.com/google.rpc.QuotaFailure"}]');
+        }
+      };
+    }
+  }));
+
+  const res = await request(app).post('/api/chat').send({ messages: [{ role: 'user', content: 'hi' }] });
+  assert.equal(res.status, 503, 'service-unavailable, not a generic 500');
+  assert.ok(res.body.error, 'has an error message');
+  assert.ok(!/GoogleGenerativeAI|@type|quotaMetric|generativelanguage/.test(res.body.error), 'no raw Google jargon reaches the user');
+  assert.match(res.body.error, /busy|limit|try again/i, 'reads like a human sentence');
+
+  gemini._resetClientFactory();
+  await db.destroy();
+});
+
 test('POST /api/chat: when second Gemini call throws, tool already executed, route still returns 200 with fallback reply', async () => {
   const { app, db } = await makeApp();
   await db('artists').insert({ name: 'Hozan', artist_split_pct: 60, company_split_pct: 40, bank_fee_pct: 2.5 });

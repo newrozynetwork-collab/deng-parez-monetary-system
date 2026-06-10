@@ -197,6 +197,8 @@ router.post('/', requireAdmin, async (req, res) => {
     });
   } catch (err) {
     console.error('Chat route error:', err);
+    const friendly = gemini.friendlyError(err);
+    if (friendly) return res.status(friendly.status).json({ error: friendly.message });
     res.status(500).json({ error: err.message });
   }
 });
@@ -259,6 +261,8 @@ router.post('/execute', requireAdmin, async (req, res) => {
     });
   } catch (err) {
     console.error('Chat execute error:', err);
+    const friendly = gemini.friendlyError(err);
+    if (friendly) return res.status(friendly.status).json({ error: friendly.message });
     res.status(500).json({ error: err.message });
   }
 });
