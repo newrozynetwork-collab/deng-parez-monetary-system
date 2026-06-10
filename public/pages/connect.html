@@ -7,182 +7,114 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/assets/images/favicon.png">
     <title>Connect Your YouTube Channel - Deng Parez</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Schibsted+Grotesk:ital,wght@0,400..900&family=Spline+Sans+Mono:wght@300..700&display=swap');
         * { box-sizing: border-box; }
+        :root {
+            --ink: #241804; --gold: #e3b458;
+            --foil: linear-gradient(100deg,#f9ecc0 0%,#ecc679 26%,#b98931 50%,#f3da9a 72%,#d3a851 100%);
+        }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            font-family: 'Schibsted Grotesk', system-ui, sans-serif;
+            margin: 0; padding: 24px;
+            background: #0b0a07;
+            background-image:
+                radial-gradient(ellipse 56% 42% at 50% -10%, rgba(227,180,88,0.16) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 36% at 12% 100%, rgba(196,110,74,0.07) 0%, transparent 60%);
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
         }
         .card {
-            background: #fff;
-            border-radius: 16px;
-            padding: 40px 32px;
-            max-width: 500px;
-            width: 100%;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            background: #fbf7ec;
+            border: 1px solid rgba(122,92,30,0.25);
+            border-radius: 22px;
+            padding: 42px 34px 36px;
+            max-width: 500px; width: 100%;
+            box-shadow: 0 40px 100px -30px rgba(0,0,0,0.85);
         }
-        .logo {
-            text-align: center;
-            margin-bottom: 24px;
-        }
-        .logo img {
-            height: 40px;
-        }
+        .logo { text-align: center; margin-bottom: 22px; }
+        .logo img { display: none; }
         .brand-name {
-            color: #1f2937;
-            font-size: 14px;
-            font-weight: 500;
-            margin-top: 8px;
+            font-family: 'Fraunces', georgia, serif;
+            color: #2b2310; font-size: 19px; font-weight: 600;
+            letter-spacing: 0.28em; text-transform: uppercase;
         }
         .hero-icon {
-            width: 80px;
-            height: 80px;
-            background: #fee2e2;
-            border-radius: 50%;
-            margin: 0 auto 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 84px; height: 84px;
+            background: radial-gradient(circle at 36% 32%, #f6e3ae 0%, #e3b458 42%, #a97c2c 88%);
+            border-radius: 50%; margin: 0 auto 20px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: inset 0 2px 10px rgba(255,250,230,0.5), 0 10px 30px -10px rgba(227,180,88,0.5);
         }
-        .hero-icon svg {
-            width: 44px;
-            height: 44px;
-            color: #ef4444;
-        }
+        .hero-icon svg { width: 42px; height: 42px; color: #241804; }
         h1 {
-            text-align: center;
-            color: #1f2937;
-            font-size: 24px;
-            margin: 0 0 8px;
-            font-weight: 600;
+            font-family: 'Fraunces', georgia, serif;
+            text-align: center; color: #2b2310;
+            font-size: 25px; margin: 0 0 8px; font-weight: 600;
+            letter-spacing: -0.01em;
         }
-        .artist-name {
-            text-align: center;
-            color: #6b7280;
-            margin: 0 0 24px;
-            font-size: 16px;
-        }
+        .artist-name { text-align: center; color: #6f6045; margin: 0 0 24px; font-size: 16px; }
         .artist-name strong {
-            color: #3b82f6;
-            font-weight: 600;
+            font-family: 'Fraunces', georgia, serif;
+            color: #a87b2a; font-weight: 600; font-style: italic;
         }
         .info-box {
-            background: #f0f9ff;
-            border-left: 4px solid #3b82f6;
-            padding: 16px;
-            border-radius: 8px;
-            margin-bottom: 24px;
-            font-size: 14px;
-            color: #1e40af;
-            line-height: 1.5;
+            background: rgba(227,180,88,0.13);
+            border-left: 4px solid var(--gold);
+            padding: 16px; border-radius: 10px; margin-bottom: 24px;
+            font-size: 14px; color: #4a3c20; line-height: 1.55;
         }
-        .steps {
-            margin: 24px 0;
-            padding: 0;
-            list-style: none;
-        }
+        .steps { margin: 24px 0; padding: 0; list-style: none; counter-reset: step; }
         .steps li {
-            padding: 12px 0 12px 40px;
-            position: relative;
-            color: #4b5563;
-            font-size: 15px;
-            line-height: 1.4;
+            padding: 12px 0 12px 42px; position: relative;
+            color: #4a3c20; font-size: 15px; line-height: 1.45;
         }
         .steps li::before {
-            content: counter(step);
-            counter-increment: step;
-            position: absolute;
-            left: 0;
-            top: 10px;
-            width: 28px;
-            height: 28px;
-            background: #3b82f6;
-            color: #fff;
+            content: counter(step); counter-increment: step;
+            position: absolute; left: 0; top: 10px;
+            width: 28px; height: 28px;
+            background: var(--foil); color: var(--ink);
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 13px;
-        }
-        .steps {
-            counter-reset: step;
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Spline Sans Mono', monospace;
+            font-weight: 700; font-size: 13px;
         }
         .btn-primary {
-            display: block;
-            width: 100%;
-            padding: 16px;
-            background: #ef4444;
-            color: #fff;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            text-decoration: none;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
+            display: block; width: 100%; padding: 16px;
+            background: var(--foil); color: var(--ink);
+            border: none; border-radius: 100px;
+            font-size: 16px; font-weight: 700;
+            text-decoration: none; text-align: center; cursor: pointer;
+            transition: all 0.25s;
+            box-shadow: 0 12px 34px -12px rgba(168,123,42,0.65);
         }
-        .btn-primary:hover {
-            background: #dc2626;
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
-        }
-        .btn-primary svg {
-            vertical-align: middle;
-            margin-right: 8px;
-        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 18px 40px -12px rgba(168,123,42,0.8); filter: brightness(1.04); }
+        .btn-primary svg { vertical-align: middle; margin-right: 8px; color: #a8201a; }
         .permissions {
-            background: #f9fafb;
-            border-radius: 8px;
-            padding: 16px;
-            margin: 20px 0;
-            font-size: 13px;
-            color: #6b7280;
+            background: rgba(122,92,30,0.07);
+            border: 1px solid rgba(122,92,30,0.16);
+            border-radius: 10px; padding: 16px; margin: 20px 0;
+            font-size: 13px; color: #6f6045;
         }
-        .permissions strong {
-            color: #1f2937;
-            display: block;
-            margin-bottom: 8px;
-        }
-        .permissions ul {
-            margin: 0;
-            padding-left: 20px;
-        }
-        .permissions li {
-            margin: 4px 0;
-        }
+        .permissions strong { color: #2b2310; display: block; margin-bottom: 8px; }
+        .permissions ul { margin: 0; padding-left: 20px; }
+        .permissions li { margin: 4px 0; }
         .footer-note {
-            text-align: center;
-            color: #9ca3af;
-            font-size: 12px;
-            margin-top: 24px;
+            font-family: 'Spline Sans Mono', monospace;
+            text-align: center; color: #9a8a66; font-size: 11px;
+            margin-top: 24px; letter-spacing: 0.04em;
         }
-        .loading, .error-state, .already-connected {
-            text-align: center;
-            padding: 20px 0;
-        }
+        .loading, .error-state, .already-connected { text-align: center; padding: 20px 0; color: #6f6045; }
         .success-badge {
-            background: #d1fae5;
-            border: 1px solid #6ee7b7;
-            color: #065f46;
-            padding: 16px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            text-align: center;
+            background: rgba(143,174,111,0.18);
+            border: 1px solid rgba(111,143,79,0.5);
+            color: #4d6433; padding: 16px;
+            border-radius: 10px; margin-bottom: 16px; text-align: center;
         }
         .error-badge {
-            background: #fee2e2;
-            border: 1px solid #fca5a5;
-            color: #991b1b;
-            padding: 16px;
-            border-radius: 8px;
-            text-align: center;
+            background: rgba(182,85,64,0.12);
+            border: 1px solid rgba(182,85,64,0.45);
+            color: #8a3d2c; padding: 16px;
+            border-radius: 10px; text-align: center;
         }
     </style>
 </head>
@@ -190,7 +122,7 @@
     <div class="card">
         <div class="logo">
             <img src="/assets/images/logo-icon.png" alt="Logo">
-            <div class="brand-name">Deng Parez Monetary System</div>
+            <div class="brand-name">Deng Parez</div>
         </div>
 
         <div id="loading" class="loading">

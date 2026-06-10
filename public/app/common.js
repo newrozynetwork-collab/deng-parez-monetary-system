@@ -13,8 +13,8 @@ var App = {
     },
 
     initTheme: function() {
-        var saved = 'light';
-        try { saved = localStorage.getItem('dp-theme') || 'light'; } catch(e) {}
+        var saved = 'dark';
+        try { saved = localStorage.getItem('dp-theme') || 'dark'; } catch(e) {}
         App.applyTheme(saved);
     },
 

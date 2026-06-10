@@ -8,9 +8,10 @@
     <title>Payment History - Deng Parez</title>
     <link href="/css/style.min.css" rel="stylesheet">
     <link href="/css/custom-app.css" rel="stylesheet">
+    <link href="/css/gold-master.css" rel="stylesheet">
     <link href="/assets/extra-libs/DataTables/DataTables-1.10.16/css/dataTables.bootstrap4.min.css" rel="stylesheet">
     <script>
-        (function(){ try { var t = localStorage.getItem("dp-theme") || "light"; document.documentElement.setAttribute("data-theme", t); } catch(e){} })();
+        (function(){ try { var t = localStorage.getItem("dp-theme") || "dark"; document.documentElement.setAttribute("data-theme", t); } catch(e){} })();
     </script>
     <style>
         .pay-overdue-row td { background: rgba(231, 76, 60, 0.08) !important; }
@@ -22,13 +23,13 @@
         .pay-days { font-weight: 600; }
         .pay-days.warn { color: #fb8c00; }
         .pay-days.danger { color: #e74c3c; }
-        .pay-days.ok { color: #28a745; }
+        .pay-days.ok { color: #8fae6f; }
         .pay-history-row { display: grid; grid-template-columns: 110px 1fr auto auto; gap: 14px; align-items: center; padding: 10px 14px; background: #f7f7fb; border-radius: 8px; margin-bottom: 6px; font-size: 0.88rem; }
-        [data-theme="dark"] .pay-history-row { background: #1a1a24; }
+        [data-theme="dark"] .pay-history-row { background: #1c1910; }
         .pay-history-row .date { font-family: monospace; color: #888; font-size: 0.82rem; }
         .pay-history-row .ctx { color: #555; }
         [data-theme="dark"] .pay-history-row .ctx { color: #bbb; }
-        .pay-history-row .amt { font-family: monospace; font-weight: 700; color: #28a745; min-width: 90px; text-align: right; }
+        .pay-history-row .amt { font-family: monospace; font-weight: 700; color: #8fae6f; min-width: 90px; text-align: right; }
     </style>
 </head>
 <body>
@@ -97,7 +98,7 @@
                     </div>
                     <div class="col-md-3 col-sm-6">
                         <div class="card"><div class="card-body">
-                            <div class="d-flex align-items-center"><div class="mr-3"><i data-feather="dollar-sign" style="width:32px;height:32px;color:#28a745;"></i></div>
+                            <div class="d-flex align-items-center"><div class="mr-3"><i data-feather="dollar-sign" style="width:32px;height:32px;color:#8fae6f;"></i></div>
                             <div><h6 class="text-muted mb-0">Total Paid</h6><h3 class="mb-0" id="stat-total">$0</h3></div></div>
                         </div></div>
                     </div>

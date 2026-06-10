@@ -1,84 +1,187 @@
 <!DOCTYPE html>
-<html dir="ltr">
+<html dir="ltr" lang="en">
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/png" sizes="16x16" href="/assets/images/favicon.png">
-    <title>Deng Parez - Login</title>
-    <link href="/css/style.min.css" rel="stylesheet">
-    <link href="/css/custom-app.css" rel="stylesheet">
-    <script>
-        (function(){ try { var t = localStorage.getItem('dp-theme') || 'light'; document.documentElement.setAttribute('data-theme', t); } catch(e){} })();
-    </script>
+    <title>Deng Parez · Sign In</title>
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Schibsted+Grotesk:ital,wght@0,400..900;1,400..900&family=Spline+Sans+Mono:wght@300..700&display=swap');
+    :root {
+      --ink-0: #0b0a07; --surface: rgba(243,234,217,0.03);
+      --line: rgba(228,198,134,0.14); --line-strong: rgba(228,198,134,0.34);
+      --cream: #f3ead9; --cream-dim: rgba(243,234,217,0.62); --cream-faint: rgba(243,234,217,0.4);
+      --gold: #e3b458; --ink: #241804;
+      --foil: linear-gradient(100deg,#f9ecc0 0%,#ecc679 26%,#b98931 50%,#f3da9a 72%,#d3a851 100%);
+      --serif: 'Fraunces', georgia, serif; --sans: 'Schibsted Grotesk', system-ui, sans-serif;
+      --mono: 'Spline Sans Mono', monospace; --ease: cubic-bezier(0.16,0.84,0.3,1);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    ::selection { background: var(--gold); color: var(--ink); }
+    body {
+      min-height: 100vh; display: grid; place-items: center;
+      background: var(--ink-0); color: var(--cream); font-family: var(--sans);
+      overflow: hidden; padding: 24px;
+    }
+    .atmosphere { position: fixed; inset: 0; pointer-events: none; }
+    .atmosphere::before {
+      content: ''; position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 56% 42% at 50% -10%, rgba(227,180,88,0.16) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 36% at 12% 100%, rgba(196,110,74,0.07) 0%, transparent 60%);
+    }
+    .atmosphere::after {
+      content: ''; position: absolute; inset: -50%;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 240 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+      opacity: 0.05; mix-blend-mode: overlay;
+    }
+    /* a giant record sinking off-canvas */
+    .big-disc {
+      position: fixed; width: min(88vmin, 760px); aspect-ratio: 1; border-radius: 50%;
+      right: -22vmin; bottom: -30vmin; pointer-events: none;
+      background:
+        radial-gradient(circle at 34% 30%, rgba(255,245,215,0.10) 0%, transparent 38%),
+        repeating-radial-gradient(circle at 50% 50%, #14110b 0 2px, #0c0a06 2px 4.4px);
+      box-shadow: inset 0 0 0 1px rgba(227,180,88,0.18), 0 30px 90px -20px rgba(0,0,0,0.9);
+      animation: spin 36s linear infinite;
+    }
+    .big-disc::after {
+      content: ''; position: absolute; inset: 33%; border-radius: 50%;
+      background: radial-gradient(circle at 36% 32%, #f6e3ae 0%, #e3b458 42%, #a97c2c 88%);
+      box-shadow: inset 0 0 0 1px rgba(60,40,8,0.4);
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .auth-card {
+      position: relative; z-index: 1; width: 100%; max-width: 420px;
+      border: 1px solid var(--line); border-radius: 22px;
+      background: linear-gradient(180deg, rgba(243,234,217,0.04) 0%, rgba(243,234,217,0.015) 100%);
+      backdrop-filter: blur(8px);
+      padding: 44px 40px 36px;
+      box-shadow: 0 40px 100px -30px rgba(0,0,0,0.85);
+      animation: rise 0.9s var(--ease) both;
+    }
+    @keyframes rise { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: none; } }
+
+    .wordmark { text-align: center; margin-bottom: 8px; }
+    .wordmark .mark {
+      font-family: var(--serif); font-weight: 600; font-size: 1.5rem;
+      letter-spacing: 0.3em; text-transform: uppercase; color: var(--cream);
+    }
+    .wordmark .mark em { font-style: italic; color: var(--gold); }
+    .tagline {
+      text-align: center; font-family: var(--mono); font-size: 0.58rem;
+      letter-spacing: 0.34em; text-transform: uppercase; color: var(--cream-faint);
+      margin-bottom: 34px;
+    }
+    .rule { display: flex; align-items: center; gap: 12px; margin: 0 auto 30px; max-width: 220px; }
+    .rule::before, .rule::after { content: ''; flex: 1; height: 1px; background: var(--line-strong); }
+    .rule .gem { color: var(--gold); font-size: 0.7rem; }
+
+    .field { margin-bottom: 16px; }
+    .field label {
+      display: block; font-family: var(--mono); font-size: 0.6rem;
+      letter-spacing: 0.28em; text-transform: uppercase; color: var(--cream-faint);
+      margin-bottom: 8px;
+    }
+    .field input {
+      width: 100%; background: rgba(243,234,217,0.04);
+      border: 1px solid var(--line); border-radius: 12px;
+      color: var(--cream); font-family: var(--sans); font-size: 0.98rem;
+      padding: 13px 16px; outline: none;
+      transition: border-color 0.25s, background 0.25s, box-shadow 0.25s;
+    }
+    .field input:focus {
+      border-color: var(--gold); background: rgba(243,234,217,0.06);
+      box-shadow: 0 0 0 3px rgba(227,180,88,0.18);
+    }
+    .field input::placeholder { color: var(--cream-faint); }
+
+    .alert-danger {
+      border: 1px solid rgba(207,111,90,0.45); background: rgba(207,111,90,0.12);
+      color: #e8a795; border-radius: 12px; padding: 11px 14px;
+      font-size: 0.85rem; margin-bottom: 16px;
+    }
+    .d-none { display: none; }
+
+    .btn-login {
+      position: relative; overflow: hidden; width: 100%;
+      margin-top: 10px; padding: 14px 20px; border: none; border-radius: 100px;
+      background: var(--foil); color: var(--ink); cursor: pointer;
+      font-family: var(--mono); font-weight: 700; font-size: 0.78rem; letter-spacing: 0.22em;
+      text-transform: uppercase;
+      box-shadow: 0 10px 34px -10px rgba(227,180,88,0.6);
+      transition: transform 0.22s var(--ease), box-shadow 0.22s, filter 0.2s;
+    }
+    .btn-login:hover { transform: translateY(-2px); box-shadow: 0 16px 40px -10px rgba(227,180,88,0.7); }
+    .btn-login:disabled { filter: grayscale(0.5) brightness(0.8); cursor: wait; transform: none; }
+    .btn-login::after {
+      content: ''; position: absolute; top: 0; bottom: 0; width: 46%; left: -60%;
+      background: linear-gradient(100deg, transparent 0%, rgba(255,255,255,0.5) 50%, transparent 100%);
+      transform: skewX(-18deg); transition: left 0.6s var(--ease);
+    }
+    .btn-login:hover::after { left: 115%; }
+
+    .foot {
+      margin-top: 30px; text-align: center;
+      font-family: var(--mono); font-size: 0.56rem; letter-spacing: 0.3em;
+      text-transform: uppercase; color: var(--cream-faint);
+    }
+    .foot .gem { color: var(--gold); }
+    @media (max-width: 480px) { .auth-card { padding: 34px 24px 28px; } }
+    @media (prefers-reduced-motion: reduce) { .big-disc { animation: none; } .auth-card { animation: none; } }
+    </style>
 </head>
 <body>
-    <div class="main-wrapper">
-        <div class="preloader">
-            <div class="lds-ripple"><div class="lds-pos"></div><div class="lds-pos"></div></div>
-        </div>
-        <div class="auth-wrapper d-flex no-block justify-content-center align-items-center" style="background:url(/assets/images/big/auth-bg.jpg) no-repeat center center; background-size: cover;">
-            <div class="auth-box">
-                <div id="loginform">
-                    <div class="logo">
-                        <span class="db"><img src="/assets/images/logo-icon.png" alt="logo" /></span>
-                        <h5 class="font-medium m-b-20">Deng Parez Monetary System</h5>
-                    </div>
-                    <div class="row">
-                        <div class="col-12">
-                            <form class="form-horizontal mt-3" id="login-form">
-                                <div id="login-error" class="alert alert-danger d-none"></div>
-                                <div class="input-group mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text"><i class="ti-user"></i></span>
-                                    </div>
-                                    <input type="text" class="form-control form-control-lg" placeholder="Username" id="username" required>
-                                </div>
-                                <div class="input-group mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text"><i class="ti-lock"></i></span>
-                                    </div>
-                                    <input type="password" class="form-control form-control-lg" placeholder="Password" id="password" required>
-                                </div>
-                                <div class="form-group text-center">
-                                    <div class="col-xs-12 p-b-20">
-                                        <button class="btn btn-block btn-lg bg-gradient-primary text-white" type="submit" id="login-btn">
-                                            Log In
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+    <div class="atmosphere"></div>
+    <div class="big-disc" aria-hidden="true"></div>
+
+    <div class="auth-card">
+        <div class="wordmark"><span class="mark">Deng <em>Parez</em></span></div>
+        <div class="tagline">Monetary System · Royalty Atelier</div>
+        <div class="rule"><span class="gem">✦</span></div>
+
+        <form id="login-form">
+            <div id="login-error" class="alert-danger d-none"></div>
+            <div class="field">
+                <label for="username">Username</label>
+                <input type="text" id="username" placeholder="Your username" autocomplete="username" required>
             </div>
-        </div>
+            <div class="field">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" required>
+            </div>
+            <button class="btn-login" type="submit" id="login-btn">Enter the studio</button>
+        </form>
+
+        <div class="foot"><span class="gem">✦</span>&nbsp; Deng Parez &nbsp;<span class="gem">✦</span></div>
     </div>
-    <script src="/assets/libs/jquery/dist/jquery.min.js"></script>
-    <script src="/assets/libs/popper.js/dist/umd/popper.min.js"></script>
-    <script src="/assets/libs/bootstrap/dist/js/bootstrap.min.js"></script>
+
     <script>
-        $(".preloader").fadeOut();
-        $('#login-form').on('submit', function(e) {
+        document.getElementById('login-form').addEventListener('submit', function (e) {
             e.preventDefault();
-            var btn = $('#login-btn');
-            btn.prop('disabled', true).text('Logging in...');
-            $.ajax({
-                url: '/api/auth/login',
+            var btn = document.getElementById('login-btn');
+            var err = document.getElementById('login-error');
+            btn.disabled = true; btn.textContent = 'Cueing…';
+            fetch('/api/auth/login', {
                 method: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({
-                    username: $('#username').val(),
-                    password: $('#password').val()
-                }),
-                success: function() {
-                    window.location.href = '/dashboard';
-                },
-                error: function(xhr) {
-                    var msg = xhr.responseJSON ? xhr.responseJSON.error : 'Login failed';
-                    $('#login-error').text(msg).removeClass('d-none');
-                    btn.prop('disabled', false).text('Log In');
-                }
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: document.getElementById('username').value,
+                    password: document.getElementById('password').value
+                })
+            }).then(function (res) {
+                if (res.ok) { window.location.href = '/dashboard'; return; }
+                return res.json().catch(function () { return {}; }).then(function (d) {
+                    err.textContent = (d && d.error) || 'Login failed';
+                    err.classList.remove('d-none');
+                    btn.disabled = false; btn.textContent = 'Enter the studio';
+                });
+            }).catch(function () {
+                err.textContent = 'Network error — try again';
+                err.classList.remove('d-none');
+                btn.disabled = false; btn.textContent = 'Enter the studio';
             });
         });
     </script>

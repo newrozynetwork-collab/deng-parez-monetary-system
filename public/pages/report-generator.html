@@ -8,27 +8,28 @@
     <title>Report Generator - Deng Parez</title>
     <link href="/css/style.min.css" rel="stylesheet">
     <link href="/css/custom-app.css" rel="stylesheet">
+    <link href="/css/gold-master.css" rel="stylesheet">
     <script>
-        (function(){ try { var t = localStorage.getItem("dp-theme") || "light"; document.documentElement.setAttribute("data-theme", t); } catch(e){} })();
+        (function(){ try { var t = localStorage.getItem("dp-theme") || "dark"; document.documentElement.setAttribute("data-theme", t); } catch(e){} })();
     </script>
     <style>
         .rg-dropzone { border: 2px dashed #d5d5e0; border-radius: 12px; padding: 40px 20px; text-align: center; cursor: pointer; transition: all 0.2s; background: #fafafb; }
-        [data-theme="dark"] .rg-dropzone { border-color: #3a3a4a; background: #1a1a24; }
-        .rg-dropzone:hover, .rg-dropzone.drag { border-color: #f158d0; background: rgba(241,88,208,0.04); }
-        .rg-dropzone .icon { font-size: 2.5rem; color: #f158d0; margin-bottom: 10px; display: block; }
+        [data-theme="dark"] .rg-dropzone { border-color: #4a4030; background: #1c1910; }
+        .rg-dropzone:hover, .rg-dropzone.drag { border-color: #e3b458; background: rgba(241,88,208,0.04); }
+        .rg-dropzone .icon { font-size: 2.5rem; color: #e3b458; margin-bottom: 10px; display: block; }
         .rg-file-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: #f7f7fb; border-radius: 8px; margin-bottom: 6px; font-size: 0.9rem; }
-        [data-theme="dark"] .rg-file-row { background: #1a1a24; }
+        [data-theme="dark"] .rg-file-row { background: #1c1910; }
         .rg-file-row .fname { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .rg-file-row .fmeta { color: #888; font-size: 0.8rem; }
         .rg-tab { cursor: pointer; padding: 7px 14px; border: 1px solid #d5d5e0; border-radius: 6px; background: #fff; font-size: 0.82rem; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: all 0.15s; }
-        [data-theme="dark"] .rg-tab { background: #1a1a24; border-color: #3a3a4a; color: #e8e8f0; }
-        .rg-tab:hover { border-color: #f158d0; color: #f158d0; }
-        .rg-tab.active { background: #f158d0; color: #fff; border-color: #f158d0; font-weight: 600; }
+        [data-theme="dark"] .rg-tab { background: #1c1910; border-color: #4a4030; color: #e8e8f0; }
+        .rg-tab:hover { border-color: #e3b458; color: #e3b458; }
+        .rg-tab.active { background: #e3b458; color: #fff; border-color: #e3b458; font-weight: 600; }
         .rg-col-chip { display: inline-flex; align-items: center; gap: 5px; background: #f7f7fb; border: 1px solid #e0e0ea; border-radius: 6px; padding: 4px 9px; font-size: 0.75rem; font-family: monospace; }
-        [data-theme="dark"] .rg-col-chip { background: #1a1a24; border-color: #3a3a4a; }
-        .rg-col-chip .lett { color: #f158d0; font-weight: 700; font-size: 0.7rem; }
+        [data-theme="dark"] .rg-col-chip { background: #1c1910; border-color: #4a4030; }
+        .rg-col-chip .lett { color: #e3b458; font-weight: 700; font-size: 0.7rem; }
         .rg-val-chip { display: inline-flex; align-items: center; gap: 5px; padding: 4px 11px; border-radius: 6px; border: 1px solid #d5d5e0; background: #fff; cursor: pointer; font-size: 0.75rem; font-family: monospace; user-select: none; transition: all 0.1s; }
-        [data-theme="dark"] .rg-val-chip { background: #1a1a24; border-color: #3a3a4a; color: #e8e8f0; }
+        [data-theme="dark"] .rg-val-chip { background: #1c1910; border-color: #4a4030; color: #e8e8f0; }
         .rg-val-chip:hover { border-color: #e74c3c; color: #e74c3c; }
         .rg-val-chip.selected { border-color: #e74c3c; background: rgba(231,76,60,0.1); color: #e74c3c; }
         .rg-val-chip .chk { width: 11px; height: 11px; border-radius: 2px; border: 1px solid currentColor; display: inline-flex; align-items: center; justify-content: center; font-size: 0.55rem; }
@@ -36,10 +37,10 @@
         .rg-val-grid { display: flex; flex-wrap: wrap; gap: 5px; max-height: 180px; overflow-y: auto; padding: 10px; background: #fafafb; border-radius: 8px; }
         [data-theme="dark"] .rg-val-grid { background: #131319; }
         .rg-preview-table-wrap { overflow-x: auto; border: 1px solid #e0e0ea; border-radius: 8px; }
-        [data-theme="dark"] .rg-preview-table-wrap { border-color: #3a3a4a; }
+        [data-theme="dark"] .rg-preview-table-wrap { border-color: #4a4030; }
         .rg-preview-table { width: 100%; font-size: 0.75rem; font-family: monospace; border-collapse: collapse; margin: 0; }
-        .rg-preview-table th { background: #f7f7fb; color: #f158d0; padding: 6px 10px; text-align: left; white-space: nowrap; border-bottom: 1px solid #e0e0ea; font-weight: 600; }
-        [data-theme="dark"] .rg-preview-table th { background: #1a1a24; border-color: #3a3a4a; }
+        .rg-preview-table th { background: #f7f7fb; color: #e3b458; padding: 6px 10px; text-align: left; white-space: nowrap; border-bottom: 1px solid #e0e0ea; font-weight: 600; }
+        [data-theme="dark"] .rg-preview-table th { background: #1c1910; border-color: #4a4030; }
         .rg-preview-table td { padding: 5px 10px; color: #666; white-space: nowrap; max-width: 180px; overflow: hidden; text-overflow: ellipsis; border-bottom: 1px solid #f0f0f5; }
         [data-theme="dark"] .rg-preview-table td { color: #aaa; border-color: #2a2a38; }
         .rg-log { background: #fafafb; border-radius: 8px; padding: 12px; max-height: 180px; overflow-y: auto; font-family: monospace; font-size: 0.72rem; color: #666; }
@@ -48,16 +49,16 @@
         .rg-progress-wrap { display: none; margin-top: 15px; }
         .rg-progress-wrap.show { display: block; }
         .rg-stat { background: #f7f7fb; border-radius: 8px; padding: 14px; text-align: center; }
-        [data-theme="dark"] .rg-stat { background: #1a1a24; }
-        .rg-stat-num { font-size: 1.4rem; font-weight: 700; color: #f158d0; }
+        [data-theme="dark"] .rg-stat { background: #1c1910; }
+        .rg-stat-num { font-size: 1.4rem; font-weight: 700; color: #e3b458; }
         .rg-stat-label { font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 3px; }
         .rg-gen-card { background: #f7f7fb; border-radius: 8px; padding: 14px; margin-bottom: 8px; }
-        [data-theme="dark"] .rg-gen-card { background: #1a1a24; }
+        [data-theme="dark"] .rg-gen-card { background: #1c1910; }
         .rg-gen-card.err { border-left: 3px solid #e74c3c; }
         .rg-gen-card .fname { font-weight: 600; margin-bottom: 4px; }
         .rg-gen-card .fmeta { font-size: 0.78rem; color: #888; display: flex; gap: 14px; flex-wrap: wrap; }
-        .rg-gen-card .fmeta b { color: #f158d0; font-weight: 500; }
-        .rg-gen-card .fnet { color: #28a745; font-weight: 700; }
+        .rg-gen-card .fmeta b { color: #e3b458; font-weight: 500; }
+        .rg-gen-card .fnet { color: #8fae6f; font-weight: 700; }
         .rg-section-label { font-size: 0.68rem; color: #888; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; margin-bottom: 8px; }
     </style>
 </head>

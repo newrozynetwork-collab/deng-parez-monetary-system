@@ -8,9 +8,10 @@
     <title>Settings - Deng Parez</title>
     <link href="/css/style.min.css" rel="stylesheet">
     <link href="/css/custom-app.css" rel="stylesheet">
+    <link href="/css/gold-master.css" rel="stylesheet">
     <link href="/assets/extra-libs/DataTables/DataTables-1.10.16/css/dataTables.bootstrap4.min.css" rel="stylesheet">
     <script>
-        (function(){ try { var t = localStorage.getItem("dp-theme") || "light"; document.documentElement.setAttribute("data-theme", t); } catch(e){} })();
+        (function(){ try { var t = localStorage.getItem("dp-theme") || "dark"; document.documentElement.setAttribute("data-theme", t); } catch(e){} })();
     </script>
 </head>
 <body>
@@ -85,7 +86,7 @@
                             <div class="card-body">
                                 <div class="d-flex align-items-center mb-3">
                                     <h4 class="card-title mb-0">
-                                        <i data-feather="minus-circle" class="feather-icon mr-1" style="color:#ef4444;"></i>
+                                        <i data-feather="minus-circle" class="feather-icon mr-1" style="color:#cf6f5a;"></i>
                                         Expense Categories
                                     </h4>
                                     <button class="btn btn-sm btn-danger ml-auto" onclick="openCategoryModal('expense')">
@@ -101,7 +102,7 @@
                             <div class="card-body">
                                 <div class="d-flex align-items-center mb-3">
                                     <h4 class="card-title mb-0">
-                                        <i data-feather="plus-circle" class="feather-icon mr-1" style="color:#10b981;"></i>
+                                        <i data-feather="plus-circle" class="feather-icon mr-1" style="color:#8fae6f;"></i>
                                         Income Categories
                                     </h4>
                                     <button class="btn btn-sm btn-success ml-auto" onclick="openCategoryModal('income')">
@@ -209,7 +210,7 @@
                         <div class="form-group">
                             <label>Color <span class="text-danger">*</span></label>
                             <div class="d-flex align-items-center">
-                                <input type="color" class="form-control" id="category-color" value="#3b82f6" style="width:80px;padding:4px;">
+                                <input type="color" class="form-control" id="category-color" value="#e3b458" style="width:80px;padding:4px;">
                                 <div class="ml-3 d-flex flex-wrap" id="color-swatches"></div>
                             </div>
                         </div>
@@ -219,7 +220,7 @@
                         </div>
                         <div class="form-group">
                             <label>Preview</label>
-                            <div><span class="badge" id="category-preview" style="background:#3b82f6;color:#fff;font-size:14px;padding:6px 14px;">Category Name</span></div>
+                            <div><span class="badge" id="category-preview" style="background:#e3b458;color:#fff;font-size:14px;padding:6px 14px;">Category Name</span></div>
                         </div>
                     </form>
                 </div>
@@ -244,7 +245,7 @@
     <script src="/app/common.js"></script>
     <script>
     var usersData = [], categoriesData = { expense: [], income: [] };
-    var presetColors = ['#3b82f6','#10b981','#f59e0b','#ef4444','#ec4899','#8b5cf6','#14b8a6','#06b6d4','#f97316','#6366f1','#64748b','#6b7280'];
+    var presetColors = ['#e3b458','#c9a14e','#e0a93e','#c46e4a','#cf6f5a','#b98a9c','#8a7eb8','#7e9bb8','#6ba5a0','#8fae6f','#9fbe7f','#8a795c'];
 
     App.init(function() {
         if (App.user.role !== 'admin') {
@@ -276,7 +277,7 @@
 
     function updateCategoryPreview() {
         var name = $('#category-name').val() || 'Category Name';
-        var color = $('#category-color').val() || '#3b82f6';
+        var color = $('#category-color').val() || '#e3b458';
         $('#category-preview').text(name).css('background', color);
     }
 
@@ -318,7 +319,7 @@
         $('#category-id').val('');
         $('#category-type').val(type);
         $('#category-name').val('');
-        $('#category-color').val(type === 'expense' ? '#ef4444' : '#10b981');
+        $('#category-color').val(type === 'expense' ? '#cf6f5a' : '#8fae6f');
         $('#category-description').val('');
         updateCategoryPreview();
         $('#categoryModal').modal('show');

@@ -7,123 +7,95 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/assets/images/favicon.png">
     <title>Connect Your YouTube Channel - Deng Parez</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Schibsted+Grotesk:ital,wght@0,400..900&family=Spline+Sans+Mono:wght@300..700&display=swap');
         * { box-sizing: border-box; }
+        :root {
+            --ink: #241804; --gold: #e3b458;
+            --foil: linear-gradient(100deg,#f9ecc0 0%,#ecc679 26%,#b98931 50%,#f3da9a 72%,#d3a851 100%);
+        }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            font-family: 'Schibsted Grotesk', system-ui, sans-serif;
+            margin: 0; padding: 24px;
+            background: #0b0a07;
+            background-image:
+                radial-gradient(ellipse 56% 42% at 50% -10%, rgba(227,180,88,0.16) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 36% at 12% 100%, rgba(196,110,74,0.07) 0%, transparent 60%);
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
         }
         .card {
-            background: #fff;
-            border-radius: 16px;
-            padding: 40px 32px;
-            max-width: 480px;
-            width: 100%;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            background: #fbf7ec;
+            border: 1px solid rgba(122,92,30,0.25);
+            border-radius: 22px;
+            padding: 42px 34px 36px;
+            max-width: 480px; width: 100%;
+            box-shadow: 0 40px 100px -30px rgba(0,0,0,0.85);
         }
-        .logo {
-            text-align: center;
-            margin-bottom: 24px;
-        }
-        .logo img { height: 40px; }
+        .logo { text-align: center; margin-bottom: 22px; }
+        .logo img { display: none; }
         .brand-name {
-            color: #1f2937;
-            font-size: 14px;
-            font-weight: 500;
-            margin-top: 8px;
+            font-family: 'Fraunces', georgia, serif;
+            color: #2b2310; font-size: 19px; font-weight: 600;
+            letter-spacing: 0.28em; text-transform: uppercase;
+        }
+        .brand-sub {
+            font-family: 'Spline Sans Mono', monospace;
+            color: #9a8a66; font-size: 10px;
+            letter-spacing: 0.3em; text-transform: uppercase; margin-top: 6px;
         }
         .hero-icon {
-            width: 88px;
-            height: 88px;
-            background: #fee2e2;
-            border-radius: 50%;
-            margin: 0 auto 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 88px; height: 88px;
+            background: radial-gradient(circle at 36% 32%, #f6e3ae 0%, #e3b458 42%, #a97c2c 88%);
+            border-radius: 50%; margin: 0 auto 20px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: inset 0 2px 10px rgba(255,250,230,0.5), 0 10px 30px -10px rgba(227,180,88,0.5);
         }
-        .hero-icon svg { width: 48px; height: 48px; color: #ef4444; }
+        .hero-icon svg { width: 44px; height: 44px; color: #241804; }
         h1 {
-            text-align: center;
-            color: #1f2937;
-            font-size: 26px;
-            margin: 0 0 10px;
-            font-weight: 600;
+            font-family: 'Fraunces', georgia, serif;
+            text-align: center; color: #2b2310;
+            font-size: 27px; margin: 0 0 10px; font-weight: 600;
+            letter-spacing: -0.01em;
         }
         .subtitle {
-            text-align: center;
-            color: #6b7280;
-            margin: 0 0 28px;
-            font-size: 15px;
-            line-height: 1.5;
+            text-align: center; color: #6f6045;
+            margin: 0 0 26px; font-size: 15px; line-height: 1.55;
         }
         .steps {
-            background: #f0f9ff;
-            border-left: 4px solid #3b82f6;
-            padding: 16px 20px;
-            border-radius: 8px;
-            margin-bottom: 24px;
+            background: rgba(227,180,88,0.13);
+            border-left: 4px solid var(--gold);
+            padding: 16px 20px; border-radius: 10px; margin-bottom: 24px;
         }
         .steps h3 {
-            margin: 0 0 10px;
-            color: #1e40af;
-            font-size: 14px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            font-family: 'Spline Sans Mono', monospace;
+            margin: 0 0 10px; color: #8a6220;
+            font-size: 11px; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.22em;
         }
-        .steps ol {
-            margin: 0;
-            padding-left: 20px;
-            color: #1e3a8a;
-            font-size: 14px;
-            line-height: 1.7;
-        }
+        .steps ol { margin: 0; padding-left: 20px; color: #4a3c20; font-size: 14px; line-height: 1.75; }
         .btn-primary {
-            display: block;
-            width: 100%;
-            padding: 18px;
-            background: #ef4444;
-            color: #fff;
-            border: none;
-            border-radius: 12px;
-            font-size: 17px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-decoration: none;
-            text-align: center;
+            display: block; width: 100%; padding: 17px;
+            background: var(--foil); color: var(--ink);
+            border: none; border-radius: 100px;
+            font-family: 'Schibsted Grotesk', sans-serif;
+            font-size: 16px; font-weight: 700;
+            cursor: pointer; transition: all 0.25s;
+            text-decoration: none; text-align: center;
+            box-shadow: 0 12px 34px -12px rgba(168,123,42,0.65);
         }
-        .btn-primary:hover {
-            background: #dc2626;
-            transform: translateY(-1px);
-            box-shadow: 0 8px 24px rgba(239, 68, 68, 0.4);
-        }
-        .btn-primary svg {
-            vertical-align: middle;
-            margin-right: 8px;
-        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 18px 40px -12px rgba(168,123,42,0.8); filter: brightness(1.04); }
+        .btn-primary svg { vertical-align: middle; margin-right: 8px; color: #a8201a; }
         .permissions {
-            background: #f9fafb;
-            border-radius: 8px;
-            padding: 14px 16px;
-            margin-top: 20px;
-            font-size: 12px;
-            color: #6b7280;
-            line-height: 1.5;
+            background: rgba(122,92,30,0.07);
+            border: 1px solid rgba(122,92,30,0.16);
+            border-radius: 10px; padding: 14px 16px; margin-top: 20px;
+            font-size: 12px; color: #6f6045; line-height: 1.55;
         }
-        .permissions strong { color: #1f2937; display: block; margin-bottom: 6px; }
+        .permissions strong { color: #2b2310; display: block; margin-bottom: 6px; }
         .footer-note {
-            text-align: center;
-            color: #9ca3af;
-            font-size: 12px;
-            margin-top: 18px;
-            line-height: 1.5;
+            font-family: 'Spline Sans Mono', monospace;
+            text-align: center; color: #9a8a66; font-size: 10.5px;
+            margin-top: 18px; line-height: 1.7; letter-spacing: 0.04em;
         }
     </style>
 </head>
@@ -131,7 +103,8 @@
     <div class="card">
         <div class="logo">
             <img src="/assets/images/logo-icon.png" alt="Logo">
-            <div class="brand-name">Deng Parez Monetary System</div>
+            <div class="brand-name">Deng Parez</div>
+            <div class="brand-sub">Monetary System · Royalty Atelier</div>
         </div>
 
         <div class="hero-icon">

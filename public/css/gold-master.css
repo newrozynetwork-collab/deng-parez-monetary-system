@@ -1,0 +1,449 @@
+/* ════════════════════════════════════════════════════════════════
+   GOLD MASTER — the Deng Parez house theme
+   A record-label pressing for the whole back office:
+   ink lacquer (dark) · gilded parchment (light) · champagne foil
+   Loads AFTER style.min.css + custom-app.css and retints the
+   --dp-* variable system, typography and every component.
+   ════════════════════════════════════════════════════════════════ */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Schibsted+Grotesk:ital,wght@0,400..900;1,400..900&family=Spline+Sans+Mono:wght@300..700&family=Noto+Kufi+Arabic:wght@300..700&display=swap');
+
+/* ─── 1. THE PALETTE ──────────────────────────────────────────── */
+:root {
+  --gm-gold: #e3b458;
+  --gm-gold-deep: #a87b2a;
+  --gm-foil: linear-gradient(100deg, #f9ecc0 0%, #ecc679 26%, #b98931 50%, #f3da9a 72%, #d3a851 100%);
+  --gm-ink: #241804;
+  --gm-serif: 'Fraunces', 'Noto Kufi Arabic', georgia, serif;
+  --gm-sans: 'Schibsted Grotesk', 'Noto Kufi Arabic', system-ui, sans-serif;
+  --gm-mono: 'Spline Sans Mono', 'Noto Kufi Arabic', monospace;
+  --gm-ease: cubic-bezier(0.16, 0.84, 0.3, 1);
+
+  /* Gilded Parchment (light) */
+  --dp-bg: #f3ecdd;
+  --dp-surface: #fbf7ec;
+  --dp-surface-2: #f0e8d4;
+  --dp-border: rgba(122, 92, 30, 0.16);
+  --dp-border-strong: rgba(122, 92, 30, 0.34);
+
+  --dp-text: #2b2310;
+  --dp-text-muted: #6f6045;
+  --dp-text-subtle: #9a8a66;
+
+  --dp-primary: #a87b2a;
+  --dp-primary-dark: #8a6220;
+  --dp-primary-light: rgba(227, 180, 88, 0.22);
+
+  --dp-accent: #b3683f;
+  --dp-accent-dark: #96512c;
+
+  --dp-success: #6f8f4f;
+  --dp-warning: #c98f1e;
+  --dp-danger: #b65540;
+  --dp-info: #5e7d9e;
+
+  --dp-sidebar-bg: #faf5e7;
+  --dp-sidebar-text: #6f6045;
+  --dp-sidebar-hover-bg: rgba(227, 180, 88, 0.14);
+  --dp-sidebar-active-bg: #2b2310;
+  --dp-sidebar-active-text: #f0d58c;
+
+  --dp-topbar-bg: #fbf7ec;
+  --dp-topbar-border: rgba(122, 92, 30, 0.16);
+
+  --dp-card-shadow: 0 1px 3px rgba(64, 44, 8, 0.05), 0 1px 2px rgba(64, 44, 8, 0.04);
+  --dp-card-shadow-hover: 0 10px 30px -12px rgba(64, 44, 8, 0.18);
+
+  --dp-gradient-blue: linear-gradient(135deg, #b98931, #e3b458);
+  --dp-gradient-teal: linear-gradient(135deg, #8a6220, #c9a14e);
+  --dp-gradient-green: linear-gradient(135deg, #5f7c42, #8fae6f);
+  --dp-gradient-amber: linear-gradient(135deg, #c98f1e, #e6b95c);
+  --dp-gradient-rose: linear-gradient(135deg, #a05236, #c97b58);
+  --dp-gradient-slate: linear-gradient(135deg, #5a5244, #8a795c);
+}
+
+[data-theme="dark"] {
+  /* Ink Pressing (the signature) */
+  --dp-bg: #0b0a07;
+  --dp-surface: #14120b;
+  --dp-surface-2: #1c1910;
+  --dp-border: rgba(228, 198, 134, 0.13);
+  --dp-border-strong: rgba(228, 198, 134, 0.32);
+
+  --dp-text: #f3ead9;
+  --dp-text-muted: rgba(243, 234, 217, 0.66);
+  --dp-text-subtle: rgba(243, 234, 217, 0.4);
+
+  --dp-primary: #e3b458;
+  --dp-primary-dark: #caa044;
+  --dp-primary-light: rgba(227, 180, 88, 0.16);
+
+  --dp-accent: #c46e4a;
+  --dp-accent-dark: #a85636;
+
+  --dp-success: #8fae6f;
+  --dp-warning: #e0a93e;
+  --dp-danger: #cf6f5a;
+  --dp-info: #7e9bb8;
+
+  --dp-sidebar-bg: #0e0c07;
+  --dp-sidebar-text: rgba(243, 234, 217, 0.6);
+  --dp-sidebar-hover-bg: rgba(227, 180, 88, 0.1);
+  --dp-sidebar-active-bg: #e3b458;
+  --dp-sidebar-active-text: #241804;
+
+  --dp-topbar-bg: rgba(13, 11, 7, 0.92);
+  --dp-topbar-border: rgba(228, 198, 134, 0.13);
+
+  --dp-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --dp-card-shadow-hover: 0 16px 40px -18px rgba(0, 0, 0, 0.7);
+
+  --dp-gradient-blue: linear-gradient(135deg, #8a6220, #e3b458);
+  --dp-gradient-teal: linear-gradient(135deg, #6b4d17, #c9a14e);
+  --dp-gradient-green: linear-gradient(135deg, #4d6433, #8fae6f);
+  --dp-gradient-amber: linear-gradient(135deg, #9c6f23, #e0a93e);
+  --dp-gradient-rose: linear-gradient(135deg, #8a4528, #c46e4a);
+  --dp-gradient-slate: linear-gradient(135deg, #3f3826, #6f6045);
+}
+
+/* ─── 2. TYPE ─────────────────────────────────────────────────── */
+body {
+  font-family: var(--gm-sans) !important;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, h4, h5, h6,
+.card-title, .page-title, .modal-title {
+  font-family: var(--gm-serif) !important;
+  font-weight: 560;
+  letter-spacing: -0.01em;
+  color: var(--dp-text);
+}
+.page-title { font-size: 1.55rem !important; }
+.table, .badge, code, .mono, .dataTables_info {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+::selection { background: var(--gm-gold); color: var(--gm-ink); }
+:focus-visible { outline: 2px solid var(--dp-primary); outline-offset: 2px; }
+
+/* ─── 3. ATMOSPHERE ───────────────────────────────────────────── */
+body {
+  background-image:
+    radial-gradient(ellipse 52% 36% at 16% -6%, rgba(227, 180, 88, 0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 44% 28% at 88% 0%, rgba(196, 110, 74, 0.05) 0%, transparent 60%) !important;
+  background-attachment: fixed !important;
+}
+[data-theme="dark"] body { background-color: var(--dp-bg) !important; }
+.page-wrapper { background: transparent !important; }
+
+/* film grain — an inert overlay above everything, like the print itself */
+#main-wrapper::after, .main-wrapper::after {
+  content: ''; position: fixed; inset: -50%; z-index: 2147483000; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 240 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  opacity: 0.03; mix-blend-mode: overlay;
+}
+
+/* ─── 4. TOPBAR: the masthead ─────────────────────────────────── */
+.topbar {
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--dp-topbar-border) !important;
+  box-shadow: none !important;
+}
+.topbar .navbar-brand img { display: none !important; }
+.topbar .navbar-brand .logo::after {
+  content: 'DENG PAREZ';
+  font-family: var(--gm-serif);
+  font-weight: 600; font-size: 1.02rem;
+  letter-spacing: 0.32em; white-space: nowrap;
+  color: var(--dp-text);
+  display: inline-block; padding: 6px 2px;
+}
+.topbar .navbar-brand .logo:hover::after { color: var(--dp-primary); }
+.topbar .nav-toggler, .topbar .topbartoggler, .topbar .sidebartoggler { color: var(--dp-text-muted) !important; }
+.topbar .pro-pic img { border: 2px solid var(--dp-primary); }
+
+/* ─── 5. SIDEBAR: the label rail ──────────────────────────────── */
+.left-sidebar { border-right: 1px solid var(--dp-border) !important; box-shadow: none !important; }
+.sidebar-nav ul .sidebar-item .sidebar-link {
+  font-family: var(--gm-sans);
+  font-size: 0.86rem !important;
+  letter-spacing: 0.01em;
+  border-radius: 10px;
+}
+.sidebar-nav ul .sidebar-item.selected > .sidebar-link,
+.sidebar-nav ul .sidebar-item > .sidebar-link.active {
+  background: var(--dp-sidebar-active-bg) !important;
+  color: var(--dp-sidebar-active-text) !important;
+  box-shadow: 0 6px 20px -8px rgba(227, 180, 88, 0.55) !important;
+  font-weight: 700;
+}
+.sidebar-nav ul .sidebar-item.selected > .sidebar-link .feather-icon,
+.sidebar-nav ul .sidebar-item > .sidebar-link.active .feather-icon,
+.sidebar-nav ul .sidebar-item.selected > .sidebar-link .hide-menu,
+.sidebar-nav ul .sidebar-item > .sidebar-link.active .hide-menu {
+  color: var(--dp-sidebar-active-text) !important;
+}
+.sidebar-nav ul .sidebar-item .sidebar-link:hover { color: var(--dp-primary) !important; }
+.sidebar-nav ul .sidebar-item.selected > .sidebar-link:hover,
+.sidebar-nav ul .sidebar-item > .sidebar-link.active:hover,
+.sidebar-nav ul .sidebar-item.selected > .sidebar-link:hover .hide-menu,
+.sidebar-nav ul .sidebar-item > .sidebar-link.active:hover .hide-menu {
+  color: var(--dp-sidebar-active-text) !important;
+}
+
+/* ─── 6. CARDS: pressed sleeves ───────────────────────────────── */
+.card {
+  background: var(--dp-surface) !important;
+  border: 1px solid var(--dp-border) !important;
+  border-radius: 16px !important;
+  transition: border-color 0.3s, box-shadow 0.3s, transform 0.25s var(--gm-ease);
+}
+.card:hover { border-color: var(--dp-border-strong) !important; }
+.card .card-title { font-size: 1.18rem; }
+.card .card-subtitle, .card .text-muted { color: var(--dp-text-muted) !important; }
+
+/* stat cards: foil pressings */
+.card.stat-card, .stat-card { border: 1px solid var(--dp-border) !important; }
+.stat-card h3 {
+  font-family: var(--gm-serif) !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+  font-variant-numeric: tabular-nums;
+}
+/* parchment: ink text on the light-gold gradients; ink theme keeps white */
+.stat-card h3, .stat-card h6, .stat-card span, .stat-card p { color: var(--gm-ink) !important; }
+[data-theme="dark"] .stat-card h3, [data-theme="dark"] .stat-card h6,
+[data-theme="dark"] .stat-card span, [data-theme="dark"] .stat-card p { color: #fff !important; }
+
+/* ─── 7. BUTTONS: foil + wax ──────────────────────────────────── */
+.btn { border-radius: 10px !important; font-weight: 600; letter-spacing: 0.01em; }
+.btn-primary, .bg-gradient-primary, .btn-info {
+  background: var(--gm-foil) !important;
+  border: none !important;
+  color: var(--gm-ink) !important;
+  box-shadow: 0 6px 22px -10px rgba(227, 180, 88, 0.6);
+}
+.btn-primary:hover, .bg-gradient-primary:hover, .btn-info:hover {
+  filter: brightness(1.06);
+  color: var(--gm-ink) !important;
+  transform: translateY(-1px);
+}
+.btn-outline-primary, .btn-outline-info {
+  color: var(--dp-primary) !important;
+  border: 1px solid var(--dp-border-strong) !important;
+  background: transparent !important;
+}
+.btn-outline-primary:hover, .btn-outline-info:hover {
+  background: var(--dp-primary-light) !important;
+  border-color: var(--dp-primary) !important;
+  color: var(--dp-primary) !important;
+}
+.btn-success { background: var(--dp-success) !important; border-color: var(--dp-success) !important; color: #fff !important; }
+.btn-danger { background: var(--dp-danger) !important; border-color: var(--dp-danger) !important; color: #fff !important; }
+.btn-warning { background: var(--dp-warning) !important; border-color: var(--dp-warning) !important; color: var(--gm-ink) !important; }
+.btn-secondary, .btn-light, .btn-dark {
+  background: var(--dp-surface-2) !important;
+  border: 1px solid var(--dp-border-strong) !important;
+  color: var(--dp-text) !important;
+}
+.btn-outline-secondary, .btn-outline-dark {
+  color: var(--dp-text-muted) !important;
+  border-color: var(--dp-border-strong) !important;
+  background: transparent !important;
+}
+.btn-outline-secondary:hover, .btn-outline-dark:hover { background: var(--dp-surface-2) !important; color: var(--dp-text) !important; }
+.btn-outline-danger { color: var(--dp-danger) !important; border-color: var(--dp-danger) !important; background: transparent !important; }
+.btn-outline-danger:hover { background: var(--dp-danger) !important; color: #fff !important; }
+.btn-outline-success { color: var(--dp-success) !important; border-color: var(--dp-success) !important; background: transparent !important; }
+.btn-outline-success:hover { background: var(--dp-success) !important; color: #fff !important; }
+
+/* ─── 8. FORMS ────────────────────────────────────────────────── */
+.form-control, .custom-select, .dataTables_wrapper .dataTables_filter input, .dataTables_wrapper .dataTables_length select {
+  background: var(--dp-surface-2) !important;
+  border: 1px solid var(--dp-border-strong) !important;
+  color: var(--dp-text) !important;
+  border-radius: 10px !important;
+  font-family: var(--gm-sans);
+}
+.form-control:focus, .custom-select:focus {
+  border-color: var(--dp-primary) !important;
+  box-shadow: 0 0 0 3px var(--dp-primary-light) !important;
+}
+.form-control::placeholder { color: var(--dp-text-subtle) !important; }
+.input-group-text {
+  background: var(--dp-surface-2) !important;
+  border: 1px solid var(--dp-border-strong) !important;
+  color: var(--dp-text-muted) !important;
+  border-radius: 10px !important;
+}
+label { color: var(--dp-text-muted); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.04em; text-transform: uppercase; font-family: var(--gm-sans); }
+.custom-control-label { text-transform: none; letter-spacing: 0; font-weight: 500; color: var(--dp-text); }
+.custom-control-input:checked ~ .custom-control-label::before {
+  background: var(--gm-foil) !important;
+  border-color: var(--dp-primary) !important;
+}
+.custom-checkbox .custom-control-label::before { border-radius: 5px; border: 1px solid var(--dp-border-strong); background: var(--dp-surface-2); }
+
+/* ─── 9. TABLES: the ledger ───────────────────────────────────── */
+.table thead th {
+  background: transparent !important;
+  color: var(--dp-text-subtle) !important;
+  font-family: var(--gm-mono) !important;
+  font-size: 0.62rem !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.22em !important;
+  text-transform: uppercase !important;
+  border-bottom: 1px solid var(--dp-border-strong) !important;
+}
+.table td { border-top: 1px solid var(--dp-border) !important; }
+.table-striped tbody tr:nth-of-type(odd) { background: rgba(227, 180, 88, 0.035) !important; }
+.table-hover tbody tr:hover { background: var(--dp-primary-light) !important; }
+.table .font-weight-bold, .table b, .table strong { font-variant-numeric: tabular-nums; }
+
+/* DataTables chrome */
+.dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter { color: var(--dp-text-muted) !important; font-size: 0.82rem; }
+.page-link {
+  background: var(--dp-surface) !important;
+  border-color: var(--dp-border) !important;
+  color: var(--dp-text-muted) !important;
+}
+.page-item.active .page-link {
+  background: var(--gm-foil) !important;
+  border-color: var(--dp-primary) !important;
+  color: var(--gm-ink) !important;
+  font-weight: 700;
+}
+.page-item.disabled .page-link { background: transparent !important; color: var(--dp-text-subtle) !important; }
+table.dataTable thead .sorting:before, table.dataTable thead .sorting:after,
+table.dataTable thead .sorting_asc:before, table.dataTable thead .sorting_asc:after,
+table.dataTable thead .sorting_desc:before, table.dataTable thead .sorting_desc:after { color: var(--dp-primary); }
+
+/* ─── 10. BADGES, ALERTS, MISC ────────────────────────────────── */
+.badge { font-family: var(--gm-mono); font-weight: 600 !important; letter-spacing: 0.04em; border-radius: 6px !important; }
+/* data-colored badges (category colors from the DB): mute into the pressing */
+.badge[style*="background"] { filter: saturate(0.62) brightness(0.94); border: 1px solid rgba(255, 255, 255, 0.14); }
+.badge-primary { background: var(--dp-primary) !important; color: var(--gm-ink) !important; }
+.badge-success { background: var(--dp-success) !important; color: #fff !important; }
+.badge-danger { background: var(--dp-danger) !important; color: #fff !important; }
+.badge-warning { background: var(--dp-warning) !important; color: var(--gm-ink) !important; }
+.badge-info { background: var(--dp-info) !important; color: #fff !important; }
+.badge-secondary { background: var(--dp-surface-2) !important; color: var(--dp-text-muted) !important; border: 1px solid var(--dp-border-strong); }
+
+.alert { border-radius: 12px !important; font-size: 0.9rem; }
+.alert-success { background: rgba(143, 174, 111, 0.14) !important; color: var(--dp-success) !important; border: 1px solid rgba(143, 174, 111, 0.4) !important; }
+.alert-danger { background: rgba(207, 111, 90, 0.13) !important; color: var(--dp-danger) !important; border: 1px solid rgba(207, 111, 90, 0.4) !important; }
+.alert-warning { background: rgba(224, 169, 62, 0.12) !important; color: var(--dp-warning) !important; border: 1px solid rgba(224, 169, 62, 0.4) !important; }
+.alert-info { background: rgba(126, 155, 184, 0.12) !important; color: var(--dp-info) !important; border: 1px solid rgba(126, 155, 184, 0.4) !important; }
+
+.text-primary { color: var(--dp-primary) !important; }
+.text-success { color: var(--dp-success) !important; }
+.text-danger { color: var(--dp-danger) !important; }
+.text-warning { color: var(--dp-warning) !important; }
+.text-info { color: var(--dp-info) !important; }
+.bg-white, .bg-light { background: var(--dp-surface) !important; color: var(--dp-text) !important; }
+.bg-primary { background: var(--gm-foil) !important; color: var(--gm-ink) !important; }
+.border, .border-top, .border-bottom, .border-left, .border-right { border-color: var(--dp-border) !important; }
+/* semantic stripes keep their meaning (after the blanket rule so they win) */
+.border-primary { border-color: var(--dp-primary) !important; }
+.border-success { border-color: var(--dp-success) !important; }
+.border-danger { border-color: var(--dp-danger) !important; }
+.border-warning { border-color: var(--dp-warning) !important; }
+.border-info { border-color: var(--dp-info) !important; }
+hr { border-top-color: var(--dp-border) !important; }
+a { color: var(--dp-primary); }
+a:hover { color: var(--dp-primary-dark); }
+
+/* ─── 11. BREADCRUMB BAND ─────────────────────────────────────── */
+.page-breadcrumb {
+  background: transparent !important;
+  border-bottom: 1px solid var(--dp-border) !important;
+  padding: 22px 25px 18px !important;
+}
+.breadcrumb-item a { color: var(--dp-primary) !important; }
+.breadcrumb-item.active { color: var(--dp-text-subtle) !important; }
+.breadcrumb-item + .breadcrumb-item::before { color: var(--dp-text-subtle); content: '✦'; font-size: 0.6rem; line-height: 2; }
+
+/* ─── 12. DROPDOWNS & MODALS ──────────────────────────────────── */
+.dropdown-menu {
+  background: var(--dp-surface) !important;
+  border: 1px solid var(--dp-border-strong) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 18px 50px -18px rgba(0, 0, 0, 0.5) !important;
+  overflow: hidden;
+}
+.dropdown-item { color: var(--dp-text) !important; font-size: 0.88rem; }
+.dropdown-item:hover { background: var(--dp-primary-light) !important; color: var(--dp-primary) !important; }
+.dropdown-divider { border-top-color: var(--dp-border) !important; }
+.user-dd .bg-primary { background: var(--gm-foil) !important; }
+.user-dd .bg-primary h4, .user-dd .bg-primary p { color: var(--gm-ink) !important; }
+.user-dd .with-arrow .bg-primary { background: var(--gm-gold) !important; }
+
+.modal-content {
+  background: var(--dp-surface) !important;
+  border: 1px solid var(--dp-border-strong) !important;
+  border-radius: 16px !important;
+}
+.modal-header { border-bottom: 1px solid var(--dp-border) !important; }
+.modal-header[class*="bg-"] { background: var(--gm-foil) !important; }
+.modal-header[class*="bg-"] .modal-title, .modal-header[class*="bg-"] .close { color: var(--gm-ink) !important; }
+.modal-footer { border-top: 1px solid var(--dp-border) !important; }
+.close { color: var(--dp-text) !important; text-shadow: none !important; }
+
+/* ─── 13. PRELOADER: cueing the record ────────────────────────── */
+.preloader { background: var(--dp-bg) !important; }
+.lds-ripple .lds-pos { border-color: var(--gm-gold) !important; }
+
+/* ─── 14. FOOTER ──────────────────────────────────────────────── */
+.footer {
+  background: transparent !important;
+  border-top: 1px solid var(--dp-border) !important;
+  color: var(--dp-text-subtle) !important;
+  font-family: var(--gm-mono);
+  font-size: 0.68rem !important;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+/* ─── 15. SCROLLBARS ──────────────────────────────────────────── */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--dp-bg); }
+::-webkit-scrollbar-thumb { background: var(--dp-border-strong); border-radius: 6px; border: 2px solid var(--dp-bg); }
+::-webkit-scrollbar-thumb:hover { background: var(--dp-primary); }
+html { scrollbar-color: var(--dp-border-strong) var(--dp-bg); }
+
+/* ─── 16. DATERANGEPICKER (ink skin) ──────────────────────────── */
+.daterangepicker {
+  background: var(--dp-surface) !important;
+  border: 1px solid var(--dp-border-strong) !important;
+  border-radius: 12px !important;
+  color: var(--dp-text) !important;
+  font-family: var(--gm-sans) !important;
+}
+.daterangepicker .calendar-table { background: transparent !important; border: none !important; }
+.daterangepicker .calendar-table th, .daterangepicker .calendar-table td { color: var(--dp-text) !important; }
+.daterangepicker td.off { color: var(--dp-text-subtle) !important; background: transparent !important; }
+.daterangepicker td.available:hover, .daterangepicker th.available:hover { background: var(--dp-primary-light) !important; }
+.daterangepicker td.active, .daterangepicker td.active:hover { background: var(--gm-gold) !important; color: var(--gm-ink) !important; }
+.daterangepicker td.in-range { background: var(--dp-primary-light) !important; color: var(--dp-text) !important; }
+.daterangepicker:before, .daterangepicker:after { border-bottom-color: var(--dp-border-strong) !important; }
+.daterangepicker .ranges li.active { background: var(--gm-gold) !important; color: var(--gm-ink) !important; }
+.daterangepicker .ranges li:hover { background: var(--dp-primary-light) !important; }
+.daterangepicker .drp-buttons { border-top: 1px solid var(--dp-border) !important; }
+
+/* ─── 17. NAV TABS / PILLS ────────────────────────────────────── */
+.nav-tabs { border-bottom: 1px solid var(--dp-border-strong) !important; }
+.nav-tabs .nav-link { color: var(--dp-text-muted) !important; border: none !important; font-weight: 600; }
+.nav-tabs .nav-link.active {
+  background: transparent !important;
+  color: var(--dp-primary) !important;
+  border-bottom: 2px solid var(--dp-primary) !important;
+}
+.nav-pills .nav-link.active { background: var(--gm-foil) !important; color: var(--gm-ink) !important; }
+
+/* ─── 18. SWITCHES & PROGRESS ─────────────────────────────────── */
+.custom-switch .custom-control-input:checked ~ .custom-control-label::before { background: var(--gm-gold) !important; border-color: var(--gm-gold) !important; }
+.progress { background: var(--dp-surface-2) !important; border-radius: 100px; }
+.progress-bar { background: var(--gm-foil) !important; color: var(--gm-ink); }
+
+/* ─── 19. SMALL PRINT ─────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}

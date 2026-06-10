@@ -58,11 +58,11 @@ function renderTrendChart(monthlyData) {
             datasets: [{
                 label: 'Revenue',
                 data: monthlyData.map(function(m) { return m.total; }),
-                borderColor: '#3b82f6',
+                borderColor: '#e3b458',
                 backgroundColor: 'rgba(59, 130, 246, 0.1)',
                 fill: true,
                 tension: 0.4,
-                pointBackgroundColor: '#3b82f6'
+                pointBackgroundColor: '#e3b458'
             }]
         },
         options: {
@@ -80,7 +80,7 @@ function renderSourceChart(sourceData) {
     var ctx = document.getElementById('revenue-source-chart').getContext('2d');
     if (sourceChart) sourceChart.destroy();
 
-    var colors = { youtube: '#ef4444', platform: '#14b8a6', both: '#3b82f6' };
+    var colors = { youtube: '#cf6f5a', platform: '#6ba5a0', both: '#e3b458' };
     sourceChart = new Chart(ctx, {
         type: 'doughnut',
         data: {

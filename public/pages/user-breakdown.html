@@ -8,10 +8,11 @@
     <title>User Breakdown - Deng Parez</title>
     <link href="/css/style.min.css" rel="stylesheet">
     <link href="/css/custom-app.css" rel="stylesheet">
+    <link href="/css/gold-master.css" rel="stylesheet">
     <link href="/assets/extra-libs/DataTables/DataTables-1.10.16/css/dataTables.bootstrap4.min.css" rel="stylesheet">
     <style>.chart-container { position: relative; height: 250px; }</style>
     <script>
-        (function(){ try { var t = localStorage.getItem("dp-theme") || "light"; document.documentElement.setAttribute("data-theme", t); } catch(e){} })();
+        (function(){ try { var t = localStorage.getItem("dp-theme") || "dark"; document.documentElement.setAttribute("data-theme", t); } catch(e){} })();
     </script>
 </head>
 <body>
@@ -85,7 +86,7 @@
                             </div>
                         </div>
                         <div class="col-lg-4 col-md-6">
-                            <div class="card" style="background: linear-gradient(135deg, #5cd050, #7ee674);">
+                            <div class="card" style="background: linear-gradient(135deg, #8fae6f, #9fbe7f);">
                                 <div class="card-body text-white">
                                     <h6 class="text-white op-7">Total Earned</h6>
                                     <h3 class="text-white mb-0" id="bd-total">$0.00</h3>
@@ -93,7 +94,7 @@
                             </div>
                         </div>
                         <div class="col-lg-4 col-md-6">
-                            <div class="card" style="background: linear-gradient(135deg, #30ccff, #56dcff);">
+                            <div class="card" style="background: linear-gradient(135deg, #7e9bb8, #56dcff);">
                                 <div class="card-body text-white">
                                     <h6 class="text-white op-7">Total Entries</h6>
                                     <h3 class="text-white mb-0" id="bd-entries">0</h3>
@@ -197,7 +198,7 @@
                 type: 'bar',
                 data: {
                     labels: data.timeline.map(function(t) { return t.month; }),
-                    datasets: [{ label: 'Earnings', data: data.timeline.map(function(t) { return t.total; }), backgroundColor: 'rgba(241,88,208,0.7)', borderColor: '#f158d0', borderWidth: 1 }]
+                    datasets: [{ label: 'Earnings', data: data.timeline.map(function(t) { return t.total; }), backgroundColor: 'rgba(241,88,208,0.7)', borderColor: '#e3b458', borderWidth: 1 }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: function(v) { return '$'+v; } } } } }
             });

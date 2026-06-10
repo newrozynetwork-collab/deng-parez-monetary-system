@@ -209,9 +209,9 @@ function printArtists() {
     var html = '<html><head><title>Artists — Deng Parez</title>' +
         '<style>' +
         'body{font-family:Arial,sans-serif;padding:20px;color:#1f2937;}' +
-        'h1{color:#3b82f6;border-bottom:2px solid #3b82f6;padding-bottom:8px;}' +
+        'h1{color:#e3b458;border-bottom:2px solid #e3b458;padding-bottom:8px;}' +
         'table{width:100%;border-collapse:collapse;margin-top:15px;font-size:12px;}' +
-        'th{background:#3b82f6;color:#fff;padding:8px;text-align:left;}' +
+        'th{background:#e3b458;color:#fff;padding:8px;text-align:left;}' +
         'td{border:1px solid #e5e7eb;padding:6px 8px;}' +
         'tr:nth-child(even){background:#f9fafb;}' +
         '.meta{color:#6b7280;font-size:12px;margin-bottom:10px;}' +

@@ -8,10 +8,11 @@
     <title>Artist Detail - Deng Parez</title>
     <link href="/css/style.min.css" rel="stylesheet">
     <link href="/css/custom-app.css" rel="stylesheet">
+    <link href="/css/gold-master.css" rel="stylesheet">
     <link href="/assets/extra-libs/DataTables/DataTables-1.10.16/css/dataTables.bootstrap4.min.css" rel="stylesheet">
     <style>.chart-container { position: relative; height: 250px; }</style>
     <script>
-        (function(){ try { var t = localStorage.getItem("dp-theme") || "light"; document.documentElement.setAttribute("data-theme", t); } catch(e){} })();
+        (function(){ try { var t = localStorage.getItem("dp-theme") || "dark"; document.documentElement.setAttribute("data-theme", t); } catch(e){} })();
     </script>
 </head>
 <body>
@@ -93,7 +94,7 @@
                             <div class="card-body">
                                 <div class="d-flex align-items-center mb-2">
                                     <h4 class="card-title mb-0">
-                                        <i data-feather="youtube" class="feather-icon mr-1" style="color:#ef4444;"></i>
+                                        <i data-feather="youtube" class="feather-icon mr-1" style="color:#cf6f5a;"></i>
                                         YouTube Section
                                     </h4>
                                     <div class="ml-auto" id="yt-actions"></div>
@@ -351,7 +352,7 @@
                 type: 'pie',
                 data: {
                     labels: ['Artist Share', 'Company Net', 'Referral Payouts'],
-                    datasets: [{ data: [totalArtist, totalCompany, totalRef], backgroundColor: ['#3b82f6', '#10b981', '#f59e0b'] }]
+                    datasets: [{ data: [totalArtist, totalCompany, totalRef], backgroundColor: ['#e3b458', '#8fae6f', '#e0a93e'] }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
             });

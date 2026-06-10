@@ -8,10 +8,11 @@
     <title>Reports - Deng Parez</title>
     <link href="/css/style.min.css" rel="stylesheet">
     <link href="/css/custom-app.css" rel="stylesheet">
+    <link href="/css/gold-master.css" rel="stylesheet">
     <link href="/assets/libs/daterangepicker/daterangepicker.css" rel="stylesheet">
     <style>.chart-container { position: relative; height: 300px; }</style>
     <script>
-        (function(){ try { var t = localStorage.getItem("dp-theme") || "light"; document.documentElement.setAttribute("data-theme", t); } catch(e){} })();
+        (function(){ try { var t = localStorage.getItem("dp-theme") || "dark"; document.documentElement.setAttribute("data-theme", t); } catch(e){} })();
     </script>
 </head>
 <body>
@@ -79,7 +80,7 @@
                 <!-- Net Profit -->
                 <div class="row">
                     <div class="col-12">
-                        <div class="card" style="background: linear-gradient(135deg, #5cd050, #7ee674);">
+                        <div class="card" style="background: linear-gradient(135deg, #8fae6f, #9fbe7f);">
                             <div class="card-body">
                                 <div class="d-flex align-items-center text-white">
                                     <div>
@@ -165,7 +166,7 @@
                 type: 'doughnut',
                 data: {
                     labels: ['Artist Payouts', 'Referral Payouts', 'Bank Fees', 'Company Profit'],
-                    datasets: [{ data: [d.totalArtistPayouts, d.totalReferralPayouts, d.totalBankFees, d.netCompanyProfit > 0 ? d.netCompanyProfit : 0], backgroundColor: ['#30ccff', '#ffaf30', '#ff7430', '#5cd050'] }]
+                    datasets: [{ data: [d.totalArtistPayouts, d.totalReferralPayouts, d.totalBankFees, d.netCompanyProfit > 0 ? d.netCompanyProfit : 0], backgroundColor: ['#7e9bb8', '#e0a93e', '#c46e4a', '#8fae6f'] }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
             });
@@ -178,7 +179,7 @@
                 type: 'bar',
                 data: {
                     labels: d.monthlyRevenue.map(function(m) { return m.month; }),
-                    datasets: [{ label: 'Revenue', data: d.monthlyRevenue.map(function(m) { return m.total; }), backgroundColor: 'rgba(241,88,208,0.7)', borderColor: '#f158d0', borderWidth: 1 }]
+                    datasets: [{ label: 'Revenue', data: d.monthlyRevenue.map(function(m) { return m.total; }), backgroundColor: 'rgba(241,88,208,0.7)', borderColor: '#e3b458', borderWidth: 1 }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: function(v) { return '$'+v; } } } } }
             });

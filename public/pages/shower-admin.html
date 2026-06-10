@@ -8,22 +8,23 @@
     <title>Report Shower Admin - Deng Parez</title>
     <link href="/css/style.min.css" rel="stylesheet">
     <link href="/css/custom-app.css" rel="stylesheet">
+    <link href="/css/gold-master.css" rel="stylesheet">
     <script>
-        (function(){ try { var t = localStorage.getItem("dp-theme") || "light"; document.documentElement.setAttribute("data-theme", t); } catch(e){} })();
+        (function(){ try { var t = localStorage.getItem("dp-theme") || "dark"; document.documentElement.setAttribute("data-theme", t); } catch(e){} })();
     </script>
     <style>
         .sw-dropzone { border: 2px dashed #d5d5e0; border-radius: 12px; padding: 48px 24px; text-align: center; cursor: pointer; transition: all 0.2s; background: #fafafb; }
-        [data-theme="dark"] .sw-dropzone { border-color: #3a3a4a; background: #1a1a24; }
-        .sw-dropzone:hover, .sw-dropzone.drag { border-color: #f158d0; background: rgba(241,88,208,0.04); }
+        [data-theme="dark"] .sw-dropzone { border-color: #4a4030; background: #1c1910; }
+        .sw-dropzone:hover, .sw-dropzone.drag { border-color: #e3b458; background: rgba(241,88,208,0.04); }
         .sw-import-row { display: grid; grid-template-columns: 1fr auto auto auto; gap: 12px; align-items: center; padding: 12px 16px; background: #f7f7fb; border-radius: 8px; margin-bottom: 6px; font-size: 0.88rem; }
-        [data-theme="dark"] .sw-import-row { background: #1a1a24; }
+        [data-theme="dark"] .sw-import-row { background: #1c1910; }
         .sw-import-row .meta { font-family: monospace; font-size: 0.78rem; color: #888; }
-        .sw-import-row .period { font-weight: 600; color: #f158d0; }
+        .sw-import-row .period { font-weight: 600; color: #e3b458; }
         .sw-artist-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: #f7f7fb; border-radius: 8px; margin-bottom: 4px; font-size: 0.88rem; }
-        [data-theme="dark"] .sw-artist-row { background: #1a1a24; }
+        [data-theme="dark"] .sw-artist-row { background: #1c1910; }
         .sw-artist-row .name { flex: 1; font-weight: 500; }
         .sw-artist-row .slug { font-family: monospace; font-size: 0.78rem; color: #888; }
-        .sw-artist-row .rev { font-family: monospace; color: #28a745; font-weight: 700; min-width: 80px; text-align: right; }
+        .sw-artist-row .rev { font-family: monospace; color: #8fae6f; font-weight: 700; min-width: 80px; text-align: right; }
         .sw-artist-row a.btn { min-width: auto; }
     </style>
 </head>
@@ -94,14 +95,14 @@
                         <h5 class="card-title"><i data-feather="upload-cloud" class="feather-icon"></i> Ingest a Distribution CSV</h5>
                         <p class="text-muted" style="font-size:0.85rem;">Upload the raw CSV from the distributor (the same kind of file you'd feed into <a href="/report-generator">Report Generator</a>). It's parsed server-side and stored in Postgres — one row per (artist, track, store, country, month, type). UPCs, ISRCs, and label names are dropped.</p>
                         <div class="sw-dropzone" id="swDz" onclick="document.getElementById('swFileInput').click()">
-                            <i data-feather="file-text" style="width:48px;height:48px;color:#f158d0;"></i>
+                            <i data-feather="file-text" style="width:48px;height:48px;color:#e3b458;"></i>
                             <h5 class="mt-3 mb-1">Drop CSV/Excel files here or click to browse</h5>
                             <p class="text-muted mb-0" style="font-size:0.8rem;">Raw distribution CSV or Report Generator output (.xlsx) · Multi-file supported</p>
                         </div>
                         <input type="file" id="swFileInput" accept=".csv,.tsv,.txt,.xlsx,.xls" multiple style="display:none;">
                         <div class="custom-control custom-checkbox mt-3">
                             <input type="checkbox" class="custom-control-input" id="swAggregate">
-                            <label class="custom-control-label" for="swAggregate" style="font-size:0.83rem;"><b>Aggregate</b> — add to months already imported. Leave OFF normally (re-uploading a month is skipped, so no double-counting). Only tick it for a <i>second source</i> for the same month (e.g. Believe on top of Orchard).</label>
+                            <label class="custom-control-label" for="swAggregate" style="font-size:0.83rem;"><b>Aggregate</b> — add on top of months already imported. Leave OFF normally (re-uploading a month <i>replaces</i> it, so no double-counting). Only tick it for a <i>second source</i> for the same month (e.g. Believe on top of Orchard).</label>
                         </div>
                         <div id="swIngestAlert" style="margin-top:12px;"></div>
                         <div id="swIngestProgress" style="display:none; margin-top:12px;">

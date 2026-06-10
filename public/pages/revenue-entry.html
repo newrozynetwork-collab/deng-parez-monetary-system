@@ -8,6 +8,7 @@
     <title>New Revenue Entry - Deng Parez</title>
     <link href="/css/style.min.css" rel="stylesheet">
     <link href="/css/custom-app.css" rel="stylesheet">
+    <link href="/css/gold-master.css" rel="stylesheet">
     <link href="/assets/libs/bootstrap-datepicker/dist/css/bootstrap-datepicker.min.css" rel="stylesheet">
     <style>
         .calc-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--dp-border); }
@@ -18,7 +19,7 @@
         .referral-item { background: var(--dp-surface-2); padding: 8px 12px; border-radius: 6px; margin-bottom: 4px; }
     </style>
     <script>
-        (function(){ try { var t = localStorage.getItem("dp-theme") || "light"; document.documentElement.setAttribute("data-theme", t); } catch(e){} })();
+        (function(){ try { var t = localStorage.getItem("dp-theme") || "dark"; document.documentElement.setAttribute("data-theme", t); } catch(e){} })();
     </script>
 </head>
 <body>
@@ -173,7 +174,7 @@
                                     <h6 class="text-muted">Referral Commissions (from company share)</h6>
                                     <div id="calc-referrals"></div>
                                     <hr>
-                                    <div class="calc-row calc-total" style="border-top:2px solid #5cd050;padding-top:10px;">
+                                    <div class="calc-row calc-total" style="border-top:2px solid #8fae6f;padding-top:10px;">
                                         <span class="text-success">Final Company Profit</span>
                                         <span class="text-success" id="calc-company-net">$0.00</span>
                                     </div>

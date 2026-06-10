@@ -8,13 +8,14 @@
     <title>Chat — Deng Parez</title>
     <link href="/css/style.min.css" rel="stylesheet">
     <link href="/css/custom-app.css" rel="stylesheet">
+    <link href="/css/gold-master.css" rel="stylesheet">
     <link href="/assets/libs/daterangepicker/daterangepicker.css" rel="stylesheet">
     <script>
-        (function(){ try { var t = localStorage.getItem('dp-theme') || 'light'; document.documentElement.setAttribute('data-theme', t); } catch(e){} })();
+        (function(){ try { var t = localStorage.getItem('dp-theme') || 'dark'; document.documentElement.setAttribute('data-theme', t); } catch(e){} })();
     </script>
     <style>
         .chat-msg { margin: 8px 0; padding: 8px 12px; border-radius: 12px; max-width: 80%; word-wrap: break-word; }
-        .chat-msg-user { background: #f158d0; color: #fff; margin-left: auto; }
+        .chat-msg-user { background: #e3b458; color: #fff; margin-left: auto; }
         .chat-msg-assistant { background: #f4f4f8; color: #333; margin-right: auto; }
         [data-theme="dark"] .chat-msg-assistant { background: #2a2a36; color: #e8e8e8; }
         .chat-msg-error { background: #fde2e2; color: #a02525; margin-right: auto; }
@@ -88,7 +89,7 @@
             <div class="scroll-sidebar">
                 <nav class="sidebar-nav">
                     <ul id="sidebarnav">
-                        <li class="sidebar-item selected">
+                        <li class="sidebar-item">
                             <a class="sidebar-link waves-effect waves-dark" href="/dashboard">
                                 <i data-feather="home" class="feather-icon"></i>
                                 <span class="hide-menu">Dashboard</span>
