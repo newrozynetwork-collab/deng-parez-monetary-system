@@ -108,6 +108,64 @@ test('POST /api/chat: when first Gemini call throws, returns 500 and logs nothin
   await db.destroy();
 });
 
+test('POST /api/chat: chains read tool → confirm tool in ONE turn (lookup then act)', async () => {
+  const { app, db } = await makeApp();
+  let callCount = 0;
+  gemini._setClientFactory(() => ({
+    getGenerativeModel() {
+      return {
+        async generateContent() {
+          callCount++;
+          if (callCount === 1) {
+            return { response: { candidates: [{ content: { role: 'model', parts: [{ functionCall: { name: 'list_categories', args: { type: 'income' } } }] } }] } };
+          }
+          return { response: { candidates: [{ content: { role: 'model', parts: [{ functionCall: { name: 'add_additional_income', args: { amount: 500, category: 'Other', description: 'fixing social media accounts' } } }] } }] } };
+        }
+      };
+    }
+  }));
+
+  const res = await request(app).post('/api/chat').send({ messages: [{ role: 'user', content: 'I earned 500$ additional income, other category' }] });
+  assert.equal(res.status, 200);
+  assert.equal(callCount, 2, 'model consulted twice: lookup, then act');
+  assert.equal(res.body.actions.length, 2, 'both steps surface in the UI');
+  assert.equal(res.body.actions[0].type, 'executed');
+  assert.equal(res.body.actions[0].tool, 'list_categories');
+  assert.equal(res.body.actions[1].type, 'confirm');
+  assert.equal(res.body.actions[1].tool, 'add_additional_income');
+  assert.ok(res.body.actions[1].preview && res.body.actions[1].preview.amount === 500, 'confirm card carries the preview');
+  assert.match(res.body.reply, /confirm/i);
+  assert.ok(!/unexpected tool call/i.test(res.body.reply), 'no dead-end message');
+
+  const pending = await db('chat_messages').where({ status: 'pending_confirm' }).first();
+  assert.ok(pending, 'pending confirmation stored');
+  assert.equal(pending.tool_name, 'add_additional_income');
+
+  gemini._resetClientFactory();
+  await db.destroy();
+});
+
+test('POST /api/chat: a runaway tool loop stops gracefully at the step cap', async () => {
+  const { app, db } = await makeApp();
+  gemini._setClientFactory(() => ({
+    getGenerativeModel() {
+      return {
+        async generateContent() {
+          return { response: { candidates: [{ content: { role: 'model', parts: [{ functionCall: { name: 'list_categories', args: {} } }] } }] } };
+        }
+      };
+    }
+  }));
+
+  const res = await request(app).post('/api/chat').send({ messages: [{ role: 'user', content: 'loop forever' }] });
+  assert.equal(res.status, 200, 'no crash');
+  assert.ok(res.body.actions.length <= 5, 'bounded number of steps');
+  assert.ok(res.body.reply && res.body.reply.length > 0, 'still says something useful');
+
+  gemini._resetClientFactory();
+  await db.destroy();
+});
+
 test('POST /api/chat: quota-dead Gemini (both models 429) → friendly 503, no raw API dump', async () => {
   const { app, db } = await makeApp();
   gemini._setClientFactory(() => ({

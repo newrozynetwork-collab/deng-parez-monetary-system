@@ -36,6 +36,11 @@ async function logMessage(db, fields) {
   await db('chat_messages').insert(fields);
 }
 
+// A single user message may legitimately need several tool steps (look up a
+// category, then record the income). The loop runs read/safe_write tools
+// inline and stops at: a text reply, a needs_confirmation card, or the cap.
+const MAX_STEPS = 5;
+
 router.post('/', requireAdmin, async (req, res) => {
   try {
     const { messages } = req.body;
@@ -55,141 +60,136 @@ router.post('/', requireAdmin, async (req, res) => {
     }
 
     const toolDefs = chatTools.listTools();
-    const truncated = messages.slice(-40);
+    const convo = messages.slice(-40);
+    const actions = [];
+    let replyText = null;
 
-    const first = await gemini.callModel({
-      systemPrompt: SYSTEM_PROMPT,
-      tools: toolDefs,
-      messages: truncated
-    });
-
-    if (first.kind === 'text') {
-      await logMessage(req.db, {
-        user_id: req.session.userId,
-        session_key: sessionKey,
-        role: 'assistant',
-        content: first.text
-      });
-      return res.json({ reply: first.text, actions: [] });
-    }
-
-    const tool = chatTools.getTool(first.toolName);
-    if (!tool) {
-      const msg = `I tried to use an unknown tool: ${first.toolName}`;
-      await logMessage(req.db, { user_id: req.session.userId, session_key: sessionKey, role: 'assistant', content: msg });
-      return res.json({ reply: msg, actions: [] });
-    }
-
-    if (tool.safety === 'needs_confirmation') {
-      let preview = null;
-      if (typeof tool.buildPreview === 'function') {
-        try { preview = await tool.buildPreview({ db: req.db }, first.toolArgs); } catch (_) { /* preview optional */ }
+    for (let step = 0; step < MAX_STEPS && replyText === null; step++) {
+      let result;
+      try {
+        result = await gemini.callModel({ systemPrompt: SYSTEM_PROMPT, tools: toolDefs, messages: convo });
+      } catch (err) {
+        if (step === 0) throw err; // nothing happened yet — outer catch turns this into a friendly error
+        console.error('Chat mid-turn model call failed:', err);
+        const lastAct = actions[actions.length - 1];
+        replyText = (lastAct && lastAct.result && lastAct.result.error)
+          ? `Tool ran into a problem: ${lastAct.result.message || lastAct.result.error}`
+          : `Done. (Narration unavailable: ${err.message})`;
+        break;
       }
 
-      // If the preview itself surfaced an error (e.g. resolveArtist returned
-      // not_found / ambiguous), short-circuit — don't open a confirmation card
-      // for an action that can't possibly succeed.
-      if (preview && preview.error) {
-        const inner = preview.error;
-        const replyText = inner.error === 'not_found'
-          ? `I couldn't find "${inner.query || 'that record'}". Want me to add it first?`
-          : inner.error === 'ambiguous'
-            ? `Multiple matches for "${inner.query}". Which one did you mean?`
-            : `Can't prepare the action: ${inner.message || inner.error}`;
-        await logMessage(req.db, {
+      if (result.kind === 'text') { replyText = result.text; break; }
+
+      const tool = chatTools.getTool(result.toolName);
+      if (!tool) { replyText = `I tried to use an unknown tool: ${result.toolName}`; break; }
+
+      if (tool.safety === 'needs_confirmation') {
+        let preview = null;
+        if (typeof tool.buildPreview === 'function') {
+          try { preview = await tool.buildPreview({ db: req.db }, result.toolArgs); } catch (_) { /* preview optional */ }
+        }
+
+        // If the preview itself surfaced an error (e.g. resolver returned
+        // not_found / ambiguous), short-circuit — don't open a confirmation
+        // card for an action that can't possibly succeed.
+        if (preview && preview.error) {
+          const inner = preview.error;
+          const failText = inner.error === 'not_found'
+            ? `I couldn't find "${inner.query || 'that record'}". Want me to add it first?`
+            : inner.error === 'ambiguous'
+              ? `Multiple matches for "${inner.query}". Which one did you mean?`
+              : `Can't prepare the action: ${inner.message || inner.error}`;
+          await logMessage(req.db, {
+            user_id: req.session.userId,
+            session_key: sessionKey,
+            role: 'tool',
+            tool_name: result.toolName,
+            tool_args: JSON.stringify(result.toolArgs),
+            tool_result: JSON.stringify({ preview_error: inner }),
+            status: 'failed'
+          });
+          await logMessage(req.db, {
+            user_id: req.session.userId,
+            session_key: sessionKey,
+            role: 'assistant',
+            content: failText
+          });
+          return res.json({
+            reply: failText,
+            actions: [...actions, {
+              type: 'preview_failed',
+              tool: result.toolName,
+              safety: tool.safety,
+              args: result.toolArgs,
+              error: inner
+            }]
+          });
+        }
+
+        const insertedPending = await req.db('chat_messages').insert({
           user_id: req.session.userId,
           session_key: sessionKey,
           role: 'tool',
-          tool_name: first.toolName,
-          tool_args: JSON.stringify(first.toolArgs),
-          tool_result: JSON.stringify({ preview_error: inner }),
-          status: 'failed'
-        });
+          tool_name: result.toolName,
+          tool_args: JSON.stringify(result.toolArgs),
+          status: 'pending_confirm'
+        }).returning('id');
+        const pendingId = Array.isArray(insertedPending)
+          ? (typeof insertedPending[0] === 'object' ? insertedPending[0].id : insertedPending[0])
+          : insertedPending;
+
+        const confirmText = `Please confirm: ${tool.confirmationLabel || result.toolName}`;
         await logMessage(req.db, {
           user_id: req.session.userId,
           session_key: sessionKey,
           role: 'assistant',
-          content: replyText
+          content: confirmText
         });
+
         return res.json({
-          reply: replyText,
-          actions: [{
-            type: 'preview_failed',
-            tool: first.toolName,
+          reply: confirmText,
+          actions: [...actions, {
+            type: 'confirm',
+            pending_id: pendingId,
+            tool: result.toolName,
             safety: tool.safety,
-            args: first.toolArgs,
-            error: inner
+            args: result.toolArgs,
+            preview
           }]
         });
       }
 
-      const insertedPending = await req.db('chat_messages').insert({
-        user_id: req.session.userId,
-        session_key: sessionKey,
-        role: 'tool',
-        tool_name: first.toolName,
-        tool_args: JSON.stringify(first.toolArgs),
-        status: 'pending_confirm'
-      }).returning('id');
-      const pendingId = Array.isArray(insertedPending)
-        ? (typeof insertedPending[0] === 'object' ? insertedPending[0].id : insertedPending[0])
-        : insertedPending;
+      // read / safe_write tools run inline and feed the next model step
+      let toolResult;
+      try {
+        toolResult = await tool.execute({ db: req.db, session: req.session }, result.toolArgs);
+      } catch (err) {
+        toolResult = { error: 'execution_failed', message: err.message };
+      }
 
-      const replyText = `Please confirm: ${tool.confirmationLabel || first.toolName}`;
       await logMessage(req.db, {
         user_id: req.session.userId,
         session_key: sessionKey,
-        role: 'assistant',
-        content: replyText
+        role: 'tool',
+        tool_name: result.toolName,
+        tool_args: JSON.stringify(result.toolArgs),
+        tool_result: JSON.stringify(toolResult),
+        status: (toolResult && toolResult.error) ? 'failed' : 'executed'
       });
 
-      return res.json({
-        reply: replyText,
-        actions: [{
-          type: 'confirm',
-          pending_id: pendingId,
-          tool: first.toolName,
-          safety: tool.safety,
-          args: first.toolArgs,
-          preview
-        }]
+      actions.push({
+        type: 'executed',
+        tool: result.toolName,
+        safety: tool.safety,
+        args: result.toolArgs,
+        result: toolResult
       });
+      convo.push({ role: 'assistant', parts: [{ functionCall: { name: result.toolName, args: result.toolArgs } }] });
+      convo.push({ role: 'tool', parts: [{ functionResponse: { name: result.toolName, response: toolResult } }] });
     }
 
-    let toolResult;
-    try {
-      toolResult = await tool.execute({ db: req.db, session: req.session }, first.toolArgs);
-    } catch (err) {
-      toolResult = { error: 'execution_failed', message: err.message };
-    }
-
-    await logMessage(req.db, {
-      user_id: req.session.userId,
-      session_key: sessionKey,
-      role: 'tool',
-      tool_name: first.toolName,
-      tool_args: JSON.stringify(first.toolArgs),
-      tool_result: JSON.stringify(toolResult),
-      status: (toolResult && toolResult.error) ? 'failed' : 'executed'
-    });
-
-    let replyText;
-    try {
-      const second = await gemini.callModel({
-        systemPrompt: SYSTEM_PROMPT,
-        tools: toolDefs,
-        messages: [
-          ...truncated,
-          { role: 'assistant', parts: [{ functionCall: { name: first.toolName, args: first.toolArgs } }] },
-          { role: 'tool', parts: [{ functionResponse: { name: first.toolName, response: toolResult } }] }
-        ]
-      });
-      replyText = second.kind === 'text' ? second.text : '(unexpected tool call — stopping for this turn)';
-    } catch (narrationErr) {
-      console.error('Chat narration call failed:', narrationErr);
-      replyText = (toolResult && toolResult.error)
-        ? `Tool ran into a problem: ${toolResult.message || toolResult.error}`
-        : `Done. (Narration unavailable: ${narrationErr.message})`;
+    if (replyText === null) {
+      replyText = `I used my ${MAX_STEPS}-step limit for one message. Here's what I found so far — tell me how to continue.`;
     }
 
     await logMessage(req.db, {
@@ -199,16 +199,7 @@ router.post('/', requireAdmin, async (req, res) => {
       content: replyText
     });
 
-    return res.json({
-      reply: replyText,
-      actions: [{
-        type: 'executed',
-        tool: first.toolName,
-        safety: tool.safety,
-        args: first.toolArgs,
-        result: toolResult
-      }]
-    });
+    return res.json({ reply: replyText, actions });
   } catch (err) {
     console.error('Chat route error:', err);
     const friendly = gemini.friendlyError(err);
