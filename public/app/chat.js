@@ -172,6 +172,49 @@
       $card.append(buildSplitTable(a.result));
       return $card;
     }
+    if (a.tool === 'list_expenses' || a.tool === 'list_additional_income') {
+      const entries = (a.result && a.result.entries) || [];
+      if (!entries.length) { $card.append('<div>No entries.</div>'); return $card; }
+      const $tbl = $('<table><thead><tr><th>Date</th><th>Category</th><th>Details</th><th style="text-align:right">Amount</th></tr></thead><tbody></tbody></table>');
+      entries.forEach(e => {
+        $tbl.find('tbody').append('<tr><td>' + esc(e.date || '') + '</td><td>' + esc(e.category_name || '') + '</td><td>' + esc(e.description || e.source || '') + '</td><td style="text-align:right">' + App.formatCurrency(e.amount) + '</td></tr>');
+      });
+      $card.append($tbl);
+      $card.append('<div style="text-align:right; margin-top:4px;"><strong>Total: ' + App.formatCurrency(a.result.total) + '</strong></div>');
+      return $card;
+    }
+    if (a.tool === 'get_financial_summary') {
+      const s = a.result || {};
+      const $tbl = $('<table></table>');
+      const row = (k, v, strong) => $tbl.append('<tr><td>' + (strong ? '<strong>' + k + '</strong>' : k) + '</td><td style="text-align:right">' + (strong ? '<strong>' + App.formatCurrency(v) + '</strong>' : App.formatCurrency(v)) + '</td></tr>');
+      row('Total revenue', s.totalRevenue);
+      row('Artist payouts', s.totalArtistPayouts);
+      row('Referral payouts', s.totalReferralPayouts);
+      row('Bank fees', s.totalBankFees);
+      row('Company revenue', s.companyRevenue);
+      row('Additional income', s.totalAdditionalIncome);
+      row('Expenses', s.totalExpenses);
+      row('Net company profit', s.netCompanyProfit, true);
+      $card.append($tbl);
+      return $card;
+    }
+    if (a.tool === 'get_payments_summary') {
+      const recips = (a.result && a.result.recipients) || [];
+      if (!recips.length) { $card.append('<div>No payments recorded yet.</div>'); return $card; }
+      const $tbl = $('<table><thead><tr><th>Name</th><th>Type</th><th style="text-align:right">Total paid</th><th>Payments</th><th>Last paid</th></tr></thead><tbody></tbody></table>');
+      recips.forEach(r => {
+        $tbl.find('tbody').append('<tr><td>' + esc(r.name) + '</td><td>' + esc(r.type) + '</td><td style="text-align:right">' + App.formatCurrency(r.totalPaid) + '</td><td>' + r.paymentCount + '</td><td>' + esc(String(r.lastPaid || '—').slice(0, 10)) + '</td></tr>');
+      });
+      $card.append($tbl);
+      return $card;
+    }
+    if (a.tool === 'get_shower_link' || a.tool === 'youtube_share_link') {
+      const url = (a.result && (a.result.url || a.result.url_path)) || '';
+      const full = location.origin + url;
+      $card.append('<div><a href="' + esc(full) + '" target="_blank" style="word-break:break-all;">' + esc(full) + '</a></div>');
+      if (a.result && a.result.expires_at) $card.append('<div style="font-size:11px; opacity:.7;">Expires: ' + esc(String(a.result.expires_at).slice(0, 10)) + '</div>');
+      return $card;
+    }
     // Generic: show JSON
     $card.append('<pre style="font-size:11px; white-space:pre-wrap;">' + esc(JSON.stringify(a.result, null, 2)) + '</pre>');
     return $card;

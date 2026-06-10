@@ -1,4 +1,6 @@
+const crypto = require('crypto');
 const { calculate } = require('./calculator');
+const royaltyShower = require('./royaltyShower');
 
 const tools = {};
 
@@ -682,6 +684,738 @@ defineTool({
     }
     await db('referrers').where({ id: r.referrer.id }).del();
     return { id: r.referrer.id, deleted: true, soft: false };
+  }
+});
+
+// ════════════════════════════════════════════════════════════════
+// FULL-SYSTEM TOOLS — income, expenses, categories, reports,
+// payments, users (read-only), Report Shower, YouTube (server-side)
+// ════════════════════════════════════════════════════════════════
+
+const today = () => new Date().toISOString().slice(0, 10);
+const num = (v) => Math.round((parseFloat(v) || 0) * 100) / 100;
+
+async function resolveCategory(db, idOrName, type) {
+  if (idOrName === undefined || idOrName === null || idOrName === '') {
+    return { error: 'not_found', query: '' };
+  }
+  if (typeof idOrName === 'number' || /^\d+$/.test(String(idOrName))) {
+    const c = await db('categories').where({ id: parseInt(idOrName, 10), type }).first();
+    return c ? { category: c } : { error: 'not_found', query: String(idOrName) };
+  }
+  const q = String(idOrName).trim().toLowerCase();
+  let rows = await db('categories').where({ type }).whereRaw('LOWER(name) = ?', [q]);
+  if (rows.length === 0) rows = await db('categories').where({ type }).whereRaw('LOWER(name) LIKE ?', [`%${q}%`]);
+  // Reverse containment: the user's words contain the category name —
+  // "others" → "Other", "consulting fees" → "Consulting".
+  if (rows.length === 0) rows = await db('categories').where({ type }).whereRaw("? LIKE '%' || LOWER(name) || '%'", [q]);
+  if (rows.length === 0) return { error: 'not_found', query: String(idOrName) };
+  if (rows.length > 1) return { error: 'ambiguous', candidates: rows.map(r => ({ id: r.id, name: r.name })) };
+  return { category: rows[0] };
+}
+
+// ─── Additional income ───
+
+defineTool({
+  name: 'add_additional_income',
+  description: 'Record company additional income (consulting, sponsorship, licensing, other non-artist money). Commission is OFF unless the user explicitly gives a commission percentage and recipient. Date defaults to today.',
+  safety: 'needs_confirmation',
+  confirmationLabel: 'Save this additional income?',
+  parameters: {
+    type: 'object',
+    required: ['amount', 'category'],
+    properties: {
+      amount: { type: 'number', description: 'Amount in dollars' },
+      category: { type: 'string', description: 'Income category name or id (e.g. Others, Consulting). Use list_categories type=income if unsure.' },
+      source: { type: 'string', description: 'Short label of where the money came from. Defaults to the category name.' },
+      description: { type: 'string' },
+      commission_pct: { type: 'number', description: 'ONLY when the user explicitly asks for a commission. Defaults to 0 (no commissions).' },
+      commission_to: { type: 'string', description: 'Recipient name for the commission, when commission_pct > 0.' },
+      date: { type: 'string', description: 'ISO date YYYY-MM-DD. Defaults to today.' }
+    }
+  },
+  async buildPreview({ db }, args) {
+    const r = await resolveCategory(db, args.category, 'income');
+    if (r.error) return { error: r };
+    const amount = num(args.amount);
+    const pct = num(args.commission_pct || 0);
+    return {
+      amount,
+      category_name: r.category.name,
+      source: args.source || args.description || r.category.name,
+      description: args.description || null,
+      commission_pct: pct,
+      commission_to: pct > 0 ? (args.commission_to || null) : null,
+      commission_amount: num(amount * pct / 100),
+      date: args.date || today()
+    };
+  },
+  async execute({ db, session }, args) {
+    const r = await resolveCategory(db, args.category, 'income');
+    if (r.error) return r;
+    const amount = parseFloat(args.amount);
+    if (!isFinite(amount) || amount <= 0) return { error: 'validation', field: 'amount', message: 'amount must be a positive number' };
+    const pct = parseFloat(args.commission_pct) || 0;
+    const inserted = await db('additional_income').insert({
+      source: args.source || args.description || r.category.name,
+      category_id: r.category.id,
+      description: args.description || null,
+      amount,
+      commission_pct: pct,
+      commission_to: pct > 0 ? (args.commission_to || null) : null,
+      date: args.date || today(),
+      created_by: session && session.userId
+    }).returning('id');
+    const id = Array.isArray(inserted) ? (typeof inserted[0] === 'object' ? inserted[0].id : inserted[0]) : inserted;
+    return { id, amount: num(amount), category_name: r.category.name, commission_pct: pct, date: args.date || today() };
+  }
+});
+
+defineTool({
+  name: 'list_additional_income',
+  description: 'List additional income entries, optionally filtered by date range or category.',
+  safety: 'read',
+  parameters: {
+    type: 'object',
+    properties: {
+      start: { type: 'string', description: 'ISO date — entries on/after this' },
+      end: { type: 'string', description: 'ISO date — entries on/before this' },
+      category: { type: 'string' },
+      limit: { type: 'integer', description: 'Default 20' }
+    }
+  },
+  async execute({ db }, args) {
+    let q = db('additional_income')
+      .leftJoin('categories', 'additional_income.category_id', 'categories.id')
+      .select('additional_income.*', 'categories.name as category_name')
+      .orderBy('additional_income.date', 'desc')
+      .limit(Math.min(Math.max(parseInt(args.limit || 20, 10), 1), 100));
+    if (args.start) q = q.where('additional_income.date', '>=', args.start);
+    if (args.end) q = q.where('additional_income.date', '<=', args.end);
+    if (args.category) {
+      const r = await resolveCategory(db, args.category, 'income');
+      if (r.error) return r;
+      q = q.where('additional_income.category_id', r.category.id);
+    }
+    const rows = await q;
+    return {
+      entries: rows.map(r => ({
+        id: r.id, amount: num(r.amount), source: r.source, description: r.description,
+        category_name: r.category_name, commission_pct: num(r.commission_pct || 0),
+        commission_to: r.commission_to, date: r.date
+      })),
+      total: num(rows.reduce((s, r) => s + (parseFloat(r.amount) || 0), 0))
+    };
+  }
+});
+
+defineTool({
+  name: 'update_additional_income',
+  description: 'Update an additional income entry by id (get the id from list_additional_income first).',
+  safety: 'needs_confirmation',
+  confirmationLabel: 'Save these income changes?',
+  parameters: {
+    type: 'object',
+    required: ['id', 'changes'],
+    properties: {
+      id: { type: 'integer' },
+      changes: {
+        type: 'object',
+        properties: {
+          amount: { type: 'number' },
+          source: { type: 'string' },
+          description: { type: 'string' },
+          date: { type: 'string' },
+          commission_pct: { type: 'number' },
+          commission_to: { type: 'string' },
+          category: { type: 'string' }
+        }
+      }
+    }
+  },
+  async buildPreview({ db }, args) {
+    const row = await db('additional_income').where({ id: args.id }).first();
+    if (!row) return { error: { error: 'not_found', query: String(args.id) } };
+    return { current: { id: row.id, amount: num(row.amount), source: row.source, date: row.date }, changes: args.changes };
+  },
+  async execute({ db }, args) {
+    const row = await db('additional_income').where({ id: args.id }).first();
+    if (!row) return { error: 'not_found', query: String(args.id) };
+    const c = args.changes || {};
+    const upd = {};
+    for (const k of ['amount', 'source', 'description', 'date', 'commission_pct', 'commission_to']) {
+      if (c[k] !== undefined) upd[k] = c[k];
+    }
+    if (c.category !== undefined) {
+      const r = await resolveCategory(db, c.category, 'income');
+      if (r.error) return r;
+      upd.category_id = r.category.id;
+    }
+    if (Object.keys(upd).length === 0) return { id: row.id, updated: false };
+    await db('additional_income').where({ id: row.id }).update(upd);
+    return { id: row.id, updated: true };
+  }
+});
+
+defineTool({
+  name: 'delete_additional_income',
+  description: 'Delete an additional income entry by id.',
+  safety: 'needs_confirmation',
+  confirmationLabel: 'Delete this income entry?',
+  parameters: { type: 'object', required: ['id'], properties: { id: { type: 'integer' } } },
+  async buildPreview({ db }, args) {
+    const row = await db('additional_income').where({ id: args.id }).first();
+    if (!row) return { error: { error: 'not_found', query: String(args.id) } };
+    return { id: row.id, amount: num(row.amount), source: row.source, date: row.date };
+  },
+  async execute({ db }, args) {
+    const n = await db('additional_income').where({ id: args.id }).del();
+    return n > 0 ? { id: args.id, deleted: true } : { error: 'not_found', query: String(args.id) };
+  }
+});
+
+// ─── Expenses ───
+
+defineTool({
+  name: 'add_expense',
+  description: 'Record a company expense. Date defaults to today. Category must be an existing expense category (use list_categories type=expense if unsure).',
+  safety: 'needs_confirmation',
+  confirmationLabel: 'Save this expense?',
+  parameters: {
+    type: 'object',
+    required: ['amount', 'category'],
+    properties: {
+      amount: { type: 'number' },
+      category: { type: 'string' },
+      description: { type: 'string' },
+      date: { type: 'string', description: 'ISO date YYYY-MM-DD. Defaults to today.' }
+    }
+  },
+  async buildPreview({ db }, args) {
+    const r = await resolveCategory(db, args.category, 'expense');
+    if (r.error) return { error: r };
+    return { amount: num(args.amount), category_name: r.category.name, description: args.description || null, date: args.date || today() };
+  },
+  async execute({ db, session }, args) {
+    const r = await resolveCategory(db, args.category, 'expense');
+    if (r.error) return r;
+    const amount = parseFloat(args.amount);
+    if (!isFinite(amount) || amount <= 0) return { error: 'validation', field: 'amount', message: 'amount must be a positive number' };
+    const inserted = await db('expenses').insert({
+      category: r.category.name,
+      category_id: r.category.id,
+      description: args.description || null,
+      amount,
+      date: args.date || today(),
+      created_by: session && session.userId
+    }).returning('id');
+    const id = Array.isArray(inserted) ? (typeof inserted[0] === 'object' ? inserted[0].id : inserted[0]) : inserted;
+    return { id, amount: num(amount), category_name: r.category.name, date: args.date || today() };
+  }
+});
+
+defineTool({
+  name: 'list_expenses',
+  description: 'List expenses, optionally filtered by date range or category.',
+  safety: 'read',
+  parameters: {
+    type: 'object',
+    properties: {
+      start: { type: 'string' }, end: { type: 'string' }, category: { type: 'string' },
+      limit: { type: 'integer', description: 'Default 20' }
+    }
+  },
+  async execute({ db }, args) {
+    let q = db('expenses')
+      .leftJoin('categories', 'expenses.category_id', 'categories.id')
+      .select('expenses.*', 'categories.name as category_name')
+      .orderBy('expenses.date', 'desc')
+      .limit(Math.min(Math.max(parseInt(args.limit || 20, 10), 1), 100));
+    if (args.start) q = q.where('expenses.date', '>=', args.start);
+    if (args.end) q = q.where('expenses.date', '<=', args.end);
+    if (args.category) {
+      const r = await resolveCategory(db, args.category, 'expense');
+      if (r.error) return r;
+      q = q.where('expenses.category_id', r.category.id);
+    }
+    const rows = await q;
+    return {
+      entries: rows.map(r => ({
+        id: r.id, amount: num(r.amount), category_name: r.category_name || r.category,
+        description: r.description, date: r.date
+      })),
+      total: num(rows.reduce((s, r) => s + (parseFloat(r.amount) || 0), 0))
+    };
+  }
+});
+
+defineTool({
+  name: 'update_expense',
+  description: 'Update an expense by id (get the id from list_expenses first).',
+  safety: 'needs_confirmation',
+  confirmationLabel: 'Save these expense changes?',
+  parameters: {
+    type: 'object',
+    required: ['id', 'changes'],
+    properties: {
+      id: { type: 'integer' },
+      changes: {
+        type: 'object',
+        properties: {
+          amount: { type: 'number' }, description: { type: 'string' },
+          date: { type: 'string' }, category: { type: 'string' }
+        }
+      }
+    }
+  },
+  async buildPreview({ db }, args) {
+    const row = await db('expenses').where({ id: args.id }).first();
+    if (!row) return { error: { error: 'not_found', query: String(args.id) } };
+    return { current: { id: row.id, amount: num(row.amount), category: row.category, date: row.date }, changes: args.changes };
+  },
+  async execute({ db }, args) {
+    const row = await db('expenses').where({ id: args.id }).first();
+    if (!row) return { error: 'not_found', query: String(args.id) };
+    const c = args.changes || {};
+    const upd = {};
+    for (const k of ['amount', 'description', 'date']) {
+      if (c[k] !== undefined) upd[k] = c[k];
+    }
+    if (c.category !== undefined) {
+      const r = await resolveCategory(db, c.category, 'expense');
+      if (r.error) return r;
+      upd.category = r.category.name;
+      upd.category_id = r.category.id;
+    }
+    if (Object.keys(upd).length === 0) return { id: row.id, updated: false };
+    await db('expenses').where({ id: row.id }).update(upd);
+    return { id: row.id, updated: true };
+  }
+});
+
+defineTool({
+  name: 'delete_expense',
+  description: 'Delete an expense by id.',
+  safety: 'needs_confirmation',
+  confirmationLabel: 'Delete this expense?',
+  parameters: { type: 'object', required: ['id'], properties: { id: { type: 'integer' } } },
+  async buildPreview({ db }, args) {
+    const row = await db('expenses').where({ id: args.id }).first();
+    if (!row) return { error: { error: 'not_found', query: String(args.id) } };
+    return { id: row.id, amount: num(row.amount), category: row.category, date: row.date };
+  },
+  async execute({ db }, args) {
+    const n = await db('expenses').where({ id: args.id }).del();
+    return n > 0 ? { id: args.id, deleted: true } : { error: 'not_found', query: String(args.id) };
+  }
+});
+
+// ─── Categories ───
+
+defineTool({
+  name: 'list_categories',
+  description: 'List expense/income categories. Use before adding income or expenses when the category is unclear.',
+  safety: 'read',
+  parameters: {
+    type: 'object',
+    properties: { type: { type: 'string', enum: ['expense', 'income'], description: 'Omit for both types' } }
+  },
+  async execute({ db }, args) {
+    let q = db('categories').orderBy(['type', 'sort_order', 'name']);
+    if (args.type) q = q.where({ type: args.type });
+    const rows = await q;
+    return { categories: rows.map(r => ({ id: r.id, name: r.name, type: r.type, color: r.color, description: r.description })) };
+  }
+});
+
+defineTool({
+  name: 'add_category',
+  description: 'Create a new expense or income category.',
+  safety: 'safe_write',
+  parameters: {
+    type: 'object',
+    required: ['name', 'type'],
+    properties: {
+      name: { type: 'string' },
+      type: { type: 'string', enum: ['expense', 'income'] },
+      color: { type: 'string', description: 'Hex color, optional' },
+      description: { type: 'string' }
+    }
+  },
+  async execute({ db }, args) {
+    const name = String(args.name || '').trim();
+    if (!name) return { error: 'validation', field: 'name', message: 'name is required' };
+    if (!['expense', 'income'].includes(args.type)) return { error: 'validation', field: 'type', message: 'type must be expense or income' };
+    const dup = await db('categories').where({ type: args.type }).whereRaw('LOWER(name) = ?', [name.toLowerCase()]).first();
+    if (dup) return { error: 'duplicate', existing: { id: dup.id, name: dup.name } };
+    const inserted = await db('categories').insert({
+      name, type: args.type, color: args.color || '#e3b458', description: args.description || null
+    }).returning('id');
+    const id = Array.isArray(inserted) ? (typeof inserted[0] === 'object' ? inserted[0].id : inserted[0]) : inserted;
+    return { id, name, type: args.type };
+  }
+});
+
+defineTool({
+  name: 'update_category',
+  description: 'Rename or restyle a category. Identify it by name or id plus its type.',
+  safety: 'safe_write',
+  parameters: {
+    type: 'object',
+    required: ['id_or_name', 'type', 'changes'],
+    properties: {
+      id_or_name: { type: 'string' },
+      type: { type: 'string', enum: ['expense', 'income'] },
+      changes: {
+        type: 'object',
+        properties: { name: { type: 'string' }, color: { type: 'string' }, description: { type: 'string' } }
+      }
+    }
+  },
+  async execute({ db }, args) {
+    const r = await resolveCategory(db, args.id_or_name, args.type);
+    if (r.error) return r;
+    const c = args.changes || {};
+    const upd = {};
+    for (const k of ['name', 'color', 'description']) {
+      if (c[k] !== undefined) upd[k] = c[k];
+    }
+    if (upd.name) {
+      const dup = await db('categories').where({ type: args.type }).whereNot({ id: r.category.id })
+        .whereRaw('LOWER(name) = ?', [String(upd.name).toLowerCase()]).first();
+      if (dup) return { error: 'duplicate', existing: { id: dup.id, name: dup.name } };
+    }
+    if (Object.keys(upd).length === 0) return { id: r.category.id, updated: false };
+    await db('categories').where({ id: r.category.id }).update(upd);
+    // keep the legacy string column on expenses in sync with a rename
+    if (upd.name && args.type === 'expense') {
+      await db('expenses').where({ category_id: r.category.id }).update({ category: upd.name });
+    }
+    return { id: r.category.id, updated: true };
+  }
+});
+
+defineTool({
+  name: 'delete_category',
+  description: 'Delete a category. Refuses if records use it unless force=true (force unlinks those records, it does NOT delete them).',
+  safety: 'needs_confirmation',
+  confirmationLabel: 'Delete this category?',
+  parameters: {
+    type: 'object',
+    required: ['id_or_name', 'type'],
+    properties: {
+      id_or_name: { type: 'string' },
+      type: { type: 'string', enum: ['expense', 'income'] },
+      force: { type: 'boolean', description: 'Unlink in-use records and delete anyway' }
+    }
+  },
+  async buildPreview({ db }, args) {
+    const r = await resolveCategory(db, args.id_or_name, args.type);
+    if (r.error) return { error: r };
+    const exp = await db('expenses').where({ category_id: r.category.id }).count('* as c').first();
+    const inc = await db('additional_income').where({ category_id: r.category.id }).count('* as c').first();
+    return { category: { id: r.category.id, name: r.category.name, type: r.category.type }, in_use: parseInt(exp.c, 10) + parseInt(inc.c, 10), force: !!args.force };
+  },
+  async execute({ db }, args) {
+    const r = await resolveCategory(db, args.id_or_name, args.type);
+    if (r.error) return r;
+    const exp = await db('expenses').where({ category_id: r.category.id }).count('* as c').first();
+    const inc = await db('additional_income').where({ category_id: r.category.id }).count('* as c').first();
+    const inUse = parseInt(exp.c, 10) + parseInt(inc.c, 10);
+    if (inUse > 0 && !args.force) {
+      return { error: 'in_use', records: inUse, message: `Category "${r.category.name}" is used by ${inUse} record(s). Re-run with force=true to unlink them and delete it.` };
+    }
+    if (inUse > 0) {
+      await db('expenses').where({ category_id: r.category.id }).update({ category_id: null });
+      await db('additional_income').where({ category_id: r.category.id }).update({ category_id: null });
+    }
+    await db('categories').where({ id: r.category.id }).del();
+    return { id: r.category.id, deleted: true, unlinked_records: inUse };
+  }
+});
+
+// ─── Revenue delete + financial reports + payments ───
+
+defineTool({
+  name: 'delete_revenue_entry',
+  description: 'Delete a revenue entry and its distributions. Get the id from list_recent_revenue first.',
+  safety: 'needs_confirmation',
+  confirmationLabel: 'Delete this revenue entry and its payout records?',
+  parameters: { type: 'object', required: ['id'], properties: { id: { type: 'integer' } } },
+  async buildPreview({ db }, args) {
+    const row = await db('revenue_entries')
+      .leftJoin('artists', 'revenue_entries.artist_id', 'artists.id')
+      .where('revenue_entries.id', args.id)
+      .select('revenue_entries.*', 'artists.name as artist_name').first();
+    if (!row) return { error: { error: 'not_found', query: String(args.id) } };
+    const d = await db('revenue_distributions').where({ revenue_entry_id: args.id }).count('* as c').first();
+    return { id: row.id, artist_name: row.artist_name, amount: num(row.amount), period_start: row.period_start, period_end: row.period_end, distributions: parseInt(d.c, 10) };
+  },
+  async execute({ db }, args) {
+    const row = await db('revenue_entries').where({ id: args.id }).first();
+    if (!row) return { error: 'not_found', query: String(args.id) };
+    await db('revenue_distributions').where({ revenue_entry_id: args.id }).del();
+    await db('revenue_entries').where({ id: args.id }).del();
+    return { id: args.id, deleted: true };
+  }
+});
+
+defineTool({
+  name: 'get_financial_summary',
+  description: 'Company financial summary: total revenue, payouts, fees, expenses, additional income and net profit. Optionally for a date range. Use for "how did we do", "profit this month", etc.',
+  safety: 'read',
+  parameters: {
+    type: 'object',
+    properties: {
+      start: { type: 'string', description: 'ISO date — include revenue periods / expenses / income from this date' },
+      end: { type: 'string', description: 'ISO date — up to this date' }
+    }
+  },
+  async execute({ db }, args) {
+    const revQ = db('revenue_entries');
+    if (args.start) revQ.where('period_start', '>=', args.start);
+    if (args.end) revQ.where('period_start', '<=', args.end);
+    const rev = await revQ.clone().sum('amount as s').first();
+
+    const distQ = db('revenue_distributions').join('revenue_entries', 'revenue_distributions.revenue_entry_id', 'revenue_entries.id');
+    if (args.start) distQ.where('revenue_entries.period_start', '>=', args.start);
+    if (args.end) distQ.where('revenue_entries.period_start', '<=', args.end);
+    const dist = await distQ.select('revenue_distributions.recipient_type').sum('revenue_distributions.amount as s').groupBy('revenue_distributions.recipient_type');
+    const by = {};
+    dist.forEach(d => { by[d.recipient_type] = parseFloat(d.s) || 0; });
+
+    const expQ = db('expenses');
+    if (args.start) expQ.where('date', '>=', args.start);
+    if (args.end) expQ.where('date', '<=', args.end);
+    const exp = await expQ.sum('amount as s').first();
+
+    const incQ = db('additional_income');
+    if (args.start) incQ.where('date', '>=', args.start);
+    if (args.end) incQ.where('date', '<=', args.end);
+    const inc = await incQ.sum('amount as s').first();
+
+    const companyRevenue = num(by.company || 0);
+    const totalExpenses = num(exp.s || 0);
+    const totalAdditionalIncome = num(inc.s || 0);
+    return {
+      start: args.start || null,
+      end: args.end || null,
+      totalRevenue: num(rev.s || 0),
+      totalArtistPayouts: num(by.artist || 0),
+      totalReferralPayouts: num(by.referral || 0),
+      totalBankFees: num(by.bank_fee || 0),
+      companyRevenue,
+      totalExpenses,
+      totalAdditionalIncome,
+      netCompanyProfit: num(companyRevenue + totalAdditionalIncome - totalExpenses)
+    };
+  }
+});
+
+defineTool({
+  name: 'get_payments_summary',
+  description: 'Who has been paid what: per-recipient totals across artist payouts, referral commissions and additional-income commissions. Use for "who is owed", "payment status".',
+  safety: 'read',
+  parameters: { type: 'object', properties: {} },
+  async execute({ db }) {
+    const dist = await db('revenue_distributions')
+      .whereIn('recipient_type', ['artist', 'referral'])
+      .select('recipient_name', 'recipient_type')
+      .sum('amount as total').count('* as n').max('created_at as last')
+      .groupBy('recipient_name', 'recipient_type');
+
+    const recipients = dist.map(d => ({
+      name: d.recipient_name,
+      type: d.recipient_type,
+      totalPaid: num(d.total),
+      paymentCount: parseInt(d.n, 10),
+      lastPaid: d.last
+    }));
+
+    const incs = await db('additional_income').whereNotNull('commission_to').where('commission_pct', '>', 0);
+    const byName = {};
+    incs.forEach(r => {
+      const amt = (parseFloat(r.amount) || 0) * (parseFloat(r.commission_pct) || 0) / 100;
+      if (!byName[r.commission_to]) byName[r.commission_to] = { total: 0, n: 0, last: null };
+      byName[r.commission_to].total += amt;
+      byName[r.commission_to].n += 1;
+      if (!byName[r.commission_to].last || String(r.date) > String(byName[r.commission_to].last)) byName[r.commission_to].last = r.date;
+    });
+    Object.entries(byName).forEach(([name, v]) => {
+      recipients.push({ name, type: 'additional', totalPaid: num(v.total), paymentCount: v.n, lastPaid: v.last });
+    });
+
+    recipients.sort((a, b) => String(a.lastPaid || '') < String(b.lastPaid || '') ? -1 : 1);
+    return { recipients };
+  }
+});
+
+defineTool({
+  name: 'get_payment_history',
+  description: 'Full payment history for one person (artist, referrer, or commission recipient) by exact name.',
+  safety: 'read',
+  parameters: { type: 'object', required: ['name'], properties: { name: { type: 'string' } } },
+  async execute({ db }, args) {
+    const name = String(args.name || '').trim();
+    if (!name) return { error: 'validation', field: 'name', message: 'name is required' };
+
+    const dist = await db('revenue_distributions')
+      .join('revenue_entries', 'revenue_distributions.revenue_entry_id', 'revenue_entries.id')
+      .leftJoin('artists', 'revenue_entries.artist_id', 'artists.id')
+      .whereIn('revenue_distributions.recipient_type', ['artist', 'referral'])
+      .whereRaw('LOWER(revenue_distributions.recipient_name) = ?', [name.toLowerCase()])
+      .select(
+        'revenue_distributions.amount', 'revenue_distributions.recipient_type',
+        'revenue_distributions.created_at as paid_at',
+        'revenue_entries.period_start', 'revenue_entries.period_end',
+        'artists.name as for_artist'
+      ).orderBy('revenue_distributions.created_at', 'desc');
+
+    const payments = dist.map(d => ({
+      amount: num(d.amount), kind: d.recipient_type, paidAt: d.paid_at,
+      period_start: d.period_start, period_end: d.period_end, for_artist: d.for_artist
+    }));
+
+    const incs = await db('additional_income')
+      .whereRaw('LOWER(COALESCE(commission_to, \'\')) = ?', [name.toLowerCase()])
+      .where('commission_pct', '>', 0).orderBy('date', 'desc');
+    incs.forEach(r => {
+      payments.push({
+        amount: num((parseFloat(r.amount) || 0) * (parseFloat(r.commission_pct) || 0) / 100),
+        kind: 'additional_commission', paidAt: r.date, context: r.source || r.description
+      });
+    });
+
+    return { name, payments, totalPaid: num(payments.reduce((s, p) => s + p.amount, 0)) };
+  }
+});
+
+// ─── Users (READ-ONLY by design) ───
+// Account creation, role changes and passwords stay in Settings → User
+// Management. Chat arguments are logged to the database, so a password sent
+// through chat would be stored in plaintext — never add such a tool.
+
+defineTool({
+  name: 'list_users',
+  description: 'List system user accounts (read-only). The chat can NOT create, modify or delete accounts — that happens in Settings → User Management.',
+  safety: 'read',
+  parameters: { type: 'object', properties: {} },
+  async execute({ db }) {
+    const rows = await db('users').select('id', 'username', 'role', 'name', 'created_at').orderBy('id');
+    return { users: rows };
+  }
+});
+
+// ─── Report Shower ───
+
+async function resolveShowerArtist(db, q) {
+  const s = String(q || '').trim().toLowerCase();
+  if (!s) return { error: 'not_found', query: '' };
+  let rows = await db('artist_slugs').whereRaw('LOWER(slug) = ?', [s]);
+  if (rows.length === 0) {
+    rows = await db('artist_slugs').where(function () {
+      this.whereRaw('LOWER(slug) LIKE ?', [`%${s}%`]).orWhereRaw('LOWER(artist_name) LIKE ?', [`%${s}%`]);
+    });
+  }
+  if (rows.length === 0) return { error: 'not_found', query: String(q) };
+  if (rows.length > 1) return { error: 'ambiguous', candidates: rows.map(r => ({ id: r.id, name: r.artist_name })) };
+  return { row: rows[0] };
+}
+
+defineTool({
+  name: 'list_shower_artists',
+  description: 'List the artists published in the public Report Shower with their all-time totals. (Uploading new royalty files happens on the /shower/admin page, not in chat.)',
+  safety: 'read',
+  parameters: { type: 'object', properties: {} },
+  async execute({ db }) {
+    const rows = await royaltyShower.listArtists(db);
+    return {
+      artists: rows.map(r => ({
+        slug: r.artist_slug || r.slug,
+        name: r.artist_name || r.name,
+        total_revenue: num(r.total_rev !== undefined ? r.total_rev : r.totalRevenue)
+      }))
+    };
+  }
+});
+
+defineTool({
+  name: 'get_shower_link',
+  description: "Get an artist's permanent public Report Shower link (their full earnings history page).",
+  safety: 'read',
+  parameters: { type: 'object', required: ['artist'], properties: { artist: { type: 'string', description: 'Artist name or slug' } } },
+  async execute({ db }, args) {
+    const r = await resolveShowerArtist(db, args.artist);
+    if (r.error) return r;
+    return { slug: r.row.slug, name: r.row.artist_name, url: `/shower/${r.row.slug}`, note: 'Prefix with the site origin, e.g. https://dp.tt-social.com' };
+  }
+});
+
+defineTool({
+  name: 'delete_shower_artist',
+  description: "Delete ALL of an artist's data from the public Report Shower (rows + their public page).",
+  safety: 'needs_confirmation',
+  confirmationLabel: 'Delete this artist from the Report Shower entirely?',
+  parameters: { type: 'object', required: ['artist'], properties: { artist: { type: 'string' } } },
+  async buildPreview({ db }, args) {
+    const r = await resolveShowerArtist(db, args.artist);
+    if (r.error) return { error: r };
+    const c = await db('royalty_rows').where({ artist_slug: r.row.slug }).count('* as c').sum('net_revenue as s').first();
+    return { slug: r.row.slug, name: r.row.artist_name, rows: parseInt(c.c, 10), total_revenue: num(c.s || 0) };
+  },
+  async execute({ db }, args) {
+    const r = await resolveShowerArtist(db, args.artist);
+    if (r.error) return r;
+    const res = await royaltyShower.deleteArtist(db, r.row.slug);
+    return { slug: r.row.slug, deleted: true, rows_removed: res.deletedRows };
+  }
+});
+
+// ─── YouTube (server-side; OAuth connect + revenue sync live in the YouTube page) ───
+
+defineTool({
+  name: 'youtube_overview',
+  description: 'Overview of YouTube channels: linked channels, pending (unmatched) connections, and total synced revenue. (Connecting channels and syncing revenue happen on the YouTube page — OAuth needs a browser.)',
+  safety: 'read',
+  parameters: { type: 'object', properties: {} },
+  async execute({ db }) {
+    const linked = await db('youtube_accounts')
+      .leftJoin('artists', 'youtube_accounts.artist_id', 'artists.id')
+      .select('youtube_accounts.channel_id', 'youtube_accounts.channel_title', 'artists.name as artist_name', 'youtube_accounts.last_synced_at');
+    const pending = await db('youtube_pending_connections')
+      .select('channel_id', 'channel_title', 'subscriber_count', 'connected_at');
+    const rev = await db('youtube_revenue_history')
+      .select('channel_id').sum('estimated_revenue as s').groupBy('channel_id');
+    const byChannel = {};
+    rev.forEach(r => { byChannel[r.channel_id] = num(r.s); });
+    return {
+      linked_channels: linked,
+      pending_channels: pending,
+      revenue_by_channel: byChannel,
+      total_synced_revenue: num(Object.values(byChannel).reduce((s, v) => s + v, 0))
+    };
+  }
+});
+
+defineTool({
+  name: 'youtube_share_link',
+  description: "Generate a fresh 30-day YouTube connect link for an artist to authorize their channel themselves. Replaces any previous unused link for that artist.",
+  safety: 'safe_write',
+  parameters: { type: 'object', required: ['artist'], properties: { artist: { type: 'string', description: 'Artist id or name' } } },
+  async execute({ db }, args) {
+    const r = await resolveArtist(db, args.artist);
+    if (r.error) return r;
+    const token = crypto.randomBytes(24).toString('hex');
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    await db('youtube_connect_tokens').where({ artist_id: r.artist.id }).whereNull('used_at').del();
+    await db('youtube_connect_tokens').insert({ artist_id: r.artist.id, token, expires_at: expiresAt });
+    return {
+      artist_name: r.artist.name,
+      token,
+      url_path: `/connect/${token}`,
+      expires_at: expiresAt.toISOString(),
+      note: 'Prefix with the site origin, e.g. https://dp.tt-social.com/connect/<token>'
+    };
   }
 });
 
