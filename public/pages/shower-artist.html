@@ -6,469 +6,537 @@
 <title>Artist Report · Deng Parez</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&family=Noto+Kufi+Arabic:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Schibsted+Grotesk:ital,wght@0,400..900;1,400..900&family=Spline+Sans+Mono:wght@300..700&family=Noto+Kufi+Arabic:wght@300..700&display=swap');
 
+/* ════════════════════════════════════════════════════════
+   GOLD MASTER — a record-label pressing for Deng Parez
+   ink lacquer · champagne foil · editorial serif · grain
+   ════════════════════════════════════════════════════════ */
 :root {
-  --bg-0: #07080d; --bg-1: #0e1018; --bg-2: #151823;
-  --surface: #1a1e2a; --surface-h: #202535;
-  --border: #242a3d; --border-l: #2e3549;
-  --text: #e6e8ef; --text-d: #a3a9bc; --muted: #6a7085;
-  --teal: #2dd4bf; --coral: #fb7185; --gold: #fbbf24;
-  --violet: #a78bfa; --blue: #60a5fa; --green: #34d399;
+  --ink-0: #0b0a07;
+  --ink-1: #11100b;
+  --ink-2: #17150e;
+  --line: rgba(228, 198, 134, 0.13);
+  --line-strong: rgba(228, 198, 134, 0.32);
+  --cream: #f3ead9;
+  --cream-dim: rgba(243, 234, 217, 0.62);
+  --cream-faint: rgba(243, 234, 217, 0.38);
+  --gold: #e3b458;
+  --gold-soft: rgba(227, 180, 88, 0.16);
+  --foil: linear-gradient(100deg, #f9ecc0 0%, #ecc679 26%, #b98931 50%, #f3da9a 72%, #d3a851 100%);
+  --serif: 'Fraunces', 'Noto Kufi Arabic', georgia, serif;
+  --sans: 'Schibsted Grotesk', 'Noto Kufi Arabic', system-ui, sans-serif;
+  --mono: 'Spline Sans Mono', 'Noto Kufi Arabic', monospace;
+  --ease: cubic-bezier(0.16, 0.84, 0.3, 1);
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
+::selection { background: var(--gold); color: var(--ink-0); }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 4px; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--ink-0); }
+::-webkit-scrollbar-thumb { background: #2c2715; border-radius: 6px; border: 2px solid var(--ink-0); }
+::-webkit-scrollbar-thumb:hover { background: #4a3f1f; }
+
+html { scrollbar-color: #2c2715 var(--ink-0); }
 body {
-  background: var(--bg-0); color: var(--text);
-  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--ink-0); color: var(--cream);
+  font-family: var(--sans);
+  font-size: 16px; line-height: 1.5;
   min-height: 100vh; overflow-x: hidden;
-  background-image:
-    radial-gradient(ellipse 60% 40% at 20% 0%, rgba(45,212,191,0.08) 0%, transparent 50%),
-    radial-gradient(ellipse 60% 40% at 80% 0%, rgba(167,139,250,0.06) 0%, transparent 50%);
+  -webkit-font-smoothing: antialiased;
 }
-html[lang="ku"] body { font-family: 'Noto Kufi Arabic', 'Inter', system-ui, sans-serif; }
+html[lang="ku"] body { font-family: 'Noto Kufi Arabic', var(--sans); }
 
-.container { max-width: 1280px; margin: 0 auto; padding: 36px 28px 80px; }
-
-.lang-toggle {
-  position: fixed; top: 20px; right: 20px; z-index: 100;
-  display: inline-flex; background: var(--surface); border: 1px solid var(--border);
-  border-radius: 100px; padding: 4px; gap: 2px; backdrop-filter: blur(8px);
+/* stage light + grain atmosphere */
+.atmosphere { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+.atmosphere::before {
+  content: ''; position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 52% 38% at 18% -6%, rgba(227, 180, 88, 0.13) 0%, transparent 60%),
+    radial-gradient(ellipse 44% 30% at 86% 0%, rgba(196, 110, 74, 0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 52% at 50% 118%, rgba(227, 180, 88, 0.05) 0%, transparent 55%);
 }
-html[dir="rtl"] .lang-toggle { right: auto; left: 20px; }
-.lang-btn {
-  background: transparent; border: none; color: var(--text-d);
-  padding: 7px 14px; border-radius: 100px;
-  font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
-  letter-spacing: 1.5px; font-weight: 600; cursor: pointer; transition: all 0.15s;
+.atmosphere::after {
+  content: ''; position: absolute; inset: -50%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 240 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  opacity: 0.05; mix-blend-mode: overlay;
 }
-.lang-btn:hover { color: var(--text); }
-.lang-btn.active { background: var(--teal); color: #000; }
-html[lang="ku"] .lang-btn { font-family: 'Noto Kufi Arabic', monospace; letter-spacing: 0; }
 
-/* BRAND */
-.brand-bar {
+.container { position: relative; z-index: 1; max-width: 1240px; margin: 0 auto; padding: 30px 30px 90px; }
+
+/* ─── MASTHEAD ─── */
+.masthead {
   display: flex; align-items: center; justify-content: space-between;
-  gap: 14px; padding: 14px 20px;
-  background: linear-gradient(135deg, rgba(45,212,191,0.08) 0%, rgba(167,139,250,0.06) 100%);
-  border: 1px solid var(--border); border-radius: 14px; margin-bottom: 28px;
-  flex-wrap: wrap;
+  gap: 16px; flex-wrap: wrap;
+  padding-bottom: 22px; margin-bottom: 40px;
+  border-bottom: 1px solid var(--line);
 }
-.brand-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; }
-.brand-mark {
-  width: 40px; height: 40px; border-radius: 10px;
-  background: linear-gradient(135deg, var(--teal) 0%, var(--violet) 100%);
-  display: grid; place-items: center; font-weight: 800; font-size: 1rem;
-  color: #000; font-family: 'JetBrains Mono', monospace; letter-spacing: -1px;
+.wordmark { display: flex; align-items: baseline; gap: 14px; text-decoration: none; color: inherit; }
+.wordmark .mark {
+  font-family: var(--serif); font-weight: 600; font-size: 1.18rem;
+  letter-spacing: 0.34em; text-transform: uppercase; color: var(--cream);
+  white-space: nowrap;
 }
-.brand-meta { display: flex; flex-direction: column; line-height: 1.2; gap: 2px; }
-.brand-name { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.3px; }
-.brand-tagline {
-  font-family: 'JetBrains Mono', monospace; font-size: 0.68rem;
-  letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted);
+.wordmark .mark em { font-style: italic; color: var(--gold); }
+.wordmark .sub {
+  font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.3em;
+  text-transform: uppercase; color: var(--cream-faint); white-space: nowrap;
 }
-html[lang="ku"] .brand-tagline { font-family: 'Noto Kufi Arabic'; letter-spacing: 0; font-size: 0.78rem; }
-.brand-tag {
-  font-family: 'JetBrains Mono', monospace; font-size: 0.66rem;
-  letter-spacing: 1.5px; text-transform: uppercase; color: var(--teal);
-  background: rgba(45,212,191,0.1); padding: 5px 12px; border-radius: 100px;
-  border: 1px solid rgba(45,212,191,0.2);
+html[lang="ku"] .wordmark .sub { letter-spacing: 0.04em; font-size: 0.72rem; }
+.masthead-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.lang-toggle { display: inline-flex; border: 1px solid var(--line); border-radius: 100px; padding: 3px; gap: 2px; background: rgba(243, 234, 217, 0.03); }
+.lang-btn {
+  background: transparent; border: none; color: var(--cream-dim);
+  padding: 6px 15px; border-radius: 100px; cursor: pointer;
+  font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.16em; font-weight: 500;
+  transition: color 0.2s, background 0.2s;
 }
-html[lang="ku"] .brand-tag { font-family: 'Noto Kufi Arabic'; letter-spacing: 0; font-size: 0.78rem; }
+.lang-btn:hover { color: var(--cream); }
+.lang-btn.active { background: var(--gold); color: var(--ink-0); font-weight: 700; }
+html[lang="ku"] .lang-btn { font-family: 'Noto Kufi Arabic'; letter-spacing: 0; font-size: 0.74rem; }
 
-/* HEADER */
-.header {
-  margin-bottom: 20px; display: flex; align-items: flex-end;
-  justify-content: space-between; gap: 20px; flex-wrap: wrap;
+/* ─── HERO ─── */
+.hero { display: grid; grid-template-columns: minmax(210px, 290px) 1fr; gap: 52px; align-items: center; margin-bottom: 46px; }
+@media (max-width: 860px) { .hero { grid-template-columns: 1fr; gap: 30px; justify-items: center; text-align: center; } }
+
+/* the record */
+.disc-stage { position: relative; width: 100%; aspect-ratio: 1; max-width: 290px; }
+.disc {
+  position: absolute; inset: 0; border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 30%, rgba(255, 245, 215, 0.16) 0%, transparent 36%),
+    repeating-radial-gradient(circle at 50% 50%, #14110b 0px, #14110b 1.6px, #0c0a06 1.6px, #0c0a06 3.4px);
+  box-shadow:
+    0 24px 70px -18px rgba(0, 0, 0, 0.85),
+    inset 0 0 0 1px rgba(227, 180, 88, 0.22),
+    inset 0 0 50px rgba(0, 0, 0, 0.6);
+  animation: spin 14s linear infinite;
 }
-.header .title-block { flex: 1; min-width: 260px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.disc::before { /* groove highlights */
+  content: ''; position: absolute; inset: 7%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, transparent 58%, rgba(227, 180, 88, 0.07) 60%, transparent 62%),
+    radial-gradient(circle, transparent 72%, rgba(227, 180, 88, 0.06) 74%, transparent 76%),
+    radial-gradient(circle, transparent 86%, rgba(227, 180, 88, 0.05) 88%, transparent 90%);
+}
+.disc .label {
+  position: absolute; inset: 31%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 36% 32%, #f6e3ae 0%, #e3b458 38%, #a97c2c 78%, #8a6220 100%);
+  display: grid; place-items: center;
+  box-shadow: inset 0 0 0 1px rgba(60, 40, 8, 0.4), inset 0 2px 10px rgba(255, 250, 230, 0.35);
+}
+.disc .label .mono {
+  font-family: var(--serif); font-weight: 700; font-style: italic;
+  font-size: clamp(2rem, 7vw, 3.1rem); color: #241804; line-height: 1;
+  letter-spacing: -0.02em;
+}
+.disc .label::after { /* spindle */
+  content: ''; position: absolute; width: 9%; height: 9%;
+  background: var(--ink-0); border-radius: 50%;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 0 2px rgba(36, 24, 4, 0.55);
+}
+.disc-sheen {
+  position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+  background: conic-gradient(from 210deg, transparent 0deg, rgba(255, 246, 220, 0.10) 22deg, transparent 56deg, transparent 175deg, rgba(255, 246, 220, 0.06) 200deg, transparent 230deg);
+}
+
+.hero-copy { min-width: 0; }
 .eyebrow {
-  font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
-  letter-spacing: 3px; color: var(--teal); text-transform: uppercase;
-  margin-bottom: 10px; display: inline-flex; align-items: center; gap: 8px;
+  display: inline-flex; align-items: center; gap: 12px;
+  font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.34em;
+  text-transform: uppercase; color: var(--gold); margin-bottom: 16px;
 }
-.eyebrow::before { content: ''; width: 24px; height: 1px; background: var(--teal); }
-html[lang="ku"] .eyebrow { font-family: 'Noto Kufi Arabic'; letter-spacing: 1px; font-size: 0.85rem; }
-h1 {
-  font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800;
-  line-height: 1.05; letter-spacing: -1.5px; margin-bottom: 8px;
+.eyebrow::before, .eyebrow::after { content: ''; width: 30px; height: 1px; background: var(--line-strong); }
+html[lang="ku"] .eyebrow { letter-spacing: 0.06em; font-size: 0.78rem; }
+h1.artist-name {
+  font-family: var(--serif); font-weight: 460;
+  font-size: clamp(2.7rem, 6.4vw, 5rem);
+  line-height: 0.98; letter-spacing: -0.015em;
+  margin-bottom: 6px; color: var(--cream);
+  font-variation-settings: 'opsz' 144;
 }
-h1 .accent {
-  background: linear-gradient(135deg, var(--teal) 0%, var(--violet) 100%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+html[lang="ku"] h1.artist-name { font-weight: 700; line-height: 1.25; letter-spacing: 0; }
+.hero-amount-label {
+  font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.26em;
+  text-transform: uppercase; color: var(--cream-faint); margin: 26px 0 6px;
 }
-.subtitle { color: var(--text-d); font-size: 1rem; }
-.back-link {
-  font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
-  color: var(--muted); text-decoration: none; display: inline-flex;
-  align-items: center; gap: 6px; margin-bottom: 12px;
-  transition: color 0.15s;
+html[lang="ku"] .hero-amount-label { letter-spacing: 0.04em; font-size: 0.76rem; }
+.hero-amount { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+@media (max-width: 860px) { .hero-amount { justify-content: center; } }
+.hero-amount .big {
+  font-family: var(--serif); font-weight: 560;
+  font-size: clamp(3.1rem, 8.6vw, 6rem); line-height: 1; letter-spacing: -0.02em;
+  background: var(--foil);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  font-variant-numeric: tabular-nums lining-nums; direction: ltr;
+  filter: drop-shadow(0 3px 22px rgba(227, 180, 88, 0.22));
 }
-.back-link:hover { color: var(--teal); }
+.hero-amount .currency { font-family: var(--mono); font-size: 0.92rem; letter-spacing: 0.3em; color: var(--cream-faint); }
+.hero-caption { margin-top: 24px; display: flex; gap: 8px 8px; flex-wrap: wrap; align-items: center; }
+@media (max-width: 860px) { .hero-caption { justify-content: center; } }
+.hero-caption .pill {
+  display: inline-flex; align-items: center; gap: 7px;
+  border: 1px solid var(--line); background: rgba(243, 234, 217, 0.025);
+  border-radius: 100px; padding: 6px 14px;
+  font-family: var(--mono); font-size: 0.68rem; color: var(--cream-dim);
+  letter-spacing: 0.02em; transition: border-color 0.25s;
+}
+.hero-caption .pill:hover { border-color: var(--line-strong); }
+.hero-caption .pill b { color: var(--gold); font-weight: 600; }
+html[lang="ku"] .hero-caption .pill { font-size: 0.78rem; }
+.hero-caption .pill.star { border-color: rgba(227, 180, 88, 0.45); background: var(--gold-soft); color: var(--cream); }
 
-/* MONTH PICKER */
+/* ─── PERIOD STRIP ─── */
 .period-bar {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 12px; padding: 14px 18px; margin-bottom: 20px;
-  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  border-block: 1px solid var(--line);
+  padding: 15px 2px; margin-bottom: 44px;
 }
 .period-bar .label {
-  font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
-  color: var(--muted); letter-spacing: 2px; text-transform: uppercase;
+  font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.3em;
+  text-transform: uppercase; color: var(--cream-faint); white-space: nowrap;
 }
-html[lang="ku"] .period-bar .label { font-family: 'Noto Kufi Arabic'; letter-spacing: 0; font-size: 0.8rem; }
-.period-chips { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
+html[lang="ku"] .period-bar .label { letter-spacing: 0.04em; font-size: 0.74rem; }
+.period-chips { display: flex; gap: 7px; flex-wrap: wrap; flex: 1; min-width: 0; }
 .period-chip {
-  background: var(--bg-2); border: 1px solid var(--border); color: var(--text-d);
-  padding: 6px 14px; border-radius: 100px; cursor: pointer; font-size: 0.78rem;
-  font-family: 'JetBrains Mono', monospace; transition: all 0.15s;
-  text-decoration: none; font-weight: 500;
+  border: 1px solid var(--line); color: var(--cream-dim);
+  padding: 6px 15px; border-radius: 100px; cursor: pointer;
+  font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.04em;
+  text-decoration: none; transition: all 0.22s var(--ease); background: transparent;
+  white-space: nowrap;
 }
-.period-chip:hover { color: var(--text); border-color: var(--border-l); }
-.period-chip.active {
-  background: var(--teal); color: #000; border-color: var(--teal); font-weight: 700;
-}
+.period-chip:hover { color: var(--cream); border-color: var(--line-strong); transform: translateY(-1px); }
+.period-chip.active { background: var(--gold); border-color: var(--gold); color: var(--ink-0); font-weight: 700; }
 
-/* HERO */
-.hero-metric {
-  background: linear-gradient(135deg, rgba(45,212,191,0.08) 0%, rgba(167,139,250,0.05) 100%);
-  border: 1px solid var(--border); border-radius: 20px;
-  padding: 32px 36px; margin-bottom: 28px;
+/* foil download button */
+.dl-btn {
   position: relative; overflow: hidden;
+  margin-inline-start: auto;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 20px; border-radius: 100px;
+  background: var(--foil); color: #241804;
+  font-family: var(--mono); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em;
+  text-decoration: none; white-space: nowrap; border: none; cursor: pointer;
+  box-shadow: 0 6px 26px -8px rgba(227, 180, 88, 0.55);
+  transition: transform 0.22s var(--ease), box-shadow 0.22s;
 }
-.hero-metric::before {
-  content: ''; position: absolute; top: -50%; right: -10%;
-  width: 300px; height: 300px;
-  background: radial-gradient(circle, rgba(45,212,191,0.15) 0%, transparent 70%);
-  pointer-events: none;
+.dl-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 34px -8px rgba(227, 180, 88, 0.65); }
+.dl-btn::after {
+  content: ''; position: absolute; top: 0; bottom: 0; width: 46%;
+  background: linear-gradient(100deg, transparent 0%, rgba(255, 255, 255, 0.55) 50%, transparent 100%);
+  inset-inline-start: -60%; transform: skewX(-18deg);
+  transition: inset-inline-start 0.55s var(--ease);
 }
-.hero-metric .label {
-  font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
-  letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 12px;
-}
-html[lang="ku"] .hero-metric .label { font-family: 'Noto Kufi Arabic'; letter-spacing: 0; font-size: 0.85rem; }
-.hero-amount { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
-.hero-amount .big {
-  font-size: clamp(3rem, 8vw, 5.5rem); font-weight: 800;
-  letter-spacing: -3px; line-height: 1;
-  background: linear-gradient(135deg, #fff 0%, var(--teal) 100%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text; font-variant-numeric: tabular-nums; direction: ltr;
-}
-.hero-amount .currency {
-  font-size: 1.1rem; font-weight: 500; color: var(--muted);
-  letter-spacing: 2px; font-family: 'JetBrains Mono', monospace;
-}
-.hero-caption {
-  margin-top: 16px; color: var(--text-d); font-size: 0.95rem;
-  display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
-}
-.hero-caption .pill {
-  display: inline-flex; align-items: center; gap: 6px;
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 100px; padding: 4px 12px;
-  font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--text);
-}
-html[lang="ku"] .hero-caption .pill { font-family: 'Noto Kufi Arabic'; font-size: 0.82rem; }
-.hero-caption .pill b { color: var(--teal); font-weight: 600; }
-.hero-caption .pill.star {
-  background: linear-gradient(135deg, rgba(251,191,36,0.15) 0%, rgba(251,113,133,0.08) 100%);
-  border-color: rgba(251,191,36,0.3);
-}
-.hero-caption .pill.star b { color: var(--gold); }
+.dl-btn:hover::after { inset-inline-start: 115%; }
+html[lang="ku"] .dl-btn { letter-spacing: 0; font-size: 0.8rem; }
+@media (max-width: 620px) { .dl-btn { margin-inline-start: 0; width: 100%; justify-content: center; } }
 
-/* GRID */
-.grid-2 { display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; margin-bottom: 20px; }
-.grid-full { margin-bottom: 20px; }
-@media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
-
+/* ─── SECTIONS / CARDS ─── */
+.section { margin-bottom: 38px; }
 .card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 16px; padding: 24px; transition: border-color 0.2s;
+  background: linear-gradient(180deg, rgba(243, 234, 217, 0.028) 0%, rgba(243, 234, 217, 0.012) 100%);
+  border: 1px solid var(--line);
+  border-radius: 18px; padding: 28px;
+  transition: border-color 0.3s;
 }
-.card:hover { border-color: var(--border-l); }
-.card-head {
-  display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 20px; gap: 10px; flex-wrap: wrap;
+.card:hover { border-color: var(--line-strong); }
+.grid-2 { display: grid; grid-template-columns: 1.15fr 1fr; gap: 22px; }
+@media (max-width: 940px) { .grid-2 { grid-template-columns: 1fr; } }
+.card-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+.card-kicker {
+  font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.32em;
+  text-transform: uppercase; color: var(--gold); margin-bottom: 7px;
 }
-.card-title { font-size: 1rem; font-weight: 600; letter-spacing: -0.3px; }
-.card-sub { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+html[lang="ku"] .card-kicker { letter-spacing: 0.04em; font-size: 0.72rem; }
+.card-title { font-family: var(--serif); font-weight: 520; font-size: 1.5rem; letter-spacing: -0.01em; line-height: 1.1; }
+html[lang="ku"] .card-title { font-weight: 700; }
+.card-sub { font-size: 0.82rem; color: var(--cream-faint); margin-top: 5px; }
 .card-tag {
-  font-family: 'JetBrains Mono', monospace; font-size: 0.66rem;
-  letter-spacing: 1.5px; text-transform: uppercase; color: var(--teal);
-  background: rgba(45,212,191,0.1); padding: 3px 10px; border-radius: 100px;
+  font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--gold); background: var(--gold-soft); border: 1px solid rgba(227, 180, 88, 0.3);
+  padding: 5px 13px; border-radius: 100px; white-space: nowrap;
 }
-html[lang="ku"] .card-tag { font-family: 'Noto Kufi Arabic'; letter-spacing: 0; font-size: 0.78rem; }
-.chart-wrap { position: relative; height: 300px; }
+html[lang="ku"] .card-tag { letter-spacing: 0; font-size: 0.74rem; }
 
-/* PLATFORM CARDS */
-.platforms-grid {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;
-}
-.platform-card {
-  background: var(--bg-2); border: 1px solid var(--border);
-  border-radius: 12px; padding: 16px; position: relative;
-  overflow: hidden; transition: transform 0.2s, border-color 0.2s;
-}
-.platform-card:hover { transform: translateY(-2px); border-color: var(--border-l); }
-.platform-card.inactive { opacity: 0.4; }
-.platform-card .accent-stripe { position: absolute; top: 0; left: 0; width: 4px; height: 100%; }
-html[dir="rtl"] .platform-card .accent-stripe { left: auto; right: 0; }
-.platform-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
-.platform-icon {
-  width: 38px; height: 38px; border-radius: 10px;
-  display: grid; place-items: center; font-weight: 800; font-size: 0.9rem;
-  color: #fff; flex-shrink: 0; font-family: 'JetBrains Mono', monospace;
-}
-.platform-name { flex: 1; font-size: 0.85rem; font-weight: 600; line-height: 1.25; }
-.platform-rev {
-  font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums;
-  font-size: 1.5rem; font-weight: 700; color: var(--teal);
-  line-height: 1; margin-bottom: 4px; direction: ltr;
-}
-.platform-pct-label {
-  font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
-  color: var(--text-d); margin-bottom: 10px; direction: ltr;
-}
-.platform-bar { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
-.platform-bar-fill { height: 100%; border-radius: 3px; transition: width 0.8s ease; }
-
-/* MONTHLY SUMMARY */
-#periodChips { flex-wrap: wrap; }
-.dl-btn { margin-inline-start: auto; display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; background: var(--teal, #14b8a6); color: #fff; font-size: 0.8rem; font-weight: 600; text-decoration: none; white-space: nowrap; border: none; cursor: pointer; }
-.dl-btn:hover { filter: brightness(1.08); }
-@media (max-width: 560px) { .dl-btn { margin-inline-start: 0; width: 100%; justify-content: center; } }
+/* ─── LEDGER (monthly summary) ─── */
 .ms-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .ms-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
-.ms-table th, .ms-table td { padding: 11px 12px; border-bottom: 1px solid var(--border); text-align: left; }
-.ms-table th { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); font-weight: 600; }
-.ms-table td.num, .ms-table th.num { text-align: right; font-family: 'JetBrains Mono', monospace; color: var(--teal); direction: ltr; white-space: nowrap; }
+.ms-table th {
+  font-family: var(--mono); font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.26em;
+  color: var(--cream-faint); font-weight: 500; text-align: start;
+  padding: 0 14px 12px; border-bottom: 1px solid var(--line-strong);
+}
+html[lang="ku"] .ms-table th { letter-spacing: 0.03em; font-size: 0.7rem; }
+.ms-table td { padding: 13px 14px; border-bottom: 1px solid var(--line); }
+.ms-table tbody tr { transition: background 0.2s; }
+.ms-table tbody tr:hover { background: rgba(243, 234, 217, 0.025); }
 .ms-table tbody tr:last-child td { border-bottom: none; }
-.ms-table a.month-link { color: inherit; text-decoration: none; }
-.ms-table a.month-link:hover { color: var(--teal); text-decoration: underline; }
+.ms-month { white-space: nowrap; }
+.ms-table a.month-link {
+  color: var(--cream); text-decoration: none; font-weight: 500;
+  border-bottom: 1px dashed transparent; transition: color 0.2s, border-color 0.2s;
+}
+.ms-table a.month-link:hover { color: var(--gold); border-bottom-color: var(--gold); }
+.ms-bar-cell { width: 46%; min-width: 130px; }
+.ms-bar { height: 5px; background: rgba(243, 234, 217, 0.07); border-radius: 4px; overflow: hidden; }
+.ms-bar i {
+  display: block; height: 100%; width: 0;
+  background: var(--foil); border-radius: 4px;
+  transition: width 1s var(--ease);
+}
+.ms-num {
+  text-align: end; font-family: var(--mono); font-size: 0.84rem;
+  color: var(--gold); white-space: nowrap; direction: ltr;
+}
+.peak-tag {
+  display: inline-block; margin-inline-start: 9px;
+  font-family: var(--mono); font-size: 0.54rem; letter-spacing: 0.2em;
+  color: var(--ink-0); background: var(--gold);
+  border-radius: 4px; padding: 2px 7px; vertical-align: 2px; font-weight: 700;
+}
+html[lang="ku"] .peak-tag { letter-spacing: 0; font-size: 0.66rem; }
 
-/* STORE LEGEND */
-.store-legend { margin-top: 16px; display: flex; flex-direction: column; gap: 6px; }
+/* ─── DOUGHNUT ─── */
+.chart-wrap { position: relative; height: 290px; }
+.chart-center {
+  position: absolute; inset: 0; display: grid; place-content: center; text-align: center;
+  pointer-events: none; gap: 2px;
+}
+.chart-center .v {
+  font-family: var(--serif); font-size: 1.7rem; font-weight: 560;
+  background: var(--foil); -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; direction: ltr;
+}
+.chart-center .l { font-family: var(--mono); font-size: 0.56rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--cream-faint); }
+html[lang="ku"] .chart-center .l { letter-spacing: 0.04em; font-size: 0.68rem; }
+.store-legend { margin-top: 20px; display: flex; flex-direction: column; gap: 2px; }
 .store-row {
-  display: flex; align-items: center; gap: 10px;
-  padding: 8px 10px; border-radius: 8px; font-size: 0.85rem;
-  transition: background 0.15s;
+  display: flex; align-items: center; gap: 11px;
+  padding: 8px 10px; border-radius: 9px; font-size: 0.85rem;
+  transition: background 0.18s;
 }
-.store-row:hover { background: var(--surface-h); }
-.store-row .swatch { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
-.store-row .name { flex: 1; }
-.store-row .val {
-  font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;
-  color: var(--text-d); font-variant-numeric: tabular-nums; direction: ltr;
-}
+.store-row:hover { background: rgba(243, 234, 217, 0.035); }
+.store-row .swatch { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 8px -1px currentColor; }
+.store-row .name { flex: 1; color: var(--cream-dim); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.store-row .val { font-family: var(--mono); font-size: 0.74rem; color: var(--cream-dim); font-variant-numeric: tabular-nums; direction: ltr; white-space: nowrap; }
 
-/* COUNTRY */
-.country-controls { display: flex; gap: 6px; flex-wrap: wrap; }
-.country-btn {
-  background: transparent; border: 1px solid var(--border); color: var(--text-d);
-  padding: 5px 12px; border-radius: 100px;
-  font-family: 'JetBrains Mono', monospace; font-size: 0.68rem;
-  letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.15s;
-}
-html[lang="ku"] .country-btn { font-family: 'Noto Kufi Arabic'; letter-spacing: 0; font-size: 0.8rem; }
-.country-btn:hover { color: var(--text); border-color: var(--border-l); }
-.country-btn.active { background: var(--teal); color: #000; border-color: var(--teal); font-weight: 600; }
-.country-list { display: flex; flex-direction: column; gap: 6px; }
-.country-row {
-  display: grid; grid-template-columns: 30px 1fr auto;
-  align-items: center; gap: 12px; padding: 9px 12px; border-radius: 8px;
-  font-size: 0.88rem; position: relative; overflow: hidden;
-  transition: background 0.15s;
-}
-.country-row:hover { background: var(--surface-h); }
-.country-row .rank {
-  font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
-  color: var(--muted); text-align: right; direction: ltr;
-}
-.country-row .flag-label { display: flex; align-items: center; gap: 10px; }
-.country-row .flag {
-  width: 24px; height: 18px; border-radius: 3px;
-  background: var(--surface-h); display: grid; place-items: center;
-  font-size: 14px; flex-shrink: 0;
-}
-.country-row .bar-bg {
-  position: absolute; inset: 0;
-  background: linear-gradient(90deg, rgba(45,212,191,0.14) 0%, rgba(45,212,191,0.04) 100%);
-  z-index: 0; pointer-events: none; transition: width 0.5s ease; border-radius: 8px;
-}
-html[dir="rtl"] .country-row .bar-bg {
-  background: linear-gradient(270deg, rgba(45,212,191,0.14) 0%, rgba(45,212,191,0.04) 100%);
-}
-.country-row .name, .country-row .val { position: relative; z-index: 1; }
-.country-row .val {
-  font-family: 'JetBrains Mono', monospace; font-size: 0.82rem;
-  font-variant-numeric: tabular-nums; color: var(--teal); font-weight: 600; direction: ltr;
-}
-.country-row.zero .val { color: var(--muted); }
-.country-row.zero .bar-bg { display: none; }
-
-/* TRACKS */
-.tracks-table { width: 100%; border-collapse: separate; border-spacing: 0 4px; }
-.tracks-table th {
-  font-family: 'JetBrains Mono', monospace; font-size: 0.66rem;
-  letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted);
-  text-align: left; padding: 0 14px 10px; font-weight: 500;
-}
-html[dir="rtl"] .tracks-table th { text-align: right; }
-html[dir="rtl"] .tracks-table th.right { text-align: left; }
-.tracks-table th.right { text-align: right; }
-.tracks-table tr.trow td {
-  background: var(--bg-2); padding: 14px;
-  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
-  transition: background 0.15s;
-}
-.tracks-table tr.trow:hover td { background: var(--surface-h); }
-.tracks-table tr.trow td:first-child {
-  border-left: 1px solid var(--border);
-  border-top-left-radius: 10px; border-bottom-left-radius: 10px;
-}
-.tracks-table tr.trow td:last-child {
-  border-right: 1px solid var(--border);
-  border-top-right-radius: 10px; border-bottom-right-radius: 10px;
-  text-align: right;
-}
-html[dir="rtl"] .tracks-table tr.trow td:last-child { text-align: left; }
-.track-title { font-weight: 600; margin-bottom: 4px; font-size: 0.95rem; }
-.track-meta { color: var(--text-d); font-size: 0.78rem; }
-.track-bar {
-  width: 220px; max-width: 100%; height: 6px;
-  background: var(--border); border-radius: 3px; overflow: hidden; margin-top: 8px;
-}
-.track-bar-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--teal) 0%, var(--violet) 100%);
-  border-radius: 3px; transition: width 0.8s ease;
-}
-.track-rev {
-  font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums;
-  font-weight: 700; font-size: 1.1rem; color: var(--teal); direction: ltr;
-}
-.track-pct {
-  font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
-  color: var(--muted); margin-top: 2px; direction: ltr;
-}
-
-/* TX */
-.tx-list { display: flex; flex-direction: column; gap: 10px; }
+/* ─── TRANSACTION TYPES ─── */
+.tx-list { display: flex; flex-direction: column; gap: 11px; }
 .tx-row {
-  display: grid; grid-template-columns: 1fr auto auto;
-  gap: 14px; align-items: center; padding: 12px 14px;
-  background: var(--bg-2); border: 1px solid var(--border);
-  border-radius: 10px; transition: border-color 0.15s;
   position: relative; overflow: hidden;
+  display: grid; grid-template-columns: 1fr auto auto; gap: 14px; align-items: center;
+  padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px;
+  transition: border-color 0.2s;
 }
-.tx-row:hover { border-color: var(--border-l); }
+.tx-row:hover { border-color: var(--line-strong); }
 .tx-row .tx-bar {
-  position: absolute; inset: 0;
-  background: linear-gradient(90deg, rgba(167,139,250,0.1) 0%, transparent 100%);
+  position: absolute; inset-block: 0; inset-inline-start: 0; width: 100%;
+  background: linear-gradient(to inline-end, var(--gold-soft), transparent);
+  background: linear-gradient(90deg, var(--gold-soft) 0%, transparent 100%);
   z-index: 0; pointer-events: none;
 }
-html[dir="rtl"] .tx-row .tx-bar {
-  background: linear-gradient(270deg, rgba(167,139,250,0.1) 0%, transparent 100%);
-}
+html[dir="rtl"] .tx-row .tx-bar { background: linear-gradient(270deg, var(--gold-soft) 0%, transparent 100%); }
 .tx-row > * { position: relative; z-index: 1; }
-.tx-name { font-size: 0.88rem; font-weight: 500; }
-.tx-qty {
-  font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
-  color: var(--text-d); text-align: right; direction: ltr;
-}
-.tx-qty .n { color: var(--text); font-weight: 600; }
-.tx-rev {
-  font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums;
-  color: var(--violet); font-weight: 700; font-size: 0.95rem;
-  min-width: 70px; text-align: right; direction: ltr;
-}
-
-.loading, .empty {
-  padding: 60px 20px; text-align: center; color: var(--text-d);
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 16px;
-}
-.loading .big, .empty .big { font-size: 3rem; margin-bottom: 14px; opacity: 0.3; }
-
-footer {
-  margin-top: 50px; padding-top: 24px; border-top: 1px solid var(--border);
-  text-align: center; color: var(--muted); font-size: 0.75rem;
-  font-family: 'JetBrains Mono', monospace; letter-spacing: 1px;
-}
-
-/* RESPONSIVE */
-@media (max-width: 768px) {
-  .container { padding: 60px 16px 60px; }
-  .lang-toggle { top: 12px; right: 12px; padding: 3px; }
-  html[dir="rtl"] .lang-toggle { left: 12px; right: auto; }
-  .lang-btn { padding: 6px 12px; font-size: 0.68rem; letter-spacing: 1px; }
-  .hero-metric { padding: 22px 20px; }
-  .card { padding: 18px; }
-  .chart-wrap { height: 260px; }
-}
+.tx-name { font-size: 0.88rem; font-weight: 500; color: var(--cream); }
+.tx-qty { font-family: var(--mono); font-size: 0.7rem; color: var(--cream-faint); direction: ltr; white-space: nowrap; }
+.tx-qty .n { color: var(--cream-dim); font-weight: 600; }
+.tx-rev { font-family: var(--mono); font-size: 0.92rem; color: var(--gold); font-weight: 600; direction: ltr; white-space: nowrap; }
 @media (max-width: 560px) {
-  h1 { font-size: 2rem; letter-spacing: -1px; }
-  .hero-amount .big { font-size: 2.6rem; letter-spacing: -2px; }
-  .card { padding: 16px; border-radius: 12px; }
-  .track-bar { width: 100%; }
-  .tx-row { grid-template-columns: 1fr auto; gap: 6px 10px; }
+  .tx-row { grid-template-columns: 1fr auto; gap: 4px 10px; }
   .tx-name { grid-column: 1 / -1; }
-  .tracks-table tr.trow { display: flex; flex-direction: column; }
-  .tracks-table tr.trow td {
-    display: block; border-left: 1px solid var(--border); border-right: 1px solid var(--border);
-  }
-  .tracks-table tr.trow td:first-child {
-    border-radius: 10px 10px 0 0; border-bottom: none; border-top: 1px solid var(--border);
-  }
-  .tracks-table tr.trow td:last-child {
-    border-radius: 0 0 10px 10px; border-top: none; border-bottom: 1px solid var(--border);
-    display: flex; justify-content: space-between; align-items: center; text-align: left !important;
-  }
+}
+
+/* ─── PLATFORM CARDS ─── */
+.platforms-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(225px, 1fr)); gap: 13px; }
+.platform-card {
+  position: relative; overflow: hidden;
+  border: 1px solid var(--line); border-radius: 14px; padding: 18px;
+  background: rgba(243, 234, 217, 0.018);
+  transition: transform 0.25s var(--ease), border-color 0.25s;
+}
+.platform-card:hover { transform: translateY(-3px); border-color: var(--line-strong); }
+.platform-card.inactive { opacity: 0.35; }
+.platform-card .accent-stripe { position: absolute; inset-block: 0; inset-inline-start: 0; width: 3px; }
+.platform-head { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
+.platform-icon {
+  width: 38px; height: 38px; border-radius: 11px;
+  display: grid; place-items: center; font-weight: 700; font-size: 0.95rem;
+  color: #fff; flex-shrink: 0; font-family: var(--mono);
+}
+.platform-name { flex: 1; font-size: 0.84rem; font-weight: 600; line-height: 1.3; color: var(--cream); min-width: 0; }
+.platform-rev { font-family: var(--mono); font-size: 1.4rem; font-weight: 600; color: var(--gold); line-height: 1; margin-bottom: 5px; direction: ltr; font-variant-numeric: tabular-nums; }
+.platform-pct-label { font-family: var(--mono); font-size: 0.66rem; color: var(--cream-faint); margin-bottom: 12px; direction: ltr; }
+.platform-bar { height: 4px; background: rgba(243, 234, 217, 0.08); border-radius: 3px; overflow: hidden; }
+.platform-bar-fill { height: 100%; border-radius: 3px; width: 0; transition: width 0.9s var(--ease); }
+
+/* ─── COUNTRIES ─── */
+.country-controls { display: flex; gap: 7px; flex-wrap: wrap; }
+.country-btn {
+  background: transparent; border: 1px solid var(--line); color: var(--cream-dim);
+  padding: 6px 14px; border-radius: 100px; cursor: pointer;
+  font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase;
+  transition: all 0.2s;
+}
+html[lang="ku"] .country-btn { letter-spacing: 0; font-size: 0.74rem; }
+.country-btn:hover { color: var(--cream); border-color: var(--line-strong); }
+.country-btn.active { background: var(--gold); color: var(--ink-0); border-color: var(--gold); font-weight: 700; }
+.country-list { display: flex; flex-direction: column; gap: 5px; }
+.country-row {
+  position: relative; overflow: hidden;
+  display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 12px;
+  padding: 10px 14px; border-radius: 10px; font-size: 0.88rem;
+  transition: background 0.18s;
+}
+.country-row:hover { background: rgba(243, 234, 217, 0.03); }
+.country-row .bar-bg {
+  position: absolute; inset-block: 0; inset-inline-start: 0;
+  background: linear-gradient(90deg, rgba(227, 180, 88, 0.16) 0%, rgba(227, 180, 88, 0.03) 100%);
+  z-index: 0; pointer-events: none; border-radius: 10px; transition: width 0.7s var(--ease);
+}
+html[dir="rtl"] .country-row .bar-bg { background: linear-gradient(270deg, rgba(227, 180, 88, 0.16) 0%, rgba(227, 180, 88, 0.03) 100%); }
+.country-row > * { position: relative; z-index: 1; }
+.country-row .rank { font-family: var(--serif); font-style: italic; font-size: 0.85rem; color: var(--cream-faint); text-align: end; direction: ltr; }
+.country-row .flag-label { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.country-row .flag { font-size: 16px; flex-shrink: 0; filter: saturate(0.85); }
+.country-row .name { color: var(--cream-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.country-row .val { font-family: var(--mono); font-size: 0.8rem; color: var(--gold); font-weight: 600; direction: ltr; white-space: nowrap; }
+.country-row.zero .val { color: var(--cream-faint); font-weight: 400; }
+.country-row.zero .bar-bg { display: none; }
+
+/* ─── TRACKS ─── */
+.tracks-table { width: 100%; border-collapse: collapse; }
+.tracks-table thead th {
+  font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.26em; text-transform: uppercase;
+  color: var(--cream-faint); font-weight: 500; text-align: start;
+  padding: 0 16px 13px; border-bottom: 1px solid var(--line-strong);
+}
+html[lang="ku"] .tracks-table thead th { letter-spacing: 0.03em; font-size: 0.7rem; }
+.tracks-table thead th.right { text-align: end; }
+.tracks-table tr.trow td { padding: 17px 16px; border-bottom: 1px solid var(--line); vertical-align: middle; transition: background 0.18s; }
+.tracks-table tr.trow:hover td { background: rgba(243, 234, 217, 0.025); }
+.tracks-table tr.trow:last-child td { border-bottom: none; }
+.track-cell { display: flex; align-items: center; gap: 18px; min-width: 0; }
+.track-rank {
+  font-family: var(--serif); font-style: italic; font-weight: 460;
+  font-size: 1.45rem; color: var(--cream-faint); min-width: 44px;
+  direction: ltr; text-align: center; line-height: 1;
+}
+tr.trow.first .track-rank { color: var(--gold); }
+.track-body { flex: 1; min-width: 0; }
+.track-title { font-weight: 600; font-size: 0.98rem; margin-bottom: 7px; color: var(--cream); }
+tr.trow.first .track-title { font-family: var(--serif); font-size: 1.12rem; font-weight: 540; }
+.track-bar { width: min(300px, 100%); height: 4px; background: rgba(243, 234, 217, 0.07); border-radius: 3px; overflow: hidden; }
+.track-bar-fill { height: 100%; width: 0; background: var(--foil); border-radius: 3px; transition: width 0.9s var(--ease); }
+.tracks-table td.rev-cell { text-align: end; white-space: nowrap; }
+.track-rev { font-family: var(--mono); font-weight: 600; font-size: 1.02rem; color: var(--gold); direction: ltr; }
+.track-pct { font-family: var(--mono); font-size: 0.64rem; color: var(--cream-faint); margin-top: 3px; direction: ltr; }
+@media (max-width: 560px) {
   .tracks-table thead { display: none; }
+  .tracks-table tr.trow { display: block; padding: 4px 0; }
+  .tracks-table tr.trow td { display: block; border-bottom: none; padding: 8px 6px; }
+  .tracks-table tr.trow { border-bottom: 1px solid var(--line); }
+  .tracks-table td.rev-cell { display: flex; justify-content: space-between; align-items: baseline; padding-top: 0; }
+  .track-rank { min-width: 34px; font-size: 1.2rem; }
+}
+
+/* ─── STATES ─── */
+.loading, .empty {
+  padding: 80px 24px; text-align: center; color: var(--cream-dim);
+  border: 1px dashed var(--line-strong); border-radius: 18px;
+}
+.loading .big, .empty .big { font-size: 2.6rem; margin-bottom: 18px; opacity: 0.55; }
+.loading h3, .empty h3 { font-family: var(--serif); font-weight: 520; font-size: 1.5rem; color: var(--cream); margin-bottom: 6px; }
+.empty p { font-size: 0.9rem; color: var(--cream-faint); }
+.loader-disc {
+  width: 64px; height: 64px; margin: 0 auto 20px; border-radius: 50%;
+  background: repeating-radial-gradient(circle, #14110b 0 1.4px, #0c0a06 1.4px 3px);
+  position: relative; animation: spin 2.4s linear infinite;
+  box-shadow: inset 0 0 0 1px rgba(227, 180, 88, 0.3);
+}
+.loader-disc::after { content: ''; position: absolute; inset: 36%; border-radius: 50%; background: var(--gold); }
+
+/* ─── FOOTER ─── */
+.groove { height: 22px; margin: 64px 0 26px; background: repeating-linear-gradient(to bottom, var(--line) 0 1px, transparent 1px 6px); opacity: 0.7; }
+footer { text-align: center; color: var(--cream-faint); font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.3em; text-transform: uppercase; }
+html[lang="ku"] footer { letter-spacing: 0.04em; font-size: 0.74rem; }
+footer .f-mark { color: var(--gold); }
+
+/* ─── ENTRANCE ─── */
+.reveal { animation: rise 0.85s var(--ease) both; animation-delay: calc(var(--d, 0) * 95ms); }
+@keyframes rise { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: none; } }
+
+@media (max-width: 768px) {
+  .container { padding: 22px 18px 70px; }
+  .card { padding: 20px; border-radius: 15px; }
+  .chart-wrap { height: 250px; }
+  .masthead { margin-bottom: 28px; }
+  .hero { margin-bottom: 34px; }
+  .disc-stage { max-width: 210px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .disc, .loader-disc { animation: none; }
+  .reveal { animation: none; }
+  *, *::before, *::after { transition-duration: 0.01ms !important; }
 }
 </style>
 </head>
 <body>
-
-<div class="lang-toggle">
-  <button class="lang-btn active" data-lang="en">EN</button>
-  <button class="lang-btn" data-lang="ku">کوردی</button>
-</div>
+<div class="atmosphere"></div>
 
 <div class="container">
 
-<div class="brand-logo brand-bar" style="text-decoration:none;">
-  <div class="brand-logo">
-    <div class="brand-mark">DP</div>
-    <div class="brand-meta">
-      <span class="brand-name">Deng Parez</span>
-      <span class="brand-tagline" data-i18n="brandTagline">Artist Report Portal</span>
+<!-- MASTHEAD -->
+<div class="masthead">
+  <a class="wordmark" href="/shower">
+    <span class="mark">Deng <em>Parez</em></span>
+    <span class="sub" data-i18n="brandTagline">Royalty Atelier</span>
+  </a>
+  <div class="masthead-right">
+    <div class="lang-toggle">
+      <button class="lang-btn active" data-lang="en">EN</button>
+      <button class="lang-btn" data-lang="ku">کوردی</button>
     </div>
   </div>
-  <span class="brand-tag" data-i18n="officialReport">Official Artist Report</span>
 </div>
 
-<!-- HEADER -->
-<div class="header">
-  <div class="title-block">
-    <div class="eyebrow" data-i18n="eyebrow">Royalty Insights</div>
-    <h1 id="artistNameH1"><span class="accent" id="artistNameText">—</span></h1>
-    <p class="subtitle" data-i18n="subtitle">Distribution revenue breakdown across platforms, territories &amp; tracks</p>
+<!-- HERO -->
+<div class="hero reveal" style="--d:0">
+  <div class="disc-stage" aria-hidden="true">
+    <div class="disc">
+      <div class="label"><span class="mono" id="discMono">DP</span></div>
+    </div>
+    <div class="disc-sheen"></div>
+  </div>
+  <div class="hero-copy">
+    <div class="eyebrow" data-i18n="eyebrow">Official Royalty Statement</div>
+    <h1 class="artist-name"><span id="artistNameText">—</span></h1>
+    <div class="hero-amount-label" id="heroAmountLabel"></div>
+    <div class="hero-amount" id="heroAmountRow" style="display:none;">
+      <span class="big" id="heroAmount">$0.00</span>
+      <span class="currency">USD</span>
+    </div>
+    <div class="hero-caption" id="heroCap"></div>
   </div>
 </div>
 
-<!-- PERIOD PICKER -->
-<div class="period-bar" id="periodBar" style="display:none;">
-  <span class="label" data-i18n="periodLabel">Period:</span>
+<!-- PERIOD STRIP -->
+<div class="period-bar reveal" id="periodBar" style="display:none; --d:1">
+  <span class="label" data-i18n="periodLabel">Pressing</span>
   <div class="period-chips" id="periodChips"></div>
   <a id="downloadBtn" class="dl-btn" href="#" download>⬇ Download .xlsx</a>
 </div>
 
 <div id="mainContent">
-  <div class="loading"><div class="big">⏳</div><h3>Loading…</h3></div>
+  <div class="loading"><div class="loader-disc"></div><h3 data-i18n="loading">Cueing the record…</h3></div>
 </div>
 
-<footer data-i18n="footer">Deng Parez · Public Artist Report</footer>
+<div class="groove" aria-hidden="true"></div>
+<footer><span class="f-mark">✦</span>&nbsp; <span data-i18n="footer">Deng Parez · Official Artist Report</span> &nbsp;<span class="f-mark">✦</span></footer>
 
 </div>
 
@@ -484,7 +552,7 @@ const COUNTRY_FLAGS = {
   "Lebanon":"🇱🇧","Spain":"🇪🇸","Jordan":"🇯🇴","Russia":"🇷🇺","Russian Federation":"🇷🇺"
 };
 
-const STORE_COLORS = ['#2dd4bf','#a78bfa','#fb7185','#fbbf24','#60a5fa','#34d399','#f472b6','#4ade80','#fb923c','#e879f9'];
+const STORE_COLORS = ['#e3b458','#c46e4a','#9aa56b','#7e9bb8','#b98a9c','#8a7eb8','#d3a851','#6ba5a0','#bb6b5e','#a8915c'];
 const PLATFORM_BRANDS = {
   "YouTube Content ID":              { color: '#FF0033', icon: '▶' },
   "YouTube Art Tracks & Music Videos": { color: '#FF4466', icon: '♫' },
@@ -499,6 +567,7 @@ const PLATFORM_BRANDS = {
   "Tencent Music":                   { color: '#FF6A00', icon: '♪' },
   "Spotify":                         { color: '#1ED760', icon: '♫' },
   "Facebook / Instagram":            { color: '#4267B2', icon: 'f' },
+  "Meta":                            { color: '#4267B2', icon: 'f' },
   "SNAPCHAT":                        { color: '#FFFC00', icon: '👻' },
   "Deezer":                          { color: '#EF5466', icon: 'D' },
   "NetEase":                         { color: '#C20C0C', icon: 'N' },
@@ -510,67 +579,101 @@ const PLATFORM_BRANDS = {
 
 const I18N = {
   en: {
-    brandTagline: "Artist Report Portal",
-    officialReport: "Official Artist Report",
-    backToAll: "← Back to all artists",
-    eyebrow: "Royalty Insights",
-    subtitle: "Distribution revenue breakdown across platforms, territories & tracks",
-    periodLabel: "Period:",
+    brandTagline: "Royalty Atelier",
+    eyebrow: "Official Royalty Statement",
+    periodLabel: "Pressing",
+    loading: "Cueing the record…",
     totalNetRevenue: "Total Net Revenue",
-    topTrackLabel: "Top track:",
+    allTime: "All time",
+    download: "⬇ Download .xlsx",
+    topTrackLabel: "Top track",
     transactions: "transactions",
     countriesReached: "countries reached",
     tracksEarning: "tracks earning",
     platforms: "platforms",
+    ledgerKicker: "Side A",
+    ledger: "The Monthly Ledger",
+    ledgerSub: "Every pressing, month by month",
+    month: "Month",
+    share: "Share",
+    totalUsd: "Total ($)",
+    peak: "Peak",
+    shareKicker: "Side B",
     platformRevenueShare: "Platform Revenue Share",
-    distributionByStore: "Distribution by store",
+    distributionByStore: "Where the money plays",
     transactionTypes: "Transaction Types",
     txCategoryRevenue: "Revenue & volume by stream category",
+    types: "Types",
+    countriesKicker: "The World Tour",
     countries: "Countries",
     revenueByTerritory: "Revenue by territory",
     top15: "Top 15",
     earning: "Earning",
     allCountries: "All",
+    platformsKicker: "The Stage",
     platformsTitle: "Platforms",
     platformsSub: "Individual breakdown per store",
+    stores: "Stores",
+    tracksKicker: "The Tracklist",
     trackPerformance: "Track Performance",
-    revenuePerTrack: "Revenue per track",
+    revenuePerTrack: "Revenue per track, ranked",
     track: "Track",
     netRevenue: "Net Revenue",
-    footer: "Deng Parez · Public Artist Report",
+    tracksWord: "Tracks",
+    footer: "Deng Parez · Official Artist Report",
+    notFound: "Artist not found",
+    noRoyaltyData: s => `No royalty data for “${s}”`,
+    couldNotLoad: "Could not load",
     noData: "No data available for this period",
     pctOfTotal: p => `${p}% of total`,
     txShort: "tx"
   },
   ku: {
     brandTagline: "پۆرتاڵی ڕاپۆرتی هونەرمەند",
-    officialReport: "ڕاپۆرتی فەرمیی هونەرمەند",
-    backToAll: "→ گەڕانەوە بۆ هەموو هونەرمەندەکان",
-    eyebrow: "بینینی داهات",
-    subtitle: "شیکاری داهاتی بڵاوکەرەوە لەسەر پلاتفۆرم، وڵات و گۆرانی",
-    periodLabel: "ماوە:",
+    eyebrow: "ڕاپۆرتی فەرمیی داهات",
+    periodLabel: "ماوە",
+    loading: "بارکردنی ڕاپۆرت…",
     totalNetRevenue: "کۆی گشتی داهات",
-    topTrackLabel: "باشترین گۆرانی:",
+    allTime: "هەموو کات",
+    download: "⬇ داگرتنی ڕاپۆرت",
+    topTrackLabel: "باشترین گۆرانی",
     transactions: "مامەڵە",
     countriesReached: "وڵات",
     tracksEarning: "گۆرانی داهاتدار",
     platforms: "پلاتفۆرم",
+    ledgerKicker: "بەشی یەکەم",
+    ledger: "پوختەی مانگانە",
+    ledgerSub: "داهاتی هەر مانگێک بە جیا",
+    month: "مانگ",
+    share: "بەش",
+    totalUsd: "کۆی داهات ($)",
+    peak: "بەرزترین",
+    shareKicker: "بەشی دووەم",
     platformRevenueShare: "بەشی داهاتی پلاتفۆرمەکان",
     distributionByStore: "دابەشکردن بەپێی فرۆشگا",
     transactionTypes: "جۆرەکانی مامەڵە",
     txCategoryRevenue: "داهات و ژمارە بەپێی جۆری گوێگرتن",
+    types: "جۆر",
+    countriesKicker: "گەشتی جیهانی",
     countries: "وڵاتان",
     revenueByTerritory: "داهات بەپێی ناوچە",
     top15: "باڵاترین ١٥",
     earning: "داهاتدار",
     allCountries: "هەموو",
+    platformsKicker: "سەکۆ",
     platformsTitle: "پلاتفۆرمەکان",
     platformsSub: "شیکاری جیاوازی هەر فرۆشگایەک",
+    stores: "فرۆشگا",
+    tracksKicker: "لیستی گۆرانییەکان",
     trackPerformance: "پەرفۆرمانسی گۆرانی",
-    revenuePerTrack: "داهاتی هەر گۆرانیەک",
+    revenuePerTrack: "داهاتی هەر گۆرانیەک، ڕیزبەندکراو",
     track: "گۆرانی",
     netRevenue: "کۆی داهات",
-    footer: "دەنگ پارێز · ڕاپۆرتی گشتی هونەرمەند",
+    tracksWord: "گۆرانی",
+    footer: "دەنگ پارێز · ڕاپۆرتی فەرمیی هونەرمەند",
+    notFound: "هونەرمەند نەدۆزرایەوە",
+    noRoyaltyData: s => `هیچ داتایەکی داهات نییە بۆ «${s}»`,
+    couldNotLoad: "بارنەکرا",
     noData: "بۆ ئەم ماوەیە داتا نییە",
     pctOfTotal: p => `${p}٪ لە گشتی`,
     txShort: "مامەڵە"
@@ -580,24 +683,26 @@ const I18N = {
 const MONTH_LABEL = { en: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
                      ku: ['ڕێبەندان','ڕەشەمە','ئازار','نیسان','گوڵان','حوزەیران','تەممووز','گەلاوێژ','خەرمانان','ڕەزبەر','خەزەڵوەر','بەفرانبار'] };
 
-let currentLang = 'en';
+let currentLang = localStorage.getItem('dp_shower_lang') || 'en';
 let currentData = null;
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-function t(k) { return I18N[currentLang][k] || I18N.en[k] || k; }
-function money(n) { return '$' + (Number(n) || 0).toFixed(2); }
+function t(k) { const v = I18N[currentLang][k] !== undefined ? I18N[currentLang][k] : I18N.en[k]; return v !== undefined ? v : k; }
+function money(n) { return '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function initials(name) {
+  const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+  return ((parts[0] || '?')[0] + ((parts[1] || '')[0] || '')).toUpperCase();
+}
 function periodLabel(p, lang = currentLang) {
   if (!p) return '—';
   const [y, m] = p.split('-');
-  return `${MONTH_LABEL[lang][parseInt(m)-1]} ${y}`;
+  return `${MONTH_LABEL[lang][parseInt(m) - 1]} ${y}`;
 }
 
 function applyLangToStatic() {
   document.documentElement.setAttribute('lang', currentLang);
   document.documentElement.setAttribute('dir', currentLang === 'ku' ? 'rtl' : 'ltr');
-  document.querySelectorAll('[data-i18n]').forEach(el => {
-    const key = el.dataset.i18n;
-    el.textContent = t(key);
-  });
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === currentLang));
 }
 
@@ -607,6 +712,19 @@ function parseRoute() {
   return { slug: parts[1], period: parts[2] || null };
 }
 
+/* gold-foil odometer for the hero figure */
+function countUp(el, target) {
+  if (reducedMotion || !target) { el.textContent = money(target); return; }
+  const dur = 1350, start = performance.now();
+  const tick = (now) => {
+    const p = Math.min(1, (now - start) / dur);
+    const eased = 1 - Math.pow(1 - p, 4);
+    el.textContent = money(target * eased);
+    if (p < 1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
 async function load() {
   const { slug, period } = parseRoute();
   try {
@@ -614,7 +732,7 @@ async function load() {
     const res = await fetch(url);
     if (res.status === 404) {
       document.getElementById('mainContent').innerHTML =
-        `<div class="empty"><div class="big">🎵</div><h3>Artist not found</h3><p>No royalty data for "${slug}"</p></div>`;
+        `<div class="empty"><div class="big">♫</div><h3>${t('notFound')}</h3><p>${t('noRoyaltyData')(slug)}</p></div>`;
       return;
     }
     if (!res.ok) throw new Error('Failed to load');
@@ -622,7 +740,7 @@ async function load() {
     render();
   } catch (e) {
     document.getElementById('mainContent').innerHTML =
-      `<div class="empty"><div class="big">⚠</div><h3>Could not load</h3><p>${e.message}</p></div>`;
+      `<div class="empty"><div class="big">⚠</div><h3>${t('couldNotLoad')}</h3><p>${e.message}</p></div>`;
   }
 }
 
@@ -632,18 +750,25 @@ function render() {
 
   document.title = `${artist.name} · Deng Parez`;
   document.getElementById('artistNameText').textContent = artist.name;
+  document.getElementById('discMono').textContent = initials(artist.name);
+
+  // Hero figure
+  document.getElementById('heroAmountLabel').textContent =
+    `${t('totalNetRevenue')} · ${period ? periodLabel(period) : t('allTime')}`;
+  const amountRow = document.getElementById('heroAmountRow');
+  amountRow.style.display = 'flex';
+  countUp(document.getElementById('heroAmount'), totalRevenue || 0);
 
   // Period chips: "All time" + one per month
   const bar = document.getElementById('periodBar');
   const chips = document.getElementById('periodChips');
-  const allTimeLabel = currentLang === 'ku' ? 'هەموو کات' : 'All time';
   chips.innerHTML = '';
   bar.style.display = (periods && periods.length) ? 'flex' : 'none';
   if (periods && periods.length) {
     const allChip = document.createElement('a');
     allChip.className = 'period-chip' + (!period ? ' active' : '');
     allChip.href = `/shower/${artist.slug}`;
-    allChip.textContent = allTimeLabel;
+    allChip.textContent = t('allTime');
     chips.appendChild(allChip);
     periods.forEach(p => {
       const chip = document.createElement('a');
@@ -658,7 +783,7 @@ function render() {
   const dl = document.getElementById('downloadBtn');
   if (dl) {
     dl.href = `/api/shower/public/${artist.slug}/export`;
-    dl.textContent = currentLang === 'ku' ? '⬇ داگرتنی ڕاپۆرت' : '⬇ Download .xlsx';
+    dl.textContent = t('download');
   }
 
   if (!totalRevenue || totalRevenue <= 0) {
@@ -668,68 +793,78 @@ function render() {
   }
 
   const topTrack = tracks[0];
-  const topStore = stores[0];
-  const topStorePct = totalRevenue > 0 && topStore ? (topStore.rev / totalRevenue * 100).toFixed(0) : 0;
-  const maxCountryRev = countries.length ? countries[0].rev : 0;
-  const maxTrackRev = tracks.length ? tracks[0].rev : 0;
   const maxTypeRev = types.length ? types[0].rev : 0;
 
   const container = document.getElementById('mainContent');
   container.innerHTML = '';
+  let order = 2; // reveal stagger continues after hero + period bar
+  const section = (el) => { el.classList.add('reveal'); el.style.setProperty('--d', order++); container.appendChild(el); };
 
-  // HERO
-  const hero = document.createElement('div');
-  hero.className = 'hero-metric';
-  hero.innerHTML = `
-    <div class="label">${t('totalNetRevenue')} · ${period ? periodLabel(period) : (currentLang === 'ku' ? 'هەموو کات' : 'All time')}</div>
-    <div class="hero-amount">
-      <span class="big">${money(totalRevenue)}</span>
-      <span class="currency">USD</span>
-    </div>
-    <div class="hero-caption" id="heroCap"></div>`;
-  container.appendChild(hero);
+  // Credits line under the figure
+  const cap = document.getElementById('heroCap');
+  cap.innerHTML = '';
+  const pill = (cls, emoji, bHtml, label) => {
+    const p = document.createElement('span'); p.className = 'pill' + (cls ? ' ' + cls : '');
+    const b = document.createElement('b'); b.textContent = bHtml;
+    p.append(document.createTextNode(emoji + ' '), b, document.createTextNode(' ' + label));
+    return p;
+  };
+  if (topTrack) cap.append(pill('star', '⭐', topTrack.name, t('topTrackLabel')));
+  cap.append(pill('', '◍', (totalQuantity || 0).toLocaleString(), t('transactions')));
+  cap.append(pill('', '✦', countries.filter(c => c.rev > 0).length, t('countriesReached')));
+  cap.append(pill('', '♫', tracks.filter(x => x.rev > 0).length, t('tracksEarning')));
+  cap.append(pill('', '▸', stores.filter(s => s.rev > 0).length, t('platforms')));
 
-  // MONTHLY SUMMARY (all-time view, when there's more than one month)
+  // ── THE LEDGER (all-time view, >1 month) ──
   if (!period && byMonth && byMonth.length > 1) {
-    const msCard = document.createElement('div'); msCard.className = 'card grid-full';
+    const maxMonth = Math.max(...byMonth.map(m => m.total || 0), 0);
+    const peakKey = byMonth.reduce((best, m) => (m.total > (best ? best.total : -1) ? m : best), null);
+    const msCard = document.createElement('div'); msCard.className = 'card section';
     const body = byMonth.map(m => {
       const lbl = m.period ? periodLabel(m.period) : '—';
       const href = m.period ? `/shower/${artist.slug}/${m.period}` : '#';
-      return `<tr><td><a class="month-link" href="${href}">${lbl}</a></td><td class="num">${money(m.total)}</td></tr>`;
+      const w = maxMonth > 0 ? (m.total / maxMonth) * 100 : 0;
+      const isPeak = peakKey && m.period === peakKey.period && byMonth.length > 2;
+      return `<tr>
+        <td class="ms-month"><a class="month-link" href="${href}">${lbl}</a>${isPeak ? `<span class="peak-tag">★ ${t('peak')}</span>` : ''}</td>
+        <td class="ms-bar-cell"><div class="ms-bar"><i data-w="${w}"></i></div></td>
+        <td class="ms-num">${money(m.total)}</td>
+      </tr>`;
     }).join('');
     msCard.innerHTML = `
-      <div class="card-head"><div class="card-title">${currentLang === 'ku' ? 'پوختەی مانگانە' : 'Monthly Summary'}</div></div>
+      <div class="card-head">
+        <div>
+          <div class="card-kicker">${t('ledgerKicker')}</div>
+          <div class="card-title">${t('ledger')}</div>
+          <div class="card-sub">${t('ledgerSub')}</div>
+        </div>
+        <span class="card-tag">${byMonth.length} ${t('month')}</span>
+      </div>
       <div class="ms-wrap"><table class="ms-table">
-        <thead><tr><th>${currentLang === 'ku' ? 'مانگ' : 'Month'}</th><th class="num">${currentLang === 'ku' ? 'کۆی داهات ($)' : 'Total ($)'}</th></tr></thead>
+        <thead><tr><th>${t('month')}</th><th>${t('share')}</th><th style="text-align:end;">${t('totalUsd')}</th></tr></thead>
         <tbody>${body}</tbody></table></div>`;
-    container.appendChild(msCard);
+    section(msCard);
+    requestAnimationFrame(() => setTimeout(() =>
+      msCard.querySelectorAll('.ms-bar i').forEach(i => i.style.width = i.dataset.w + '%'), 140));
   }
 
-  const cap = hero.querySelector('#heroCap');
-  const pill = (cls, emoji, bHtml, label) => {
-    const p = document.createElement('span'); p.className = 'pill' + (cls ? ' ' + cls : '');
-    p.innerHTML = `${emoji} <b>${bHtml}</b> ${label}`;
-    return p;
-  };
-  if (topTrack) cap.append(pill('star', '⭐', topTrack.name, t('topTrackLabel').replace(':','')));
-  cap.append(pill('', '📈', totalQuantity.toLocaleString(), t('transactions')));
-  cap.append(pill('', '🌍', countries.filter(c => c.rev > 0).length, t('countriesReached')));
-  cap.append(pill('', '🎵', tracks.filter(x => x.rev > 0).length, t('tracksEarning')));
-  cap.append(pill('', '🏪', stores.filter(s => s.rev > 0).length, t('platforms')));
-
-  // GRID 2: Store doughnut + TX
-  const grid2 = document.createElement('div'); grid2.className = 'grid-2';
+  // ── GRID: platform share + transaction types ──
+  const grid2 = document.createElement('div'); grid2.className = 'grid-2 section';
 
   const storeCard = document.createElement('div'); storeCard.className = 'card';
   storeCard.innerHTML = `
     <div class="card-head">
       <div>
+        <div class="card-kicker">${t('shareKicker')}</div>
         <div class="card-title">${t('platformRevenueShare')}</div>
         <div class="card-sub">${t('distributionByStore')}</div>
       </div>
       <span class="card-tag">USD</span>
     </div>
-    <div class="chart-wrap"><canvas id="storeChart"></canvas></div>
+    <div class="chart-wrap">
+      <canvas id="storeChart"></canvas>
+      <div class="chart-center"><span class="v">${money(totalRevenue)}</span><span class="l">${t('totalNetRevenue')}</span></div>
+    </div>
     <div class="store-legend" id="storeLegend"></div>`;
   grid2.appendChild(storeCard);
 
@@ -737,37 +872,40 @@ function render() {
   txCard.innerHTML = `
     <div class="card-head">
       <div>
+        <div class="card-kicker">${t('shareKicker')}</div>
         <div class="card-title">${t('transactionTypes')}</div>
         <div class="card-sub">${t('txCategoryRevenue')}</div>
       </div>
-      <span class="card-tag">${types.length} ${currentLang === 'ku' ? 'جۆر' : 'Types'}</span>
+      <span class="card-tag">${types.length} ${t('types')}</span>
     </div>
     <div class="tx-list" id="txList"></div>`;
   grid2.appendChild(txCard);
-  container.appendChild(grid2);
+  section(grid2);
 
-  // PLATFORMS section
-  const platSection = document.createElement('div'); platSection.className = 'grid-full';
+  // ── PLATFORMS ──
+  const platSection = document.createElement('div'); platSection.className = 'section';
   platSection.innerHTML = `
     <div class="card">
       <div class="card-head">
         <div>
+          <div class="card-kicker">${t('platformsKicker')}</div>
           <div class="card-title">${t('platformsTitle')}</div>
           <div class="card-sub">${t('platformsSub')}</div>
         </div>
-        <span class="card-tag">${stores.length} ${currentLang === 'ku' ? 'فرۆشگا' : 'Stores'}</span>
+        <span class="card-tag">${stores.length} ${t('stores')}</span>
       </div>
       <div class="platforms-grid" id="platformsGrid"></div>
     </div>`;
-  container.appendChild(platSection);
+  section(platSection);
 
-  // COUNTRIES
+  // ── COUNTRIES ──
   if (countries.length > 0) {
-    const cSection = document.createElement('div'); cSection.className = 'grid-full';
+    const cSection = document.createElement('div'); cSection.className = 'section';
     cSection.innerHTML = `
       <div class="card">
         <div class="card-head">
           <div>
+            <div class="card-kicker">${t('countriesKicker')}</div>
             <div class="card-title">${t('countries')}</div>
             <div class="card-sub">${t('revenueByTerritory')}</div>
           </div>
@@ -779,30 +917,31 @@ function render() {
         </div>
         <div class="country-list" id="countryList"></div>
       </div>`;
-    container.appendChild(cSection);
+    section(cSection);
   }
 
-  // TRACKS
+  // ── TRACKS ──
   if (tracks.length > 0) {
-    const tSection = document.createElement('div'); tSection.className = 'grid-full';
+    const tSection = document.createElement('div'); tSection.className = 'section';
     tSection.innerHTML = `
       <div class="card">
         <div class="card-head">
           <div>
+            <div class="card-kicker">${t('tracksKicker')}</div>
             <div class="card-title">${t('trackPerformance')}</div>
             <div class="card-sub">${t('revenuePerTrack')}</div>
           </div>
-          <span class="card-tag">${tracks.length} ${currentLang === 'ku' ? 'گۆرانی' : 'Tracks'}</span>
+          <span class="card-tag">${tracks.length} ${t('tracksWord')}</span>
         </div>
         <table class="tracks-table">
           <thead><tr><th>${t('track')}</th><th class="right">${t('netRevenue')}</th></tr></thead>
           <tbody id="tracksBody"></tbody>
         </table>
       </div>`;
-    container.appendChild(tSection);
+    section(tSection);
   }
 
-  // Store chart
+  // Store doughnut
   const activeStores = stores.filter(s => s.rev > 0);
   if (activeStores.length) {
     new Chart(document.getElementById('storeChart').getContext('2d'), {
@@ -812,18 +951,19 @@ function render() {
         datasets: [{
           data: activeStores.map(s => s.rev),
           backgroundColor: activeStores.map((s, i) => (PLATFORM_BRANDS[s.name] && PLATFORM_BRANDS[s.name].color) || STORE_COLORS[i % STORE_COLORS.length]),
-          borderColor: '#0e1018', borderWidth: 3, hoverOffset: 10
+          borderColor: '#0b0a07', borderWidth: 3, hoverOffset: 10
         }]
       },
       options: {
-        responsive: true, maintainAspectRatio: false, cutout: '68%',
+        responsive: true, maintainAspectRatio: false, cutout: '74%',
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: '#1a1e2a', borderColor: '#2e3549', borderWidth: 1,
-            titleColor: '#e6e8ef', bodyColor: '#a3a9bc', padding: 12,
+            backgroundColor: '#17150e', borderColor: 'rgba(227,180,88,0.35)', borderWidth: 1,
+            titleColor: '#f3ead9', bodyColor: 'rgba(243,234,217,0.7)', padding: 12,
+            titleFont: { family: 'Schibsted Grotesk' }, bodyFont: { family: 'Spline Sans Mono' },
             callbacks: {
-              label: (ctx) => `$${ctx.parsed.toFixed(2)} · ${((ctx.parsed/totalRevenue)*100).toFixed(1)}%`
+              label: (ctx) => ` $${ctx.parsed.toFixed(2)} · ${((ctx.parsed / totalRevenue) * 100).toFixed(1)}%`
             }
           }
         }
@@ -837,23 +977,25 @@ function render() {
     const row = document.createElement('div'); row.className = 'store-row';
     const color = (PLATFORM_BRANDS[s.name] && PLATFORM_BRANDS[s.name].color) || STORE_COLORS[i % STORE_COLORS.length];
     const pct = totalRevenue > 0 ? ((s.rev / totalRevenue) * 100).toFixed(1) : '0';
-    const sw = document.createElement('span'); sw.className = 'swatch'; sw.style.background = color;
+    const sw = document.createElement('span'); sw.className = 'swatch'; sw.style.background = color; sw.style.color = color;
     const nm = document.createElement('span'); nm.className = 'name'; nm.textContent = s.name;
-    const vl = document.createElement('span'); vl.className = 'val'; vl.textContent = `$${s.rev.toFixed(2)} · ${pct}%`;
+    const vl = document.createElement('span'); vl.className = 'val'; vl.textContent = `${money(s.rev)} · ${pct}%`;
     row.append(sw, nm, vl);
     legend.appendChild(row);
   });
 
-  // TX list
+  // Transaction types
   const txList = document.getElementById('txList');
   types.forEach(tx => {
     const pct = maxTypeRev > 0 ? (tx.rev / maxTypeRev) * 100 : 0;
     const row = document.createElement('div'); row.className = 'tx-row';
     const bar = document.createElement('div'); bar.className = 'tx-bar';
-    bar.style.clipPath = `inset(0 ${100 - pct}% 0 0)`;
+    bar.style.clipPath = currentLang === 'ku'
+      ? `inset(0 0 0 ${100 - pct}%)`
+      : `inset(0 ${100 - pct}% 0 0)`;
     const name = document.createElement('div'); name.className = 'tx-name'; name.textContent = tx.name;
     const qty = document.createElement('div'); qty.className = 'tx-qty';
-    const n = document.createElement('span'); n.className = 'n'; n.textContent = tx.qty.toLocaleString();
+    const n = document.createElement('span'); n.className = 'n'; n.textContent = (tx.qty || 0).toLocaleString();
     qty.append(n, document.createTextNode(' ' + t('txShort')));
     const rev = document.createElement('div'); rev.className = 'tx-rev'; rev.textContent = money(tx.rev);
     row.append(bar, name, qty, rev);
@@ -862,8 +1004,8 @@ function render() {
 
   // Platforms
   const pg = document.getElementById('platformsGrid');
-  stores.forEach(s => {
-    const brand = PLATFORM_BRANDS[s.name] || { color: '#6a7085', icon: '♪' };
+  stores.forEach((s, i) => {
+    const brand = PLATFORM_BRANDS[s.name] || { color: STORE_COLORS[i % STORE_COLORS.length], icon: '♪' };
     const pct = totalRevenue > 0 ? (s.rev / totalRevenue) * 100 : 0;
     const card = document.createElement('div');
     card.className = 'platform-card' + (s.rev === 0 ? ' inactive' : '');
@@ -875,22 +1017,21 @@ function render() {
       </div>
       <div class="platform-rev">${money(s.rev)}</div>
       <div class="platform-pct-label">${pct.toFixed(1)}% ${currentLang === 'ku' ? 'لە گشتی' : 'of total'}</div>
-      <div class="platform-bar"><div class="platform-bar-fill" style="width:0%;background:linear-gradient(90deg,${brand.color}aa 0%,${brand.color} 100%)"></div></div>`;
+      <div class="platform-bar"><div class="platform-bar-fill" style="background:linear-gradient(90deg,${brand.color}99 0%,${brand.color} 100%)"></div></div>`;
     card.querySelector('.platform-name').textContent = s.name;
     pg.appendChild(card);
-    requestAnimationFrame(() => setTimeout(() => card.querySelector('.platform-bar-fill').style.width = pct + '%', 100));
+    requestAnimationFrame(() => setTimeout(() => card.querySelector('.platform-bar-fill').style.width = pct + '%', 130));
   });
 
-  // Countries
+  // Countries + tracks
   if (countries.length > 0) renderCountries('top15');
-  // Tracks
   if (tracks.length > 0) renderTracks();
 }
 
 function renderCountries(mode) {
   if (!currentData) return;
   const { countries } = currentData;
-  const sorted = [...countries].sort((a,b) => b.rev - a.rev);
+  const sorted = [...countries].sort((a, b) => b.rev - a.rev);
   const maxRev = sorted[0] ? sorted[0].rev : 0;
   let list;
   if (mode === 'top15') list = sorted.slice(0, 15);
@@ -905,7 +1046,7 @@ function renderCountries(mode) {
     const pct = maxRev > 0 ? (c.rev / maxRev) * 100 : 0;
     row.innerHTML = `
       <div class="bar-bg" style="width:${pct}%"></div>
-      <div class="rank">#${idx+1}</div>
+      <div class="rank">${String(idx + 1).padStart(2, '0')}</div>
       <div class="flag-label">
         <span class="flag">${COUNTRY_FLAGS[c.name] || '🌐'}</span>
         <span class="name"></span>
@@ -926,30 +1067,37 @@ function renderTracks() {
   const maxRev = tracks[0] ? tracks[0].rev : 0;
   const body = document.getElementById('tracksBody');
   body.innerHTML = '';
-  tracks.forEach(tk => {
+  tracks.forEach((tk, idx) => {
     const pct = maxRev > 0 ? (tk.rev / maxRev) * 100 : 0;
     const pctTotal = totalRevenue > 0 ? ((tk.rev / totalRevenue) * 100).toFixed(1) : 0;
-    const tr = document.createElement('tr'); tr.className = 'trow';
+    const tr = document.createElement('tr'); tr.className = 'trow' + (idx === 0 ? ' first' : '');
     tr.innerHTML = `
       <td>
-        <div class="track-title"></div>
-        <div class="track-bar"><div class="track-bar-fill" style="width:0%"></div></div>
+        <div class="track-cell">
+          <div class="track-rank">${String(idx + 1).padStart(2, '0')}</div>
+          <div class="track-body">
+            <div class="track-title"></div>
+            <div class="track-bar"><div class="track-bar-fill"></div></div>
+          </div>
+        </div>
       </td>
-      <td>
+      <td class="rev-cell">
         <div class="track-rev">${money(tk.rev)}</div>
         <div class="track-pct">${t('pctOfTotal')(pctTotal)}</div>
       </td>`;
     tr.querySelector('.track-title').textContent = tk.name;
     body.appendChild(tr);
-    requestAnimationFrame(() => setTimeout(() => tr.querySelector('.track-bar-fill').style.width = pct + '%', 100));
+    requestAnimationFrame(() => setTimeout(() => tr.querySelector('.track-bar-fill').style.width = pct + '%', 130));
   });
 }
 
 document.querySelectorAll('.lang-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     currentLang = btn.dataset.lang;
+    localStorage.setItem('dp_shower_lang', currentLang);
     applyLangToStatic();
     if (currentData) render();
+    else load();
   });
 });
 

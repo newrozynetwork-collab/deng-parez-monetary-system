@@ -5,208 +5,359 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Deng Parez · Artist Reports</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&family=Noto+Kufi+Arabic:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Schibsted+Grotesk:ital,wght@0,400..900;1,400..900&family=Spline+Sans+Mono:wght@300..700&family=Noto+Kufi+Arabic:wght@300..700&display=swap');
 
+/* ════════════════════════════════════════════════════════
+   GOLD MASTER · THE ROSTER — Deng Parez artist directory
+   ════════════════════════════════════════════════════════ */
 :root {
-  --bg-0: #07080d; --bg-2: #151823;
-  --surface: #1a1e2a; --surface-h: #202535;
-  --border: #242a3d; --border-l: #2e3549;
-  --text: #e6e8ef; --text-d: #a3a9bc; --muted: #6a7085;
-  --teal: #2dd4bf; --violet: #a78bfa; --gold: #fbbf24;
+  --ink-0: #0b0a07;
+  --ink-2: #17150e;
+  --line: rgba(228, 198, 134, 0.13);
+  --line-strong: rgba(228, 198, 134, 0.32);
+  --cream: #f3ead9;
+  --cream-dim: rgba(243, 234, 217, 0.62);
+  --cream-faint: rgba(243, 234, 217, 0.38);
+  --gold: #e3b458;
+  --gold-soft: rgba(227, 180, 88, 0.16);
+  --foil: linear-gradient(100deg, #f9ecc0 0%, #ecc679 26%, #b98931 50%, #f3da9a 72%, #d3a851 100%);
+  --serif: 'Fraunces', 'Noto Kufi Arabic', georgia, serif;
+  --sans: 'Schibsted Grotesk', 'Noto Kufi Arabic', system-ui, sans-serif;
+  --mono: 'Spline Sans Mono', 'Noto Kufi Arabic', monospace;
+  --ease: cubic-bezier(0.16, 0.84, 0.3, 1);
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
+::selection { background: var(--gold); color: var(--ink-0); }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 4px; }
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: var(--ink-0); }
+::-webkit-scrollbar-thumb { background: #2c2715; border-radius: 6px; border: 2px solid var(--ink-0); }
+html { scrollbar-color: #2c2715 var(--ink-0); }
+
 body {
-  background: var(--bg-0); color: var(--text);
-  font-family: 'Inter', system-ui, sans-serif;
-  min-height: 100vh; padding: 40px 20px 80px;
-  background-image: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(45,212,191,0.08) 0%, transparent 50%);
+  background: var(--ink-0); color: var(--cream);
+  font-family: var(--sans); line-height: 1.5;
+  min-height: 100vh; overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
-.container { max-width: 1080px; margin: 0 auto; }
-.brand-bar {
+html[lang="ku"] body { font-family: 'Noto Kufi Arabic', var(--sans); }
+
+.atmosphere { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+.atmosphere::before {
+  content: ''; position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 56% 40% at 50% -8%, rgba(227, 180, 88, 0.14) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 28% at 8% 30%, rgba(196, 110, 74, 0.05) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 50% at 50% 118%, rgba(227, 180, 88, 0.05) 0%, transparent 55%);
+}
+.atmosphere::after {
+  content: ''; position: absolute; inset: -50%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 240 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  opacity: 0.05; mix-blend-mode: overlay;
+}
+
+.container { position: relative; z-index: 1; max-width: 1140px; margin: 0 auto; padding: 30px 30px 90px; }
+
+/* ─── MASTHEAD ─── */
+.masthead {
   display: flex; align-items: center; justify-content: space-between;
-  gap: 14px; padding: 14px 20px;
-  background: linear-gradient(135deg, rgba(45,212,191,0.08) 0%, rgba(167,139,250,0.06) 100%);
-  border: 1px solid var(--border); border-radius: 14px; margin-bottom: 32px;
-  flex-wrap: wrap;
+  gap: 16px; flex-wrap: wrap;
+  padding-bottom: 22px; margin-bottom: 56px;
+  border-bottom: 1px solid var(--line);
 }
-.brand-logo { display: flex; align-items: center; gap: 12px; }
-.brand-mark {
-  width: 40px; height: 40px; border-radius: 10px;
-  background: linear-gradient(135deg, var(--teal) 0%, var(--violet) 100%);
-  display: grid; place-items: center; font-weight: 800; color: #000;
-  font-family: 'JetBrains Mono', monospace;
+.wordmark { display: flex; align-items: baseline; gap: 14px; text-decoration: none; color: inherit; }
+.wordmark .mark {
+  font-family: var(--serif); font-weight: 600; font-size: 1.18rem;
+  letter-spacing: 0.34em; text-transform: uppercase; white-space: nowrap;
 }
-.brand-name { font-size: 1.05rem; font-weight: 700; }
-.brand-tagline {
-  font-family: 'JetBrains Mono', monospace; font-size: 0.68rem;
-  letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted);
+.wordmark .mark em { font-style: italic; color: var(--gold); }
+.wordmark .sub { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--cream-faint); white-space: nowrap; }
+html[lang="ku"] .wordmark .sub { letter-spacing: 0.04em; font-size: 0.72rem; }
+.lang-toggle { display: inline-flex; border: 1px solid var(--line); border-radius: 100px; padding: 3px; gap: 2px; background: rgba(243, 234, 217, 0.03); }
+.lang-btn {
+  background: transparent; border: none; color: var(--cream-dim);
+  padding: 6px 15px; border-radius: 100px; cursor: pointer;
+  font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.16em; font-weight: 500;
+  transition: color 0.2s, background 0.2s;
 }
-.brand-meta { display: flex; flex-direction: column; gap: 2px; }
-.brand-tag {
-  font-family: 'JetBrains Mono', monospace; font-size: 0.66rem;
-  letter-spacing: 1.5px; text-transform: uppercase; color: var(--teal);
-  background: rgba(45,212,191,0.1); padding: 5px 12px; border-radius: 100px;
-  border: 1px solid rgba(45,212,191,0.2);
-}
+.lang-btn:hover { color: var(--cream); }
+.lang-btn.active { background: var(--gold); color: var(--ink-0); font-weight: 700; }
+html[lang="ku"] .lang-btn { font-family: 'Noto Kufi Arabic'; letter-spacing: 0; font-size: 0.74rem; }
 
-header { margin-bottom: 40px; text-align: center; }
+/* ─── HERO ─── */
+header.hero { text-align: center; margin-bottom: 48px; }
 .eyebrow {
-  font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
-  letter-spacing: 3px; color: var(--teal);
-  text-transform: uppercase; margin-bottom: 10px;
+  display: inline-flex; align-items: center; gap: 12px;
+  font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.34em;
+  text-transform: uppercase; color: var(--gold); margin-bottom: 18px;
 }
+.eyebrow::before, .eyebrow::after { content: ''; width: 30px; height: 1px; background: var(--line-strong); }
+html[lang="ku"] .eyebrow { letter-spacing: 0.06em; font-size: 0.78rem; }
 h1 {
-  font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800;
-  letter-spacing: -1.5px; line-height: 1.05; margin-bottom: 8px;
+  font-family: var(--serif); font-weight: 460;
+  font-size: clamp(2.6rem, 6.4vw, 4.6rem);
+  line-height: 1.02; letter-spacing: -0.015em; margin-bottom: 14px;
+  font-variation-settings: 'opsz' 144;
 }
+html[lang="ku"] h1 { font-weight: 700; line-height: 1.3; letter-spacing: 0; }
 h1 .accent {
-  background: linear-gradient(135deg, var(--teal) 0%, var(--violet) 100%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-style: italic;
+  background: var(--foil);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 3px 18px rgba(227, 180, 88, 0.2));
 }
-.lede { color: var(--text-d); font-size: 1rem; }
+.lede { color: var(--cream-dim); font-size: 1rem; max-width: 560px; margin: 0 auto; }
 
-.totals-row {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px; margin-bottom: 32px;
-}
+/* ─── STAT PLAQUES ─── */
+.totals-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 13px; margin-bottom: 40px; }
 .stat {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 14px; padding: 18px; text-align: center;
+  border: 1px solid var(--line); border-radius: 15px; padding: 20px 16px; text-align: center;
+  background: linear-gradient(180deg, rgba(243, 234, 217, 0.028) 0%, rgba(243, 234, 217, 0.012) 100%);
+  transition: border-color 0.3s;
 }
+.stat:hover { border-color: var(--line-strong); }
 .stat .n {
-  font-size: 1.8rem; font-weight: 700;
-  background: linear-gradient(135deg, #fff 0%, var(--teal) 100%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text;
-  font-family: 'JetBrains Mono', monospace;
-  font-variant-numeric: tabular-nums;
+  font-family: var(--serif); font-weight: 560; font-size: 1.85rem; line-height: 1.1;
+  background: var(--foil); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  font-variant-numeric: tabular-nums; direction: ltr;
 }
 .stat .l {
-  font-size: 0.7rem; color: var(--muted);
-  text-transform: uppercase; letter-spacing: 1.5px;
-  margin-top: 4px; font-family: 'JetBrains Mono', monospace;
+  font-family: var(--mono); font-size: 0.58rem; color: var(--cream-faint);
+  text-transform: uppercase; letter-spacing: 0.26em; margin-top: 8px;
 }
+html[lang="ku"] .stat .l { letter-spacing: 0.03em; font-size: 0.72rem; }
 
-.search-wrap { margin-bottom: 20px; }
+/* ─── SEARCH ─── */
+.search-wrap { position: relative; margin-bottom: 30px; }
+.search-wrap::before {
+  content: '⌕'; position: absolute; inset-block-start: 50%; inset-inline-start: 18px;
+  transform: translateY(-54%); color: var(--cream-faint); font-size: 1.15rem; pointer-events: none;
+}
 .search {
-  width: 100%; background: var(--surface); border: 1px solid var(--border);
-  border-radius: 12px; color: var(--text); padding: 14px 18px;
-  font-size: 0.95rem; outline: none; transition: border-color 0.2s;
-  font-family: 'Inter', sans-serif;
+  width: 100%; background: rgba(243, 234, 217, 0.025); border: 1px solid var(--line);
+  border-radius: 100px; color: var(--cream); padding: 15px 22px;
+  padding-inline-start: 46px;
+  font-size: 0.95rem; outline: none; font-family: var(--sans);
+  transition: border-color 0.25s, background 0.25s;
 }
-.search:focus { border-color: var(--teal); }
-.search::placeholder { color: var(--muted); }
+html[lang="ku"] .search { font-family: 'Noto Kufi Arabic', var(--sans); }
+.search:focus { border-color: var(--gold); background: rgba(243, 234, 217, 0.04); }
+.search::placeholder { color: var(--cream-faint); }
 
-.artists-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 14px;
-}
+/* ─── SLEEVE GRID ─── */
+.artists-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(265px, 1fr)); gap: 16px; }
 .artist-card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 14px; padding: 20px; text-decoration: none; color: inherit;
-  transition: transform 0.2s, border-color 0.2s; display: block;
-  position: relative; overflow: hidden;
+  position: relative; display: block; text-decoration: none; color: inherit;
+  border: 1px solid var(--line); border-radius: 17px; padding: 22px;
+  background: linear-gradient(180deg, rgba(243, 234, 217, 0.03) 0%, rgba(243, 234, 217, 0.012) 100%);
+  overflow: hidden; isolation: isolate;
+  transition: transform 0.3s var(--ease), border-color 0.3s, box-shadow 0.3s;
 }
-.artist-card::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-  background: linear-gradient(90deg, var(--teal), var(--violet));
-  opacity: 0; transition: opacity 0.2s;
+.artist-card:hover {
+  transform: translateY(-4px); border-color: var(--line-strong);
+  box-shadow: 0 22px 50px -22px rgba(0, 0, 0, 0.8);
 }
-.artist-card:hover { transform: translateY(-3px); border-color: var(--border-l); }
-.artist-card:hover::before { opacity: 1; }
+/* the record peeking out of the sleeve */
+.artist-card .peek {
+  position: absolute; inset-block-start: 14px; inset-inline-end: -68px;
+  width: 108px; height: 108px; border-radius: 50%; z-index: -1;
+  background:
+    radial-gradient(circle at 35% 32%, rgba(255, 245, 215, 0.12) 0%, transparent 40%),
+    repeating-radial-gradient(circle at 50% 50%, #14110b 0 1.3px, #0c0a06 1.3px 2.8px);
+  box-shadow: inset 0 0 0 1px rgba(227, 180, 88, 0.25), 0 8px 26px -8px rgba(0, 0, 0, 0.85);
+  transition: transform 0.45s var(--ease);
+}
+.artist-card .peek::after {
+  content: ''; position: absolute; inset: 36%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 36% 32%, #f6e3ae 0%, #e3b458 45%, #a97c2c 100%);
+}
+.artist-card:hover .peek { transform: translateX(-26px) rotate(80deg); }
+html[dir="rtl"] .artist-card:hover .peek { transform: translateX(26px) rotate(-80deg); }
 
-.artist-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.artist-head { display: flex; align-items: center; gap: 13px; margin-bottom: 18px; }
 .artist-avatar {
-  width: 44px; height: 44px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--teal) 0%, var(--violet) 100%);
-  display: grid; place-items: center; font-weight: 700; color: #000;
-  font-family: 'JetBrains Mono', monospace; font-size: 1rem; flex-shrink: 0;
+  width: 46px; height: 46px; border-radius: 50%; flex-shrink: 0;
+  background: radial-gradient(circle at 36% 32%, #f6e3ae 0%, #e3b458 42%, #a97c2c 85%);
+  display: grid; place-items: center;
+  font-family: var(--serif); font-style: italic; font-weight: 700; font-size: 1.05rem; color: #241804;
+  box-shadow: inset 0 1px 6px rgba(255, 250, 230, 0.4), 0 4px 14px -4px rgba(227, 180, 88, 0.4);
 }
 .artist-info { flex: 1; min-width: 0; }
 .artist-name {
-  font-weight: 600; font-size: 1rem;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-family: var(--serif); font-weight: 540; font-size: 1.22rem; line-height: 1.12;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; letter-spacing: -0.01em;
 }
-.artist-slug {
-  font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
-  color: var(--muted); margin-top: 2px;
-}
+html[lang="ku"] .artist-name { font-weight: 700; }
+.artist-slug { font-family: var(--mono); font-size: 0.62rem; color: var(--cream-faint); margin-top: 4px; direction: ltr; text-align: start; }
 
 .artist-rev {
-  font-family: 'JetBrains Mono', monospace;
-  font-variant-numeric: tabular-nums;
-  font-size: 1.5rem; font-weight: 700; color: var(--teal);
-  margin-bottom: 2px;
+  font-family: var(--serif); font-weight: 560; font-size: 1.7rem; line-height: 1;
+  background: var(--foil); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  font-variant-numeric: tabular-nums; margin-bottom: 10px; direction: ltr; text-align: start;
 }
-.artist-meta {
-  font-size: 0.76rem; color: var(--text-d);
-  display: flex; gap: 12px; flex-wrap: wrap;
-}
-.artist-meta span { display: inline-flex; align-items: center; gap: 4px; }
+.artist-meta { font-size: 0.72rem; color: var(--cream-faint); font-family: var(--mono); display: flex; gap: 14px; flex-wrap: wrap; }
+.artist-meta span { display: inline-flex; align-items: center; gap: 5px; }
+.artist-meta .dot { color: var(--gold); }
 
+.view-cue {
+  margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line);
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--cream-faint); transition: color 0.25s;
+}
+html[lang="ku"] .view-cue { letter-spacing: 0.02em; font-size: 0.72rem; }
+.artist-card:hover .view-cue { color: var(--gold); }
+.view-cue .arrow { transition: transform 0.3s var(--ease); }
+.artist-card:hover .view-cue .arrow { transform: translateX(4px); }
+html[dir="rtl"] .view-cue .arrow { transform: scaleX(-1); }
+html[dir="rtl"] .artist-card:hover .view-cue .arrow { transform: scaleX(-1) translateX(4px); }
+
+/* ─── STATES ─── */
 .empty-state {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 14px; padding: 50px 20px; text-align: center;
-  color: var(--text-d);
+  padding: 80px 24px; text-align: center; color: var(--cream-dim);
+  border: 1px dashed var(--line-strong); border-radius: 18px;
 }
-.empty-state .big-icon { font-size: 3rem; margin-bottom: 14px; opacity: 0.3; }
-.empty-state h3 { margin-bottom: 8px; color: var(--text); }
+.empty-state .big-icon { font-size: 2.6rem; margin-bottom: 18px; opacity: 0.55; }
+.empty-state h3 { font-family: var(--serif); font-weight: 520; font-size: 1.5rem; color: var(--cream); margin-bottom: 6px; }
+.empty-state p { font-size: 0.9rem; color: var(--cream-faint); }
+.loader-disc {
+  width: 64px; height: 64px; margin: 0 auto 20px; border-radius: 50%;
+  background: repeating-radial-gradient(circle, #14110b 0 1.4px, #0c0a06 1.4px 3px);
+  position: relative; animation: spin 2.4s linear infinite;
+  box-shadow: inset 0 0 0 1px rgba(227, 180, 88, 0.3);
+}
+.loader-disc::after { content: ''; position: absolute; inset: 36%; border-radius: 50%; background: var(--gold); }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-footer {
-  margin-top: 60px; padding-top: 24px;
-  border-top: 1px solid var(--border); text-align: center;
-  color: var(--muted); font-size: 0.75rem;
-  font-family: 'JetBrains Mono', monospace; letter-spacing: 1px;
+/* ─── FOOTER ─── */
+.groove { height: 22px; margin: 64px 0 26px; background: repeating-linear-gradient(to bottom, var(--line) 0 1px, transparent 1px 6px); opacity: 0.7; }
+footer { text-align: center; color: var(--cream-faint); font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.3em; text-transform: uppercase; }
+html[lang="ku"] footer { letter-spacing: 0.04em; font-size: 0.74rem; }
+footer .f-mark { color: var(--gold); }
+
+/* ─── ENTRANCE ─── */
+.reveal { animation: rise 0.85s var(--ease) both; animation-delay: calc(var(--d, 0) * 90ms); }
+@keyframes rise { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+
+@media (max-width: 768px) {
+  .container { padding: 22px 18px 70px; }
+  .masthead { margin-bottom: 36px; }
+  header.hero { margin-bottom: 36px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .loader-disc { animation: none; }
+  .reveal { animation: none; }
+  *, *::before, *::after { transition-duration: 0.01ms !important; }
 }
 </style>
 </head>
 <body>
+<div class="atmosphere"></div>
+
 <div class="container">
 
-<div class="brand-bar">
-  <div class="brand-logo">
-    <div class="brand-mark">DP</div>
-    <div class="brand-meta">
-      <span class="brand-name">Deng Parez</span>
-      <span class="brand-tagline">Artist Report Portal</span>
-    </div>
+<div class="masthead reveal" style="--d:0">
+  <a class="wordmark" href="/shower">
+    <span class="mark">Deng <em>Parez</em></span>
+    <span class="sub" data-i18n="brandTagline">Royalty Atelier</span>
+  </a>
+  <div class="lang-toggle">
+    <button class="lang-btn active" data-lang="en">EN</button>
+    <button class="lang-btn" data-lang="ku">کوردی</button>
   </div>
-  <span class="brand-tag">Public Directory</span>
 </div>
 
-<header>
-  <div class="eyebrow">Report Shower</div>
-  <h1>All <span class="accent">Artists</span></h1>
-  <p class="lede">Browse individual royalty reports — click an artist to view their breakdown</p>
+<header class="hero reveal" style="--d:1">
+  <div class="eyebrow" data-i18n="eyebrow">The Label Roster</div>
+  <h1 id="heroTitle"></h1>
+  <p class="lede" data-i18n="lede">Browse individual royalty reports — open an artist to hear where the money plays</p>
 </header>
 
-<div class="totals-row" id="totalsRow"></div>
+<div class="totals-row reveal" id="totalsRow" style="--d:2"></div>
 
-<div class="search-wrap">
-  <input type="text" class="search" id="searchInput" placeholder="Search artists…">
+<div class="search-wrap reveal" style="--d:3">
+  <input type="text" class="search" id="searchInput" data-i18n-ph="searchPh" placeholder="Search artists…">
 </div>
 
-<div id="content">
-  <div class="empty-state"><div class="big-icon">⏳</div><h3>Loading…</h3></div>
+<div id="content" class="reveal" style="--d:4">
+  <div class="empty-state"><div class="loader-disc"></div><h3 data-i18n="loading">Cueing the records…</h3></div>
 </div>
 
-<footer>Deng Parez · Public Artist Report Portal</footer>
+<div class="groove" aria-hidden="true"></div>
+<footer><span class="f-mark">✦</span>&nbsp; <span data-i18n="footer">Deng Parez · Public Artist Report Portal</span> &nbsp;<span class="f-mark">✦</span></footer>
 </div>
 
 <script>
+const I18N = {
+  en: {
+    brandTagline: "Royalty Atelier",
+    eyebrow: "The Label Roster",
+    titleHtml: 'Every <span class="accent">Artist</span>, on the record',
+    lede: "Browse individual royalty reports — open an artist to hear where the money plays",
+    searchPh: "Search artists…",
+    loading: "Cueing the records…",
+    statArtists: "Artists",
+    statRevenue: "Total Revenue",
+    statRows: "Royalty Lines",
+    statPeriods: "Latest Pressing",
+    latest: "Latest",
+    monthsWord: n => n + (n === 1 ? ' month' : ' months'),
+    viewCue: "View statement",
+    noMatches: "No matches",
+    tryDifferent: "Try a different search term",
+    noArtists: "No artists yet",
+    adminHint: "Admin: upload a report to get started",
+    couldNotLoad: "Could not load",
+    footer: "Deng Parez · Public Artist Report Portal"
+  },
+  ku: {
+    brandTagline: "پۆرتاڵی ڕاپۆرتی هونەرمەند",
+    eyebrow: "هونەرمەندانی لەیبڵ",
+    titleHtml: 'هەموو <span class="accent">هونەرمەندان</span>',
+    lede: "ڕاپۆرتی داهاتی هەر هونەرمەندێک ببینە — کرتە لە هونەرمەندێک بکە",
+    searchPh: "گەڕان بەدوای هونەرمەند…",
+    loading: "بارکردنی ڕاپۆرتەکان…",
+    statArtists: "هونەرمەند",
+    statRevenue: "کۆی داهات",
+    statRows: "دێڕی داهات",
+    statPeriods: "نوێترین مانگ",
+    latest: "نوێترین",
+    monthsWord: n => n + ' مانگ',
+    viewCue: "بینینی ڕاپۆرت",
+    noMatches: "هیچ نەدۆزرایەوە",
+    tryDifferent: "وشەیەکی تر تاقی بکەرەوە",
+    noArtists: "هێشتا هیچ هونەرمەندێک نییە",
+    adminHint: "بەڕێوەبەر: ڕاپۆرتێک باربکە بۆ دەستپێکردن",
+    couldNotLoad: "بارنەکرا",
+    footer: "دەنگ پارێز · پۆرتاڵی ڕاپۆرتی هونەرمەند"
+  }
+};
+const MONTH_LABEL = { en: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+                     ku: ['ڕێبەندان','ڕەشەمە','ئازار','نیسان','گوڵان','حوزەیران','تەممووز','گەلاوێژ','خەرمانان','ڕەزبەر','خەزەڵوەر','بەفرانبار'] };
+
+let currentLang = localStorage.getItem('dp_shower_lang') || 'en';
 let allArtists = [];
 
-function money(n) { return '$' + (n || 0).toFixed(2); }
+function t(k) { const v = I18N[currentLang][k] !== undefined ? I18N[currentLang][k] : I18N.en[k]; return v !== undefined ? v : k; }
+function money(n) { return '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 function initials(name) {
   const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
-  return ((parts[0] || '?')[0] + (parts[1] || '')[0] || '').toUpperCase();
+  return ((parts[0] || '?')[0] + ((parts[1] || '')[0] || '')).toUpperCase();
 }
 function periodLabel(p) {
   if (!p) return '—';
   const [y, m] = p.split('-');
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  return `${months[parseInt(m)-1]} ${y}`;
+  return `${MONTH_LABEL[currentLang][parseInt(m) - 1]} ${y}`;
+}
+
+function applyLangToStatic() {
+  document.documentElement.setAttribute('lang', currentLang);
+  document.documentElement.setAttribute('dir', currentLang === 'ku' ? 'rtl' : 'ltr');
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+  document.getElementById('heroTitle').innerHTML = t('titleHtml');
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === currentLang));
 }
 
 async function load() {
@@ -217,7 +368,7 @@ async function load() {
     render();
   } catch (e) {
     document.getElementById('content').innerHTML =
-      `<div class="empty-state"><div class="big-icon">⚠</div><h3>Could not load</h3><p>${e.message}</p></div>`;
+      `<div class="empty-state"><div class="big-icon">⚠</div><h3>${t('couldNotLoad')}</h3><p>${e.message}</p></div>`;
   }
 }
 
@@ -225,7 +376,7 @@ function render() {
   const filter = document.getElementById('searchInput').value.trim().toLowerCase();
   const list = filter ? allArtists.filter(a => a.name.toLowerCase().includes(filter) || a.slug.includes(filter)) : allArtists;
 
-  // Totals
+  // Stat plaques
   const totals = document.getElementById('totalsRow');
   totals.innerHTML = '';
   const total = allArtists.reduce((s, a) => s + a.totalRevenue, 0);
@@ -235,28 +386,31 @@ function render() {
     const lbl = document.createElement('div'); lbl.className = 'l'; lbl.textContent = l;
     d.append(num, lbl); return d;
   };
+  const latest = allArtists.map(a => a.latestPeriod).filter(Boolean).sort().pop() || null;
   totals.append(
-    stat(allArtists.length, 'Artists'),
-    stat(money(total), 'Total Revenue'),
-    stat(allArtists.reduce((s, a) => s + a.rowCount, 0).toLocaleString(), 'Rows'),
-    stat(new Set(allArtists.map(a => a.latestPeriod).filter(Boolean)).size, 'Periods Covered')
+    stat(allArtists.length, t('statArtists')),
+    stat(money(total), t('statRevenue')),
+    stat(allArtists.reduce((s, a) => s + a.rowCount, 0).toLocaleString(), t('statRows')),
+    stat(latest ? periodLabel(latest) : '—', t('statPeriods'))
   );
 
-  // Grid
+  // Sleeve grid
   const content = document.getElementById('content');
   if (list.length === 0) {
     content.innerHTML = filter
-      ? `<div class="empty-state"><div class="big-icon">🔍</div><h3>No matches</h3><p>Try a different search term</p></div>`
-      : `<div class="empty-state"><div class="big-icon">🎵</div><h3>No artists yet</h3><p>Admin: upload a CSV to get started</p></div>`;
+      ? `<div class="empty-state"><div class="big-icon">⌕</div><h3>${t('noMatches')}</h3><p>${t('tryDifferent')}</p></div>`
+      : `<div class="empty-state"><div class="big-icon">♫</div><h3>${t('noArtists')}</h3><p>${t('adminHint')}</p></div>`;
     return;
   }
   content.innerHTML = '';
   const grid = document.createElement('div'); grid.className = 'artists-grid';
-  list.forEach(a => {
+  list.forEach((a, i) => {
     const card = document.createElement('a');
-    card.className = 'artist-card';
+    card.className = 'artist-card reveal';
+    card.style.setProperty('--d', Math.min(i, 10));
     card.href = `/shower/${a.slug}`;
     card.innerHTML = `
+      <div class="peek" aria-hidden="true"></div>
       <div class="artist-head">
         <div class="artist-avatar"></div>
         <div class="artist-info">
@@ -266,20 +420,31 @@ function render() {
       </div>
       <div class="artist-rev"></div>
       <div class="artist-meta">
-        <span>🗓 <span class="p"></span></span>
-        <span>📊 <span class="pc"></span></span>
-      </div>`;
+        <span><span class="dot">✦</span> ${t('latest')} <span class="p"></span></span>
+        <span><span class="dot">♫</span> <span class="pc"></span></span>
+      </div>
+      <div class="view-cue"><span>${t('viewCue')}</span><span class="arrow">⟶</span></div>`;
     card.querySelector('.artist-avatar').textContent = initials(a.name);
     card.querySelector('.artist-name').textContent = a.name;
     card.querySelector('.artist-rev').textContent = money(a.totalRevenue);
     card.querySelector('.p').textContent = periodLabel(a.latestPeriod);
-    card.querySelector('.pc').textContent = a.periodCount + ' month' + (a.periodCount === 1 ? '' : 's');
+    card.querySelector('.pc').textContent = t('monthsWord')(a.periodCount);
     grid.appendChild(card);
   });
   content.appendChild(grid);
 }
 
 document.getElementById('searchInput').addEventListener('input', render);
+document.querySelectorAll('.lang-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentLang = btn.dataset.lang;
+    localStorage.setItem('dp_shower_lang', currentLang);
+    applyLangToStatic();
+    if (allArtists.length) render();
+  });
+});
+
+applyLangToStatic();
 load();
 </script>
 </body>
